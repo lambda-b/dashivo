@@ -12,16 +12,22 @@
         { "label": "East", "value": "East" },
         { "label": "West", "value": "West" }
       ]
+    },
+    {
+      "type": "radio",
+      "key": "date_1",
+      "label": "日付",
+      "defaultValue": "All",
+      "options": [
+        { "label": "すべて", "value": "All" },
+        { "label": "1月", "value": "2026-01-01" },
+        { "label": "2月", "value": "2026-02-01" },
+        { "label": "3月", "value": "2026-03-01" }
+      ]
     }
   ],
   "visualizations": [
-    {
-      "type": "line",
-      "title": "月次売上",
-      "dataset": "summary",
-      "x": "date",
-      "y": ["revenue"]
-    }
+    { "type": "line", "title": "月次売上", "dataset": "summary", "x": "date", "y": ["revenue"] }
   ],
   "tables": [
     {
@@ -31,11 +37,7 @@
         { "key": "date", "label": "月" },
         { "key": "revenue", "label": "売上", "format": "currency" },
         { "key": "orders", "label": "注文件数", "format": "number" },
-        {
-          "key": "average_order_value",
-          "label": "平均注文額",
-          "format": "currency"
-        }
+        { "key": "average_order_value", "label": "平均注文額", "format": "currency" }
       ]
     }
   ]

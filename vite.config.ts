@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import { browserOnlyWorker } from "./vite/plugins/browser-only-worker.ts";
+import { dashboardEditor } from "./vite/plugins/dashboard-editor.ts";
 import { dashboardOutput } from "./vite/plugins/dashboard-output.ts";
 import { pyodideAssets } from "./vite/plugins/pyodide-assets.ts";
 import { pyodideRuntime } from "./vite/plugins/pyodide-runtime.ts";
@@ -19,6 +20,7 @@ export default defineConfig(({ command }) => ({
     react(),
     tailwindcss(),
     pyodideRuntime(projectRoot, command),
+    command === "serve" && dashboardEditor(projectRoot),
     command === "serve" && pyodideAssets(projectRoot),
     viteSingleFile(),
     dashboardOutput(projectRoot),

@@ -26,7 +26,7 @@ Pythonによるデータ分析とReactのUIを、ネットワーク接続なし�
 
    Viteは `0.0.0.0:3030` で待ち受けます。Dev Container外からは `http://localhost:3030` を開いてください。
 
-   開発画面右下の「Builderを開く」からDashboardの基本情報とRadio Controlを編集できます。Zodによる検証に成功したSchemaだけがプレビューへ反映され、編集結果は `dashboard.json` として保存できます。Builderは開発時専用で、本番成果物には含まれません。
+   開発画面右下の「Builderを開く」からDashboardの基本情報とRadio Controlを編集できます。Zodによる検証に成功したSchemaだけがプレビューへ反映され、編集結果は `dashboard/dashboard.json` へ直接保存できます。Builderと保存APIは開発時専用で、本番成果物には含まれません。
 
 ## ビルド
 

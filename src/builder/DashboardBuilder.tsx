@@ -1,6 +1,6 @@
 import { useReducer, useState, type ReactNode } from "react";
 import { ControlEditor } from "@/builder/ControlEditor";
-import { serializeDashboard } from "@/builder/schema";
+import { saveDashboardFile } from "@/builder/dashboard-file";
 import { builderReducer, createBuilderState } from "@/builder/state";
 import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
 
@@ -8,19 +8,6 @@ interface DashboardBuilderProps {
   initialDashboard: DashboardSchema;
   children: (dashboard: DashboardSchema, revision: number) => ReactNode;
 }
-
-const downloadDashboard = (dashboard: DashboardSchema) => {
-  const url = URL.createObjectURL(
-    new Blob([serializeDashboard(dashboard)], { type: "application/json" }),
-  );
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "dashboard.json";
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-};
 
 const createControlKey = (dashboard: DashboardSchema) => {
   const keys = new Set(dashboard.controls.map((control) => control.key));
@@ -44,13 +31,22 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
     dispatch({ type: "apply", dashboard: result.data });
   };
 
-  const saveDraft = () => {
+  const saveDraft = async () => {
     const result = dashboardSchema.safeParse(state.draft);
     if (!result.success) {
       dispatch({ type: "error", message: result.error.message });
       return;
     }
-    downloadDashboard(result.data);
+    dispatch({ type: "saving" });
+    try {
+      await saveDashboardFile(result.data);
+      dispatch({ type: "saved" });
+    } catch (error) {
+      dispatch({
+        type: "error",
+        message: error instanceof Error ? error.message : "dashboard.jsonを保存できませんでした。",
+      });
+    }
   };
 
   const addRadioControl = () => {
@@ -192,13 +188,17 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
                 元に戻す
               </button>
               <button
-                className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:cursor-wait disabled:opacity-60"
+                disabled={state.saveStatus === "saving"}
                 onClick={saveDraft}
                 type="button"
               >
-                JSONを保存
+                {state.saveStatus === "saving" ? "保存中…" : "dashboard.jsonを保存"}
               </button>
             </div>
+            {state.saveStatus === "saved" && (
+              <span className="text-xs font-medium text-emerald-700">保存しました</span>
+            )}
             <button
               className="bg-brand hover:bg-brand-dark cursor-pointer rounded-md px-4 py-2 text-sm font-semibold text-white"
               onClick={applyDraft}

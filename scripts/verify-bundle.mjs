@@ -21,7 +21,12 @@ for (const marker of ["numpy-2.4.6", "pandas-3.0.2", "python_stdlib.zip", "pyodi
   }
 }
 
-for (const marker of ["Builderを開く", "DEVELOPMENT ONLY", "Dashboard Builder"]) {
+for (const marker of [
+  "Builderを開く",
+  "DEVELOPMENT ONLY",
+  "Dashboard Builder",
+  "/__dashlet/dashboard",
+]) {
   if (html.includes(marker)) {
     throw new Error(`Development-only marker found: ${marker}`);
   }
