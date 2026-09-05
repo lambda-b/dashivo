@@ -23,6 +23,9 @@
         "mosapride.zenkaku",
         "oderwat.indent-rainbow",
         "openai.chatgpt",
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
         "qcz.text-power-tools",
         "shardulm94.trailing-spaces",
         "streetsidesoftware.code-spell-checker",
@@ -45,6 +48,14 @@
         "oxc.lint.run": "onType",
         "[markdown]": {
           "editor.defaultFormatter": "oxc.oxc-vscode"
+        },
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+          }
         }
       }
     }

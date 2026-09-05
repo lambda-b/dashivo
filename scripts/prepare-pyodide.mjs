@@ -11,13 +11,13 @@ const lock = JSON.parse(await fs.readFile(path.join(pyodideRoot, "pyodide-lock.j
 const requestedPackages = ["numpy", "pandas"];
 const packageNames = new Set();
 
-function collectPackage(name) {
+const collectPackage = (name) => {
   if (packageNames.has(name)) return;
   const entry = lock.packages[name];
   if (!entry) throw new Error(`Pyodide package not found in lockfile: ${name}`);
   packageNames.add(name);
   for (const dependency of entry.depends ?? []) collectPackage(dependency);
-}
+};
 
 for (const name of requestedPackages) collectPackage(name);
 
@@ -63,3 +63,17 @@ await fs.writeFile(
   path.join(cacheRoot, "manifest.json"),
   `${JSON.stringify({ pyodideVersion: packageJson.version, files }, null, 2)}\n`,
 );
+
+const embeddedAssets = Object.fromEntries(
+  await Promise.all(
+    files.map(async (file) => [
+      file,
+      (await fs.readFile(path.join(cacheRoot, file))).toString("base64"),
+    ]),
+  ),
+);
+await fs.writeFile(
+  path.join(cacheRoot, "assets.ts"),
+  `export const embeddedAssets: Readonly<Record<string, string>> = ${JSON.stringify(embeddedAssets)};\n`,
+);
+await fs.rm(path.join(cacheRoot, "assets.json"), { force: true });

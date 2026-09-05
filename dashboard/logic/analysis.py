@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def execute(params):
-    frame = pd.read_csv(io.StringIO(params["csv"]))
+    frame = pd.read_csv(io.StringIO(params["source_data"]))
     region = params.get("region", "All")
     if region != "All":
         frame = frame[frame["region"] == region]
@@ -25,8 +25,8 @@ def execute(params):
             "pandas": pd.__version__,
             "numpy": np.__version__,
         },
-        "summary": summary.to_dict(orient="records"),
-        "totals": {
+        "datasets": {"summary": summary.to_dict(orient="records")},
+        "metrics": {
             "revenue": int(summary["revenue"].sum()),
             "orders": int(summary["orders"].sum()),
         },

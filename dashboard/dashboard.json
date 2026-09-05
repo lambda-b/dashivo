@@ -1,0 +1,42 @@
+{
+  "title": "Sales pulse",
+  "description": "地域別の売上と注文状況を、ブラウザ内Pythonで集計します。",
+  "controls": [
+    {
+      "type": "radio",
+      "key": "region",
+      "label": "営業地域",
+      "defaultValue": "All",
+      "options": [
+        { "label": "すべて", "value": "All" },
+        { "label": "East", "value": "East" },
+        { "label": "West", "value": "West" }
+      ]
+    }
+  ],
+  "visualizations": [
+    {
+      "type": "line",
+      "title": "月次売上",
+      "dataset": "summary",
+      "x": "date",
+      "y": ["revenue"]
+    }
+  ],
+  "tables": [
+    {
+      "title": "月次サマリー",
+      "dataset": "summary",
+      "columns": [
+        { "key": "date", "label": "月" },
+        { "key": "revenue", "label": "売上", "format": "currency" },
+        { "key": "orders", "label": "注文件数", "format": "number" },
+        {
+          "key": "average_order_value",
+          "label": "平均注文額",
+          "format": "currency"
+        }
+      ]
+    }
+  ]
+}

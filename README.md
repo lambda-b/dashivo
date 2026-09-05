@@ -1,6 +1,6 @@
 # Dashlet
 
-Pythonによるデータ分析とReactのUIを、ネットワーク接続なしで直接開ける単一HTMLへまとめるダッシュボード基盤です。現在はプロジェクト計画のPhase 1（技術検証）を実装しています。
+Pythonによるデータ分析とReactのUIを、ネットワーク接続なしで直接開ける単一HTMLへまとめるダッシュボード基盤です。現在はプロジェクト計画のPhase 2（Vertical Slice）を実装しています。
 
 ## 前提条件
 
@@ -51,11 +51,19 @@ pnpm test:e2e
 
 ```
 .
-├─ dashboard/         # 埋め込むPython分析とCSV
+├─ dashboard/
+│  ├─ data/raw/       # ビルドへ埋め込むソースデータ
+│  ├─ logic/          # Python集計ロジック
+│  └─ dashboard.json  # UIとデータBindingのSchema
 ├─ scripts/           # Pyodide asset収集
 ├─ src/               # React UIとPython Worker
+├─ vite/
+│  ├─ plugins/        # Dashlet固有のVite plugin
+│  └─ virtual/        # serve/buildで差し替えるvirtual module実装
 ├─ work/              # プロジェクト計画（Git管理外）
 └─ vite.config.ts     # 単一HTML packaging
 ```
 
-Pythonの分析処理は `dashboard/analysis.py` の `execute(params)` に記述します。CSVとPython sourceはいずれもビルド時にHTMLへ埋め込まれます。
+Pythonの分析処理は `dashboard/logic/analysis.py` の `execute(params)` に記述します。`dashboard/data/raw/` のCSVとPython sourceはいずれもビルド時にHTMLへ埋め込まれます。
+
+`src/` 内のimportは `@/` を起点にします。Pyodideはdevでは配布ファイルを動的に読み込み、buildでは `virtual:dashlet/pyodide-runtime` を埋め込み実装へ差し替えます。

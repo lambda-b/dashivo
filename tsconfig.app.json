@@ -4,7 +4,8 @@
     "target": "ES2023",
     "useDefineForClassFields": true,
     "lib": ["ES2023", "DOM", "DOM.Iterable", "WebWorker"],
-    "allowJs": false,
+    "allowJs": true,
+    "maxNodeModuleJsDepth": 1,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -12,10 +13,17 @@
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "paths": {
+      "@/*": ["./src/*"],
+      "#dashboard/*": ["./dashboard/*"],
+      "#generated/*": ["./.pyodide-cache/*"],
+      "virtual:dashlet/pyodide-runtime": ["./vite/virtual/pyodide-runtime/development.ts"]
+    },
     "resolveJsonModule": true,
+    "types": ["vite/client"],
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src"]
+  "include": ["src", "vite/virtual"]
 }

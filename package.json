@@ -9,20 +9,28 @@
     "prepare:pyodide": "node scripts/prepare-pyodide.mjs",
     "build": "pnpm prepare:pyodide && tsc -b && vite build",
     "lint": "oxlint .",
-    "format": "oxfmt --write package.json tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts playwright.config.ts index.html dashboard.html .devcontainer src scripts dashboard tests",
-    "format:check": "oxfmt --check package.json tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts playwright.config.ts index.html dashboard.html .devcontainer src scripts dashboard tests",
+    "format": "oxfmt --write package.json .oxlintrc.json tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts playwright.config.ts index.html .devcontainer src scripts vite dashboard tests",
+    "format:check": "oxfmt --check package.json .oxlintrc.json tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts playwright.config.ts index.html .devcontainer src scripts vite dashboard tests",
+    "precheck": "pnpm prepare:pyodide",
     "check": "pnpm lint && pnpm format:check && tsc -b",
     "test:bundle": "node scripts/verify-bundle.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@tanstack/react-query": "5.102.8",
+    "@tanstack/react-table": "9.2.4",
     "@vitejs/plugin-react": "6.1.1",
     "clsx": "2.1.1",
+    "comlink": "4.4.2",
     "pyodide": "314.0.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "recharts": "3.10.1",
+    "tailwindcss": "4.3.3",
     "vite": "8.2.2",
-    "vite-plugin-singlefile": "2.3.3"
+    "vite-plugin-singlefile": "2.3.3",
+    "zod": "4.5.4"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
