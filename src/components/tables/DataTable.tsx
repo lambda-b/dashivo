@@ -13,13 +13,13 @@ export const DataTable = ({ definition, data }: DataTableProps) => {
   const table = useTable({ features: tableAdapterFeatures, columns, data });
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-stone-300 bg-white/70">
+    <section className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
       <div className="border-b border-stone-200 p-6">
         <p className="mb-2 text-xs font-bold tracking-[0.15em] text-stone-500">TANSTACK TABLE</p>
         <h2 className="text-2xl font-bold tracking-tight">{definition.title}</h2>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full min-w-[40rem] border-collapse">
           <thead>
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>

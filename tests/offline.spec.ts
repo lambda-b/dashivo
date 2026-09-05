@@ -23,6 +23,7 @@ test("runs pandas and NumPy from a standalone file", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "月次サマリー" })).toBeVisible();
   await expect(page.locator(".recharts-wrapper")).toBeVisible();
 
+  await page.getByRole("button", { name: /絞り込み/ }).click();
   await page.getByRole("button", { name: "West" }).click();
   await expect(page.getByText("￥335,000")).toBeVisible({ timeout: 120_000 });
   expect(networkRequests).toEqual([]);
