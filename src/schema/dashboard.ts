@@ -9,6 +9,11 @@ const radioControlSchema = z
     defaultValue: z.string(),
     options: z.array(optionSchema).min(1),
   })
+  .refine(
+    (control) =>
+      new Set(control.options.map((option) => option.value)).size === control.options.length,
+    { message: "option values must be unique", path: ["options"] },
+  )
   .refine((control) => control.options.some((option) => option.value === control.defaultValue), {
     message: "defaultValue must match one of the control options",
     path: ["defaultValue"],

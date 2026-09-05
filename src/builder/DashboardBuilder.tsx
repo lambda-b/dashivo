@@ -1,14 +1,13 @@
-import { useState, type ReactNode } from "react";
-import { parseDashboardJson, serializeDashboard } from "@/builder/schema";
-import type { DashboardSchema } from "@/schema/dashboard";
+import { useReducer, useState, type ReactNode } from "react";
+import { ControlEditor } from "@/builder/ControlEditor";
+import { serializeDashboard } from "@/builder/schema";
+import { builderReducer, createBuilderState } from "@/builder/state";
+import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
 
 interface DashboardBuilderProps {
   initialDashboard: DashboardSchema;
   children: (dashboard: DashboardSchema, revision: number) => ReactNode;
 }
-
-const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : "Dashboard Schemaを読み込めませんでした。";
 
 const downloadDashboard = (dashboard: DashboardSchema) => {
   const url = URL.createObjectURL(
@@ -23,47 +22,57 @@ const downloadDashboard = (dashboard: DashboardSchema) => {
   URL.revokeObjectURL(url);
 };
 
+const createControlKey = (dashboard: DashboardSchema) => {
+  const keys = new Set(dashboard.controls.map((control) => control.key));
+  let index = dashboard.controls.length + 1;
+  while (keys.has(`control_${index}`)) index += 1;
+  return `control_${index}`;
+};
+
 export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilderProps) => {
-  const initialSource = serializeDashboard(initialDashboard);
-  const [dashboard, setDashboard] = useState(initialDashboard);
-  const [source, setSource] = useState(initialSource);
-  const [revision, setRevision] = useState(0);
+  const [state, dispatch] = useReducer(builderReducer, initialDashboard, createBuilderState);
   const [isOpen, setIsOpen] = useState(false);
-  const [error, setError] = useState<string>();
 
-  const applySource = () => {
-    try {
-      const nextDashboard = parseDashboardJson(source);
-      setDashboard(nextDashboard);
-      setSource(serializeDashboard(nextDashboard));
-      setRevision((current) => current + 1);
-      setError(undefined);
-    } catch (nextError) {
-      setError(getErrorMessage(nextError));
+  const editDashboard = (dashboard: DashboardSchema) => dispatch({ type: "edit", dashboard });
+
+  const applyDraft = () => {
+    const result = dashboardSchema.safeParse(state.draft);
+    if (!result.success) {
+      dispatch({ type: "error", message: result.error.message });
+      return;
     }
+    dispatch({ type: "apply", dashboard: result.data });
   };
 
-  const resetSource = () => {
-    setDashboard(initialDashboard);
-    setSource(initialSource);
-    setRevision((current) => current + 1);
-    setError(undefined);
+  const saveDraft = () => {
+    const result = dashboardSchema.safeParse(state.draft);
+    if (!result.success) {
+      dispatch({ type: "error", message: result.error.message });
+      return;
+    }
+    downloadDashboard(result.data);
   };
 
-  const saveSource = () => {
-    try {
-      const nextDashboard = parseDashboardJson(source);
-      setSource(serializeDashboard(nextDashboard));
-      setError(undefined);
-      downloadDashboard(nextDashboard);
-    } catch (nextError) {
-      setError(getErrorMessage(nextError));
-    }
+  const addRadioControl = () => {
+    const key = createControlKey(state.draft);
+    editDashboard({
+      ...state.draft,
+      controls: [
+        ...state.draft.controls,
+        {
+          type: "radio",
+          key,
+          label: "新しい条件",
+          defaultValue: "option-1",
+          options: [{ label: "選択肢1", value: "option-1" }],
+        },
+      ],
+    });
   };
 
   return (
     <>
-      {children(dashboard, revision)}
+      {children(state.dashboard, state.revision)}
 
       {isOpen ? (
         <aside
@@ -77,7 +86,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
               </p>
               <h2 className="mt-1 text-xl font-bold">Dashboard Builder</h2>
               <p className="mt-1 text-xs leading-5 text-stone-500">
-                Schemaを検証してプレビューへ反映します。
+                設定を検証してプレビューへ反映します。
               </p>
             </div>
             <button
@@ -90,23 +99,85 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
             </button>
           </header>
 
-          <div className="flex min-h-0 flex-1 flex-col p-5">
-            <label className="mb-2 text-xs font-semibold text-stone-600" htmlFor="dashboard-schema">
-              dashboard.json
-            </label>
-            <textarea
-              className="min-h-0 flex-1 resize-none rounded-lg border border-stone-300 bg-stone-950 p-4 font-mono text-xs leading-5 text-stone-100 outline-none focus:border-[#7248b9] focus:ring-2 focus:ring-[#7248b9]/20"
-              id="dashboard-schema"
-              onChange={(event) => setSource(event.target.value)}
-              spellCheck={false}
-              value={source}
-            />
-            {error && (
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
+            <section>
+              <h3 className="mb-3 text-sm font-bold">基本設定</h3>
+              <div className="grid gap-3">
+                <label className="text-xs font-medium text-stone-600">
+                  タイトル
+                  <input
+                    className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#7248b9]"
+                    onChange={(event) =>
+                      editDashboard({ ...state.draft, title: event.target.value })
+                    }
+                    value={state.draft.title}
+                  />
+                </label>
+                <label className="text-xs font-medium text-stone-600">
+                  説明
+                  <textarea
+                    className="mt-1 min-h-20 w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#7248b9]"
+                    onChange={(event) =>
+                      editDashboard({ ...state.draft, description: event.target.value })
+                    }
+                    value={state.draft.description}
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section>
+              <div className="mb-3 flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-bold">Controls</h3>
+                  <p className="mt-1 text-xs text-stone-500">表示条件として利用する入力です。</p>
+                </div>
+                <button
+                  className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
+                  onClick={addRadioControl}
+                  type="button"
+                >
+                  Radioを追加
+                </button>
+              </div>
+
+              <div className="grid gap-3">
+                {state.draft.controls.map((control, index) => (
+                  <ControlEditor
+                    control={control}
+                    key={index}
+                    onChange={(nextControl) =>
+                      editDashboard({
+                        ...state.draft,
+                        controls: state.draft.controls.map((current, controlIndex) =>
+                          controlIndex === index ? nextControl : current,
+                        ),
+                      })
+                    }
+                    onRemove={() =>
+                      editDashboard({
+                        ...state.draft,
+                        controls: state.draft.controls.filter(
+                          (_, controlIndex) => controlIndex !== index,
+                        ),
+                      })
+                    }
+                  />
+                ))}
+                {state.draft.controls.length === 0 && (
+                  <p className="rounded-lg border border-dashed border-stone-300 p-5 text-center text-xs text-stone-500">
+                    Controlはまだありません。
+                  </p>
+                )}
+              </div>
+            </section>
+
+            {state.error && (
               <pre
-                className="mt-3 max-h-32 overflow-auto whitespace-pre-wrap rounded-lg bg-red-50 p-3 text-xs text-red-800"
+                className="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-red-50 p-3 text-xs text-red-800"
                 role="alert"
               >
-                {error}
+                {state.error}
               </pre>
             )}
           </div>
@@ -115,14 +186,14 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
             <div className="flex gap-2">
               <button
                 className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
-                onClick={resetSource}
+                onClick={() => dispatch({ type: "reset", dashboard: initialDashboard })}
                 type="button"
               >
                 元に戻す
               </button>
               <button
                 className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
-                onClick={saveSource}
+                onClick={saveDraft}
                 type="button"
               >
                 JSONを保存
@@ -130,7 +201,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
             </div>
             <button
               className="cursor-pointer rounded-md bg-[#7248b9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5c359e]"
-              onClick={applySource}
+              onClick={applyDraft}
               type="button"
             >
               プレビューへ反映

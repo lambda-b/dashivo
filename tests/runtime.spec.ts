@@ -38,6 +38,24 @@ test("rejects a control default that is not in its options", () => {
   );
 });
 
+test("rejects duplicate control option values", () => {
+  const invalidDashboard = {
+    ...dashboardSource,
+    controls: [
+      {
+        ...dashboardSource.controls[0],
+        options: [
+          { label: "First", value: "duplicate" },
+          { label: "Second", value: "duplicate" },
+        ],
+        defaultValue: "duplicate",
+      },
+    ],
+  };
+
+  expect(() => dashboardSchema.parse(invalidDashboard)).toThrow("option values must be unique");
+});
+
 test("round-trips a dashboard through the builder schema editor", () => {
   const dashboard = dashboardSchema.parse(dashboardSource);
 
