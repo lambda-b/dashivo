@@ -9,53 +9,53 @@ importers:
   .:
     dependencies:
       '@tailwindcss/vite':
-        specifier: 4.3.3
+        specifier: ^4.3.3
         version: 4.3.3(vite@8.2.2(@types/node@24.3.1)(jiti@2.7.0))
       '@tanstack/react-query':
-        specifier: 5.102.8
+        specifier: ^5.102.8
         version: 5.102.8(react@19.2.8)
       '@tanstack/react-table':
-        specifier: 9.2.4
+        specifier: ^9.2.4
         version: 9.2.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@vitejs/plugin-react':
-        specifier: 6.1.1
+        specifier: ^6.1.1
         version: 6.1.1(vite@8.2.2(@types/node@24.3.1)(jiti@2.7.0))
       clsx:
-        specifier: 2.1.1
+        specifier: ^2.1.1
         version: 2.1.1
       comlink:
-        specifier: 4.4.2
+        specifier: ^4.4.2
         version: 4.4.2
       pyodide:
-        specifier: 314.0.6
+        specifier: ^314.0.6
         version: 314.0.6
       react:
-        specifier: 19.2.8
+        specifier: ^19.2.8
         version: 19.2.8
       react-dom:
-        specifier: 19.2.8
+        specifier: ^19.2.8
         version: 19.2.8(react@19.2.8)
       recharts:
-        specifier: 3.10.1
+        specifier: ^3.10.1
         version: 3.10.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)
       tailwindcss:
-        specifier: 4.3.3
+        specifier: ^4.3.3
         version: 4.3.3
       vite:
-        specifier: 8.2.2
+        specifier: ^8.2.2
         version: 8.2.2(@types/node@24.3.1)(jiti@2.7.0)
       vite-plugin-singlefile:
-        specifier: 2.3.3
+        specifier: ^2.3.3
         version: 2.3.3(vite@8.2.2(@types/node@24.3.1)(jiti@2.7.0))
       zod:
-        specifier: 4.5.4
+        specifier: ^4.5.4
         version: 4.5.4
     devDependencies:
       '@playwright/test':
-        specifier: 1.63.0
+        specifier: ^1.63.0
         version: 1.63.0
       '@types/node':
-        specifier: 24.3.1
+        specifier: ^24.3.1
         version: 24.3.1
       '@types/react':
         specifier: ^19.2.18
@@ -64,16 +64,16 @@ importers:
         specifier: ^19.2.7
         version: 19.2.7(@types/react@19.2.18)
       oxfmt:
-        specifier: 0.66.0
+        specifier: ^0.66.0
         version: 0.66.0
       oxlint:
-        specifier: 1.81.0
+        specifier: ^1.81.0
         version: 1.81.0
       typescript:
-        specifier: 7.0.2
+        specifier: ^7.0.2
         version: 7.0.2
       vite-plugin-static-copy:
-        specifier: 4.1.1
+        specifier: ^4.1.1
         version: 4.1.1(vite@8.2.2(@types/node@24.3.1)(jiti@2.7.0))
 
 packages:
