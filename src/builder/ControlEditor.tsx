@@ -60,7 +60,7 @@ export const ControlEditor = ({ control, onChange, onRemove }: ControlEditorProp
         <label className="text-xs font-medium text-stone-600">
           キー
           <input
-            className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#7248b9]"
+            className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
             onChange={(event) => onChange({ ...control, key: event.target.value })}
             value={control.key}
           />
@@ -68,7 +68,7 @@ export const ControlEditor = ({ control, onChange, onRemove }: ControlEditorProp
         <label className="text-xs font-medium text-stone-600">
           ラベル
           <input
-            className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#7248b9]"
+            className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
             onChange={(event) => onChange({ ...control, label: event.target.value })}
             value={control.label}
           />
@@ -81,13 +81,13 @@ export const ControlEditor = ({ control, onChange, onRemove }: ControlEditorProp
           <div className="grid grid-cols-[1fr_1fr_auto] gap-2" key={index}>
             <input
               aria-label={`選択肢${index + 1}のラベル`}
-              className="min-w-0 rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#7248b9]"
+              className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
               onChange={(event) => updateOption(index, "label", event.target.value)}
               value={option.label}
             />
             <input
               aria-label={`選択肢${index + 1}の値`}
-              className="min-w-0 rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none focus:border-[#7248b9]"
+              className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
               onChange={(event) => updateOption(index, "value", event.target.value)}
               value={option.value}
             />
@@ -114,7 +114,7 @@ export const ControlEditor = ({ control, onChange, onRemove }: ControlEditorProp
       <label className="mt-4 block text-xs font-medium text-stone-600">
         初期値
         <select
-          className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#7248b9]"
+          className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none"
           onChange={(event) => onChange({ ...control, defaultValue: event.target.value })}
           value={control.defaultValue}
         >

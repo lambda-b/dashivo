@@ -81,7 +81,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
         >
           <header className="flex items-start justify-between gap-6 border-b border-stone-200 p-5">
             <div>
-              <p className="text-[0.6875rem] font-bold tracking-[0.16em] text-[#7248b9]">
+              <p className="text-brand text-[0.6875rem] font-bold tracking-[0.16em]">
                 DEVELOPMENT ONLY
               </p>
               <h2 className="mt-1 text-xl font-bold">Dashboard Builder</h2>
@@ -106,7 +106,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
                 <label className="text-xs font-medium text-stone-600">
                   タイトル
                   <input
-                    className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#7248b9]"
+                    className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
                     onChange={(event) =>
                       editDashboard({ ...state.draft, title: event.target.value })
                     }
@@ -116,7 +116,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
                 <label className="text-xs font-medium text-stone-600">
                   説明
                   <textarea
-                    className="mt-1 min-h-20 w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-[#7248b9]"
+                    className="focus:border-brand mt-1 min-h-20 w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
                     onChange={(event) =>
                       editDashboard({ ...state.draft, description: event.target.value })
                     }
@@ -200,7 +200,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
               </button>
             </div>
             <button
-              className="cursor-pointer rounded-md bg-[#7248b9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5c359e]"
+              className="bg-brand hover:bg-brand-dark cursor-pointer rounded-md px-4 py-2 text-sm font-semibold text-white"
               onClick={applyDraft}
               type="button"
             >
@@ -210,7 +210,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
         </aside>
       ) : (
         <button
-          className="fixed right-5 bottom-5 z-50 cursor-pointer rounded-full bg-[#7248b9] px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-[#5c359e]"
+          className="bg-brand hover:bg-brand-dark fixed right-5 bottom-5 z-50 cursor-pointer rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg"
           onClick={() => setIsOpen(true)}
           type="button"
         >

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand: #ca2420;
+  --color-brand-dark: #981614;
+  --color-brand-soft: #fff7f7;
+}
+
 @layer base {
   :root {
     color: #17201d;

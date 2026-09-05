@@ -20,9 +20,9 @@ export const LineChartAdapter = ({ definition, data }: ChartAdapterProps) => (
         <Line
           dataKey={key}
           key={key}
-          stroke="#1f7655"
+          stroke="var(--color-brand)"
           strokeWidth={3}
-          dot={{ r: 4, fill: "#1f7655" }}
+          dot={{ r: 4, fill: "var(--color-brand)" }}
         />
       ))}
     </LineChart>

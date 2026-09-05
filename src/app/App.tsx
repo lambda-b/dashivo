@@ -60,10 +60,10 @@ const Dashboard = ({ dashboard }: { dashboard: DashboardSchema }) => {
         <div className="mx-auto flex max-w-7xl items-start justify-between gap-6 max-sm:flex-col">
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <span className="grid size-7 place-items-center rounded-md bg-[#7248b9] text-[0.625rem] font-black text-white">
+              <span className="bg-brand grid size-7 place-items-center rounded-md text-[0.625rem] font-black text-white">
                 D
               </span>
-              <p className="text-[0.6875rem] font-bold tracking-[0.16em] text-[#7248b9]">
+              <p className="text-brand text-[0.6875rem] font-bold tracking-[0.16em]">
                 DASHLET{import.meta.env.DEV && " · BUILDER PREVIEW"}
               </p>
             </div>
@@ -181,8 +181,8 @@ const Dashboard = ({ dashboard }: { dashboard: DashboardSchema }) => {
                       {currency.format(analysis.data.metrics.revenue)}
                     </strong>
                   </article>
-                  <article className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
-                    <span className="text-xs font-medium uppercase tracking-wide text-emerald-800/55">
+                  <article className="border-brand/20 bg-brand-soft flex flex-col gap-2 rounded-xl border p-5 shadow-sm">
+                    <span className="text-brand-dark/60 text-xs font-medium uppercase tracking-wide">
                       注文件数
                     </span>
                     <strong className="text-3xl tracking-tight">

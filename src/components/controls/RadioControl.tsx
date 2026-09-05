@@ -16,7 +16,7 @@ export const RadioControl = ({ control, value, onChange }: RadioControlProps) =>
           aria-pressed={value === option.value}
           className={clsx(
             "cursor-pointer rounded-md px-3 py-2 text-left text-sm text-stone-500 transition hover:bg-white hover:text-stone-800 max-lg:text-center",
-            value === option.value && "bg-white text-[#5c359e] shadow-sm",
+            value === option.value && "text-brand-dark bg-white shadow-sm",
           )}
           key={option.value}
           onClick={() => onChange(option.value)}
