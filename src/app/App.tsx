@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useState } from "react";
+import { DashboardBuilder } from "@/builder/DashboardBuilder";
 import { ChartPanel } from "@/components/charts/ChartPanel";
 import { ControlPanel } from "@/components/controls/ControlPanel";
 import { DataTable } from "@/components/tables/DataTable";
+import { validateDatasetBindings } from "@/runtime/bindings";
 import { executeAnalysis } from "@/runtime/python-worker";
 import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
 import dashboardSource from "#dashboard/dashboard.json";
@@ -28,6 +30,14 @@ const App = () => {
       </main>
     );
   }
+  if (import.meta.env.DEV) {
+    return (
+      <DashboardBuilder initialDashboard={dashboardResult.data}>
+        {(dashboard, revision) => <Dashboard dashboard={dashboard} key={revision} />}
+      </DashboardBuilder>
+    );
+  }
+
   return <Dashboard dashboard={dashboardResult.data} />;
 };
 
@@ -38,7 +48,8 @@ const Dashboard = ({ dashboard }: { dashboard: DashboardSchema }) => {
   );
   const analysis = useQuery({
     queryKey: ["analysis", params],
-    queryFn: () => executeAnalysis(dashboard, params),
+    queryFn: () => executeAnalysis(params),
+    select: (result) => validateDatasetBindings(dashboard, result),
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
   });
@@ -53,7 +64,7 @@ const Dashboard = ({ dashboard }: { dashboard: DashboardSchema }) => {
                 D
               </span>
               <p className="text-[0.6875rem] font-bold tracking-[0.16em] text-[#7248b9]">
-                DASHLET · PHASE 3
+                DASHLET{import.meta.env.DEV && " · BUILDER PREVIEW"}
               </p>
             </div>
             <h1 className="text-3xl font-bold tracking-[-0.035em] sm:text-4xl">

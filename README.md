@@ -1,6 +1,6 @@
 # Dashlet
 
-Pythonによるデータ分析とReactのUIを、ネットワーク接続なしで直接開ける単一HTMLへまとめるダッシュボード基盤です。現在はプロジェクト計画のPhase 2（Vertical Slice）を実装しています。
+Pythonによるデータ分析とReactのUIを、ネットワーク接続なしで直接開ける単一HTMLへまとめるダッシュボード基盤です。現在はプロジェクト計画のPhase 4（Builder）を実装しています。
 
 ## 前提条件
 
@@ -25,6 +25,8 @@ Pythonによるデータ分析とReactのUIを、ネットワーク接続なし�
    ```
 
    Viteは `0.0.0.0:3030` で待ち受けます。Dev Container外からは `http://localhost:3030` を開いてください。
+
+   開発画面右下の「Builderを開く」から `dashboard.json` を編集できます。Zodによる検証に成功したSchemaだけがプレビューへ反映され、編集結果はJSONとして保存できます。Builderは開発時専用で、本番成果物には含まれません。
 
 ## ビルド
 

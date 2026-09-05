@@ -21,4 +21,10 @@ for (const marker of ["numpy-2.4.6", "pandas-3.0.2", "python_stdlib.zip", "pyodi
   }
 }
 
+for (const marker of ["Builderを開く", "DEVELOPMENT ONLY", "Dashboard Builder"]) {
+  if (html.includes(marker)) {
+    throw new Error(`Development-only marker found: ${marker}`);
+  }
+}
+
 process.stdout.write(`Verified standalone ${files[0]} (${html.length} bytes).\n`);
