@@ -6,7 +6,7 @@ import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
 
 interface DashboardBuilderProps {
   initialDashboard: DashboardSchema;
-  children: (dashboard: DashboardSchema, revision: number) => ReactNode;
+  children: (dashboard: DashboardSchema, revision: number, openBuilder: () => void) => ReactNode;
 }
 
 const createControlKey = (dashboard: DashboardSchema) => {
@@ -68,7 +68,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
 
   return (
     <>
-      {children(state.dashboard, state.revision)}
+      {children(state.dashboard, state.revision, () => setIsOpen(true))}
 
       {isOpen ? (
         <aside
@@ -208,15 +208,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
             </button>
           </footer>
         </aside>
-      ) : (
-        <button
-          className="bg-brand hover:bg-brand-dark fixed right-5 bottom-5 z-50 cursor-pointer rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg"
-          onClick={() => setIsOpen(true)}
-          type="button"
-        >
-          Builderを開く
-        </button>
-      )}
+      ) : null}
     </>
   );
 };

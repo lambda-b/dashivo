@@ -1,6 +1,6 @@
 import { useTable } from "@tanstack/react-table";
 import { useMemo } from "react";
-import { createTableColumns, tableAdapterFeatures } from "@/components/tables/adapter";
+import { createTableColumns, tableAdapterFeatures } from "@/components/contents/table/adapter";
 import type { DataRow, TableDefinition } from "@/schema/dashboard";
 
 interface DataTableProps {

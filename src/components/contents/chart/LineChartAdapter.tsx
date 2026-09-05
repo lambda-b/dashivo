@@ -7,7 +7,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { ChartAdapterProps } from "@/components/charts/types";
+import type { ChartAdapterProps } from "@/components/contents/chart/types";
 
 export const LineChartAdapter = ({ definition, data }: ChartAdapterProps) => (
   <ResponsiveContainer width="100%" height="100%">

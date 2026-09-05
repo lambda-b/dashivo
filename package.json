@@ -14,6 +14,7 @@
     "precheck": "pnpm prepare:pyodide",
     "check": "pnpm lint && pnpm format:check && tsc -b",
     "test:bundle": "node scripts/verify-bundle.mjs",
+    "pretest:e2e": "pnpm build",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "pyodide": "^314.0.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.3",
     "recharts": "^3.10.1",
     "tailwindcss": "^4.3.3",
     "vite": "^8.2.2",

@@ -7,7 +7,7 @@ test("builds, validates, and exports dashboard controls in development", async (
     await route.fulfill({ json: { dashboard: savedDashboard } });
   });
   await page.goto("http://127.0.0.1:3030");
-  await page.getByRole("button", { name: "Builderを開く" }).click();
+  await page.getByRole("complementary").getByRole("button", { name: "Controlを編集" }).click();
 
   await page.getByLabel("タイトル").fill("Builder preview");
   await page.getByRole("button", { name: "Radioを追加" }).click();
@@ -24,6 +24,5 @@ test("builds, validates, and exports dashboard controls in development", async (
   await expect(page.getByRole("alert")).toBeVisible();
 
   await page.getByRole("button", { name: "Builderを閉じる" }).click();
-  await page.getByRole("button", { name: "絞り込みを表示" }).click();
   await expect(page.getByText("新しい条件")).toBeVisible();
 });

@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
-import { LineChartAdapter } from "@/components/charts/LineChartAdapter";
-import type { ChartAdapterProps } from "@/components/charts/types";
+import { LineChartAdapter } from "@/components/contents/chart/LineChartAdapter";
+import type { ChartAdapterProps } from "@/components/contents/chart/types";
 import type { DataRow, VisualizationDefinition } from "@/schema/dashboard";
 
 const chartCatalog = {
