@@ -17,7 +17,7 @@
       "@/*": ["./src/*"],
       "#dashboard/*": ["./dashboard/*"],
       "#generated/*": ["./.pyodide-cache/*"],
-      "virtual:dashlet/pyodide-runtime": ["./vite/virtual/pyodide-runtime/development.ts"]
+      "virtual:*": ["./vite/virtual/*/development.ts"]
     },
     "resolveJsonModule": true,
     "types": ["vite/client"],

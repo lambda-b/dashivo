@@ -37,7 +37,7 @@ const Dashboard = ({ dashboard }: { dashboard: DashboardSchema }) => {
   );
   const analysis = useQuery({
     queryKey: ["analysis", params],
-    queryFn: () => executeAnalysis(params),
+    queryFn: () => executeAnalysis(dashboard, params),
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
   });
@@ -47,7 +47,7 @@ const Dashboard = ({ dashboard }: { dashboard: DashboardSchema }) => {
       <header className="mb-12 flex items-start justify-between gap-8 max-sm:flex-col">
         <div>
           <p className="mb-2 text-xs font-bold tracking-[0.15em] text-stone-500">
-            PHASE 2 · VERTICAL SLICE
+            PHASE 3 · RUNTIME
           </p>
           <h1 className="text-7xl font-bold tracking-[-0.06em] max-sm:text-5xl">
             {dashboard.title}

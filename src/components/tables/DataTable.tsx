@@ -1,20 +1,7 @@
-import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table";
+import { useTable } from "@tanstack/react-table";
 import { useMemo } from "react";
+import { createTableColumns, tableAdapterFeatures } from "@/components/tables/adapter";
 import type { DataRow, TableDefinition } from "@/schema/dashboard";
-
-const features = tableFeatures({});
-const columnHelper = createColumnHelper<typeof features, DataRow>();
-const currency = new Intl.NumberFormat("ja-JP", {
-  style: "currency",
-  currency: "JPY",
-  maximumFractionDigits: 0,
-});
-
-const formatValue = (value: unknown, format?: "currency" | "number") => {
-  if (typeof value !== "number") return String(value ?? "");
-  if (format === "currency") return currency.format(value);
-  return value.toLocaleString("ja-JP");
-};
 
 interface DataTableProps {
   definition: TableDefinition;
@@ -22,20 +9,8 @@ interface DataTableProps {
 }
 
 export const DataTable = ({ definition, data }: DataTableProps) => {
-  const columns = useMemo(
-    () =>
-      columnHelper.columns(
-        definition.columns.map((column) =>
-          columnHelper.accessor((row) => row[column.key], {
-            id: column.key,
-            header: column.label,
-            cell: (context) => formatValue(context.getValue(), column.format),
-          }),
-        ),
-      ),
-    [definition.columns],
-  );
-  const table = useTable({ features, columns, data });
+  const columns = useMemo(() => createTableColumns(definition), [definition]);
+  const table = useTable({ features: tableAdapterFeatures, columns, data });
 
   return (
     <section className="overflow-hidden rounded-2xl border border-stone-300 bg-white/70">
