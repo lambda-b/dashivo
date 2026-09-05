@@ -6,23 +6,27 @@ import sourceData from "#dashboard/data/raw/sales.csv?raw";
 import analysisSource from "#dashboard/logic/analysis.py?raw";
 import { initializePyodide } from "virtual:dashlet/pyodide-runtime";
 
-const pyodidePromise = initializePyodide().then(async (pyodide) => {
-  await pyodide.loadPackage(["numpy", "pandas"]);
-  return pyodide;
+const pythonRuntimePromise = initializePyodide().then(async (pyodide) => {
+  await pyodide.loadPackagesFromImports(analysisSource);
+  pyodide.FS.writeFile("/home/pyodide/analysis.py", analysisSource);
+  return { pyodide, analysis: pyodide.pyimport("analysis") };
 });
 
 const api: PythonWorkerApi = {
   execute: async (params) => {
-    const pyodide = await pyodidePromise;
-    pyodide.globals.set("__dashlet_analysis", analysisSource);
-    pyodide.globals.set("__dashlet_params", JSON.stringify({ ...params, source_data: sourceData }));
-    const json = await pyodide.runPythonAsync(`
-import json
-_dashlet_scope = {}
-exec(__dashlet_analysis, _dashlet_scope)
-json.dumps(_dashlet_scope["execute"](json.loads(__dashlet_params)))
-`);
-    return JSON.parse(json);
+    const { pyodide, analysis } = await pythonRuntimePromise;
+    const pythonParams = pyodide.toPy({ ...params, source_data: sourceData });
+
+    try {
+      const pythonResult = analysis.execute(pythonParams);
+      try {
+        return pythonResult.toJs({ dict_converter: Object.fromEntries });
+      } finally {
+        pythonResult.destroy();
+      }
+    } finally {
+      pythonParams.destroy();
+    }
   },
 };
 

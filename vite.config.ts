@@ -19,7 +19,7 @@ export default defineConfig(({ command }) => ({
     react(),
     tailwindcss(),
     pyodideRuntime(projectRoot, command),
-    pyodideAssets(projectRoot),
+    command === "serve" && pyodideAssets(projectRoot),
     viteSingleFile(),
     dashboardOutput(projectRoot),
   ],
