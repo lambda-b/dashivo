@@ -1,0 +1,57 @@
+{
+  "name": "dashlet",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "VARIANT": "jammy",
+      "NODE_VERSION": "24.13.0",
+      "PLAYWRIGHT_VERSION": "1.63.0"
+    }
+  },
+  // Codex の状態はプロジェクト内に保持し、認証情報はホスト側のものを利用する
+  "initializeCommand": "mkdir -p .codex-local \"${HOME}/.codex\" && if [ ! -f \"${HOME}/.codex/auth.json\" ]; then printf '{}\\n' > \"${HOME}/.codex/auth.json\"; fi",
+  "mounts": [
+    "source=${localWorkspaceFolder}/.codex-local,target=/home/vscode/.codex,type=bind",
+    "source=${localEnv:HOME}/.codex/auth.json,target=/home/vscode/.codex/auth.json,type=bind"
+  ],
+  // 追加する拡張機能のIDを入力
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "christian-kohler.path-intellisense",
+        "eamodio.gitlens",
+        "mosapride.zenkaku",
+        "oderwat.indent-rainbow",
+        "openai.chatgpt",
+        "qcz.text-power-tools",
+        "shardulm94.trailing-spaces",
+        "streetsidesoftware.code-spell-checker",
+        "shd101wyy.markdown-preview-enhanced",
+        "Vue.volar",
+        "antfu.slidev",
+        "unifiedjs.vscode-mdx",
+        "oxc.oxc-vscode"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "oxc.oxc-vscode",
+        "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "file",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.oxc": "always"
+        },
+        "oxc.enable.oxfmt": true,
+        "oxc.enable.oxlint": true,
+        "oxc.fixKind": "safe_fix",
+        "oxc.lint.run": "onType",
+        "[markdown]": {
+          "editor.defaultFormatter": "oxc.oxc-vscode"
+        }
+      }
+    }
+  },
+  // コンテナのフォワードポートの設定
+  "forwardPorts": [3030],
+  // この設定をしないと、コンテナのデフォルトユーザーがrootとなり不都合が多いので必須。
+  // non-root user などで調べるとより詳しくわかります。
+  "remoteUser": "vscode"
+}

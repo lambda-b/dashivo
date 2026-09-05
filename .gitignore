@@ -1,0 +1,51 @@
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== VSCode =====
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ===== Environment =====
+.env
+.env.*
+
+# ===== Node.js =====
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+build/
+
+# ===== Rust =====
+target/
+
+# ===== Java / Kotlin =====
+.gradle/
+build/
+*.log
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+.venv/
+
+# ===== Docker =====
+*.tar
+
+# ===== Misc =====
+coverage/
+playwright-report/
+test-results/
+.cache/
+.pyodide-cache/
+.idea/
+*.swp
+
+# ===== custom =====
+work
+.codex-local/
