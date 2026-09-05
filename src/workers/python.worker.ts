@@ -1,5 +1,3 @@
-/// <reference lib="webworker" />
-
 import { expose } from "comlink";
 import type { PythonWorkerApi } from "@/workers/api";
 import sourceData from "#dashboard/data/raw/sales.csv?raw";
@@ -15,18 +13,13 @@ const pythonRuntimePromise = initializePyodide().then(async (pyodide) => {
 const api: PythonWorkerApi = {
   execute: async (params) => {
     const { pyodide, analysis } = await pythonRuntimePromise;
-    const pythonParams = pyodide.toPy({ ...params, source_data: sourceData });
+    using pythonParams = pyodide.toPy({ ...params, source_data: sourceData });
+    using pythonResult = analysis.execute(pythonParams);
 
-    try {
-      const pythonResult = analysis.execute(pythonParams);
-      try {
-        return pythonResult.toJs({ dict_converter: Object.fromEntries });
-      } finally {
-        pythonResult.destroy();
-      }
-    } finally {
-      pythonParams.destroy();
-    }
+    return pythonResult.toJs({
+      dict_converter: Object.fromEntries,
+      create_pyproxies: false,
+    });
   },
 };
 

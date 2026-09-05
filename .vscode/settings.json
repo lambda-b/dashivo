@@ -1,0 +1,21 @@
+{
+  "cSpell.words": [
+    "comlink",
+    "Dashlet",
+    "groupby",
+    "NumPy",
+    "OPFS",
+    "Pyodide",
+    "pyimport",
+    "pyproxies",
+    "singlefile"
+  ],
+  "cSpell.ignorePaths": [
+    ".pyodide-cache/**",
+    "dist/**",
+    "node_modules/**",
+    "playwright-report/**",
+    "pnpm-lock.yaml",
+    "test-results/**"
+  ]
+}
