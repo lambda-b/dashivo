@@ -22,11 +22,23 @@ test("edits, validates, and saves the dashboard configuration in development", a
   await page.getByLabel("表示名").last().fill("詳細");
   await page.getByRole("button", { name: "詳細を上へ移動" }).click();
   await page.getByRole("button", { name: "プレビューへ反映" }).click();
+  await page.getByRole("button", { name: "Builderを閉じる" }).click();
+
+  await page.getByRole("link", { name: "詳細" }).click();
+  await page.getByRole("button", { name: "詳細にコンテンツを追加" }).click();
+  await page.getByRole("button", { name: "指標" }).click();
+  await page.getByLabel("タイトル").fill("詳細注文件数");
+  await page.getByLabel("Metric key").fill("orders");
+  await page.getByRole("button", { name: "プレビューへ反映" }).click();
 
   await expect(page.getByRole("heading", { level: 1, name: "Builder preview" })).toBeVisible();
-  await page.getByRole("link", { name: "詳細" }).click();
   await expect(page).toHaveURL(/#\/details$/);
-  await expect(page.getByText("このタブにはコンテンツがありません。")).toBeVisible();
+  await expect(page.getByText("詳細注文件数")).toBeVisible();
+  await expect(page.getByText("255")).toBeVisible();
+
+  await page.getByRole("button", { name: "Builderを閉じる" }).click();
+  await page.getByRole("button", { name: "詳細注文件数を編集" }).click();
+  await expect(page.getByLabel("Metric key")).toHaveValue("orders");
 
   await page.getByRole("button", { name: "dashboard.jsonを保存" }).click();
   await expect(page.getByText("保存しました")).toBeVisible();

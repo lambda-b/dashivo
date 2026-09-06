@@ -1,9 +1,12 @@
 import { useState, type ReactNode } from "react";
+import { useContentActions } from "@/builder/hooks/useContentActions";
 import { useDashboardDraft } from "@/builder/hooks/useDashboardDraft";
 import { useParameterActions } from "@/builder/hooks/useParameterActions";
 import { useTabActions } from "@/builder/hooks/useTabActions";
-import { ControlEditor } from "@/builder/ui/ControlEditor";
-import { TabEditor } from "@/builder/ui/TabEditor";
+import { ContentsEditor } from "@/builder/editors/ContentsEditor";
+import { ControlEditor } from "@/builder/editors/ControlEditor";
+import { HeaderEditor } from "@/builder/editors/HeaderEditor";
+import { TabEditor } from "@/builder/editors/TabEditor";
 import type { DashboardSchema } from "@/schema/dashboard";
 
 interface DashboardBuilderProps {
@@ -11,13 +14,25 @@ interface DashboardBuilderProps {
   children: (
     dashboard: DashboardSchema,
     revision: number,
-    actions: { openHeader: () => void; openParameters: () => void; openTabs: () => void },
+    actions: {
+      addContent: (tabIndex: number) => void;
+      editContent: (tabIndex: number, contentIndex: number) => void;
+      openHeader: () => void;
+      openParameters: () => void;
+      openTabs: () => void;
+    },
   ) => ReactNode;
 }
 
-type BuilderSection = "header" | "parameters" | "tabs";
+type BuilderSection = "contents" | "header" | "parameters" | "tabs";
+
+interface ContentTarget {
+  contentIndex?: number;
+  tabIndex: number;
+}
 
 const sectionTitles: Record<BuilderSection, string> = {
+  contents: "コンテンツ設定",
   header: "ヘッダー設定",
   parameters: "パラメータ設定",
   tabs: "タブ設定",
@@ -26,13 +41,22 @@ const sectionTitles: Record<BuilderSection, string> = {
 export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilderProps) => {
   const { state, editDashboard, applyDraft, saveDraft, resetDraft } =
     useDashboardDraft(initialDashboard);
+  const contentActions = useContentActions(state.draft, editDashboard);
   const parameterActions = useParameterActions(state.draft, editDashboard);
   const tabActions = useTabActions(state.draft, editDashboard);
   const [section, setSection] = useState<BuilderSection>();
+  const [contentTarget, setContentTarget] = useState<ContentTarget>({ tabIndex: 0 });
+
+  const openContentEditor = (target: ContentTarget) => {
+    setContentTarget(target);
+    setSection("contents");
+  };
 
   return (
     <>
       {children(state.dashboard, state.revision, {
+        addContent: (tabIndex) => openContentEditor({ tabIndex }),
+        editContent: (tabIndex, contentIndex) => openContentEditor({ tabIndex, contentIndex }),
         openHeader: () => setSection("header"),
         openParameters: () => setSection("parameters"),
         openTabs: () => setSection("tabs"),
@@ -65,64 +89,17 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
 
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
             {section === "header" ? (
-              <section>
-                <div className="grid gap-3">
-                  <label className="text-xs font-medium text-stone-600">
-                    タイトル
-                    <input
-                      className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-                      onChange={(event) =>
-                        editDashboard({ ...state.draft, title: event.target.value })
-                      }
-                      value={state.draft.title}
-                    />
-                  </label>
-                  <label className="text-xs font-medium text-stone-600">
-                    リード文
-                    <textarea
-                      className="focus:border-brand mt-1 min-h-20 w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-                      onChange={(event) =>
-                        editDashboard({ ...state.draft, description: event.target.value })
-                      }
-                      value={state.draft.description}
-                    />
-                  </label>
-                </div>
-              </section>
+              <HeaderEditor dashboard={state.draft} onChange={editDashboard} />
             ) : section === "parameters" ? (
-              <section>
-                <div className="mb-3 flex items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-sm font-bold">Parameters</h3>
-                    <p className="mt-1 text-xs text-stone-500">
-                      画面表示ロジックへ渡す入力項目です。
-                    </p>
-                  </div>
-                  <button
-                    className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
-                    onClick={parameterActions.addRadio}
-                    type="button"
-                  >
-                    Radioを追加
-                  </button>
-                </div>
-
-                <div className="grid gap-3">
-                  {state.draft.controls.map((control, index) => (
-                    <ControlEditor
-                      control={control}
-                      key={index}
-                      onChange={(nextControl) => parameterActions.update(index, nextControl)}
-                      onRemove={() => parameterActions.remove(index)}
-                    />
-                  ))}
-                  {state.draft.controls.length === 0 && (
-                    <p className="rounded-lg border border-dashed border-stone-300 p-5 text-center text-xs text-stone-500">
-                      Parameterはまだありません。
-                    </p>
-                  )}
-                </div>
-              </section>
+              <ControlEditor actions={parameterActions} dashboard={state.draft} />
+            ) : section === "contents" ? (
+              <ContentsEditor
+                actions={contentActions}
+                contentIndex={contentTarget.contentIndex}
+                dashboard={state.draft}
+                onSelect={(contentIndex) => setContentTarget({ ...contentTarget, contentIndex })}
+                tabIndex={contentTarget.tabIndex}
+              />
             ) : (
               <section>
                 <div className="mb-3 flex items-center justify-between gap-4">

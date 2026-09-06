@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { DashboardBuilder } from "@/builder/ui/DashboardBuilder";
+import { DashboardBuilder } from "@/builder/DashboardBuilder";
 import { EditButton } from "@/components/EditButton";
 import { DashboardContent } from "@/components/contents/DashboardContent";
 import { DashboardTabs } from "@/components/contents/DashboardTabs";
@@ -35,6 +35,8 @@ const App = () => {
           <Dashboard
             dashboard={dashboard}
             key={revision}
+            onAddContent={actions.addContent}
+            onEditContent={actions.editContent}
             onEditHeader={actions.openHeader}
             onEditParameters={actions.openParameters}
             onEditTabs={actions.openTabs}
@@ -49,12 +51,21 @@ const App = () => {
 
 interface DashboardProps {
   dashboard: DashboardSchema;
+  onAddContent?: (tabIndex: number) => void;
+  onEditContent?: (tabIndex: number, contentIndex: number) => void;
   onEditHeader?: () => void;
   onEditParameters?: () => void;
   onEditTabs?: () => void;
 }
 
-const Dashboard = ({ dashboard, onEditHeader, onEditParameters, onEditTabs }: DashboardProps) => {
+const Dashboard = ({
+  dashboard,
+  onAddContent,
+  onEditContent,
+  onEditHeader,
+  onEditParameters,
+  onEditTabs,
+}: DashboardProps) => {
   const defaultTabPath = `/${dashboard.tabs[0].id}`;
   const [params, setParams] = useState<Record<string, string>>(() =>
     Object.fromEntries(dashboard.controls.map((control) => [control.key, control.defaultValue])),
@@ -144,7 +155,7 @@ const Dashboard = ({ dashboard, onEditHeader, onEditParameters, onEditTabs }: Da
           </aside>
 
           <div className="min-w-0 flex-1">
-            <DashboardTabs onEdit={onEditTabs} tabs={dashboard.tabs} />
+            <DashboardTabs onEditTabs={onEditTabs} tabs={dashboard.tabs} />
 
             <div className="mt-5">
               {analysis.isError ? (
@@ -158,9 +169,19 @@ const Dashboard = ({ dashboard, onEditHeader, onEditParameters, onEditTabs }: Da
                 <>
                   <Routes>
                     <Route element={<Navigate replace to={defaultTabPath} />} path="/" />
-                    {dashboard.tabs.map((tab) => (
+                    {dashboard.tabs.map((tab, tabIndex) => (
                       <Route
-                        element={<DashboardContent result={analysis.data} tab={tab} />}
+                        element={
+                          <DashboardContent
+                            onAddContent={onAddContent && (() => onAddContent(tabIndex))}
+                            onEditContent={
+                              onEditContent &&
+                              ((contentIndex) => onEditContent(tabIndex, contentIndex))
+                            }
+                            result={analysis.data}
+                            tab={tab}
+                          />
+                        }
                         key={tab.id}
                         path={`/${tab.id}`}
                       />

@@ -1,6 +1,6 @@
 import type { ControlDefinition } from "@/schema/dashboard";
 
-interface ControlEditorProps {
+interface RadioControlEditorProps {
   control: ControlDefinition;
   onChange: (control: ControlDefinition) => void;
   onRemove: () => void;
@@ -13,7 +13,7 @@ const createOptionValue = (control: ControlDefinition) => {
   return `option-${index}`;
 };
 
-export const ControlEditor = ({ control, onChange, onRemove }: ControlEditorProps) => {
+export const RadioControlEditor = ({ control, onChange, onRemove }: RadioControlEditorProps) => {
   const updateOption = (index: number, field: "label" | "value", value: string) => {
     const previousValue = control.options[index]?.value;
     const options = control.options.map((option, optionIndex) =>

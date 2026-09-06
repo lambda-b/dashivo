@@ -5,10 +5,10 @@ import type { DashboardSchema } from "@/schema/dashboard";
 
 interface DashboardTabsProps {
   tabs: DashboardSchema["tabs"];
-  onEdit?: () => void;
+  onEditTabs?: () => void;
 }
 
-export const DashboardTabs = ({ tabs, onEdit }: DashboardTabsProps) => (
+export const DashboardTabs = ({ tabs, onEditTabs }: DashboardTabsProps) => (
   <nav aria-label="コンテンツタブ" className="border-b border-stone-200">
     <div className="flex items-start justify-between gap-4">
       <div className="flex gap-6 overflow-x-auto">
@@ -28,11 +28,13 @@ export const DashboardTabs = ({ tabs, onEdit }: DashboardTabsProps) => (
           </NavLink>
         ))}
       </div>
-      {onEdit && (
-        <EditButton className="shrink-0 px-2 py-1" onClick={onEdit}>
-          タブを編集
-        </EditButton>
-      )}
+      <div className="flex shrink-0 items-center gap-2">
+        {onEditTabs && (
+          <EditButton className="px-2 py-1" onClick={onEditTabs}>
+            タブを編集
+          </EditButton>
+        )}
+      </div>
     </div>
   </nav>
 );
