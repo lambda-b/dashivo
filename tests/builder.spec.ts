@@ -7,9 +7,12 @@ test("edits, validates, and saves the dashboard configuration in development", a
     await route.fulfill({ json: { dashboard: savedDashboard } });
   });
   await page.goto("http://127.0.0.1:3030");
-  await page.getByRole("complementary").getByRole("button", { name: "パラメータを編集" }).click();
 
+  await page.getByRole("button", { name: "ヘッダーを編集" }).click();
   await page.getByLabel("タイトル").fill("Builder preview");
+  await page.getByRole("button", { name: "Builderを閉じる" }).click();
+
+  await page.getByRole("complementary").getByRole("button", { name: "パラメータを編集" }).click();
   await page.getByRole("button", { name: "Radioを追加" }).click();
   await page.getByRole("button", { name: "Builderを閉じる" }).click();
 
@@ -36,7 +39,7 @@ test("edits, validates, and saves the dashboard configuration in development", a
   ]);
 
   await page.getByRole("button", { name: "Builderを閉じる" }).click();
-  await page.getByRole("button", { name: "パラメータを編集" }).click();
+  await page.getByRole("button", { name: "ヘッダーを編集" }).click();
   await page.getByLabel("タイトル").fill("");
   await page.getByRole("button", { name: "プレビューへ反映" }).click();
   await expect(page.getByRole("alert")).toBeVisible();

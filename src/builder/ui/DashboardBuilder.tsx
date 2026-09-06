@@ -11,11 +11,17 @@ interface DashboardBuilderProps {
   children: (
     dashboard: DashboardSchema,
     revision: number,
-    actions: { openParameters: () => void; openTabs: () => void },
+    actions: { openHeader: () => void; openParameters: () => void; openTabs: () => void },
   ) => ReactNode;
 }
 
-type BuilderSection = "parameters" | "tabs";
+type BuilderSection = "header" | "parameters" | "tabs";
+
+const sectionTitles: Record<BuilderSection, string> = {
+  header: "ヘッダー設定",
+  parameters: "パラメータ設定",
+  tabs: "タブ設定",
+};
 
 export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilderProps) => {
   const { state, editDashboard, applyDraft, saveDraft, resetDraft } =
@@ -27,6 +33,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
   return (
     <>
       {children(state.dashboard, state.revision, {
+        openHeader: () => setSection("header"),
         openParameters: () => setSection("parameters"),
         openTabs: () => setSection("tabs"),
       })}
@@ -41,9 +48,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
               <p className="text-brand text-[0.6875rem] font-bold tracking-[0.16em]">
                 DEVELOPMENT ONLY
               </p>
-              <h2 className="mt-1 text-xl font-bold">
-                {section === "parameters" ? "パラメータ設定" : "タブ設定"}
-              </h2>
+              <h2 className="mt-1 text-xl font-bold">{sectionTitles[section]}</h2>
               <p className="mt-1 text-xs leading-5 text-stone-500">
                 設定を検証してプレビューへ反映します。
               </p>
@@ -59,68 +64,65 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
           </header>
 
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
-            {section === "parameters" ? (
-              <>
-                <section>
-                  <h3 className="mb-3 text-sm font-bold">基本設定</h3>
-                  <div className="grid gap-3">
-                    <label className="text-xs font-medium text-stone-600">
-                      タイトル
-                      <input
-                        className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-                        onChange={(event) =>
-                          editDashboard({ ...state.draft, title: event.target.value })
-                        }
-                        value={state.draft.title}
-                      />
-                    </label>
-                    <label className="text-xs font-medium text-stone-600">
-                      説明
-                      <textarea
-                        className="focus:border-brand mt-1 min-h-20 w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-                        onChange={(event) =>
-                          editDashboard({ ...state.draft, description: event.target.value })
-                        }
-                        value={state.draft.description}
-                      />
-                    </label>
+            {section === "header" ? (
+              <section>
+                <div className="grid gap-3">
+                  <label className="text-xs font-medium text-stone-600">
+                    タイトル
+                    <input
+                      className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
+                      onChange={(event) =>
+                        editDashboard({ ...state.draft, title: event.target.value })
+                      }
+                      value={state.draft.title}
+                    />
+                  </label>
+                  <label className="text-xs font-medium text-stone-600">
+                    リード文
+                    <textarea
+                      className="focus:border-brand mt-1 min-h-20 w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
+                      onChange={(event) =>
+                        editDashboard({ ...state.draft, description: event.target.value })
+                      }
+                      value={state.draft.description}
+                    />
+                  </label>
+                </div>
+              </section>
+            ) : section === "parameters" ? (
+              <section>
+                <div className="mb-3 flex items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-bold">Parameters</h3>
+                    <p className="mt-1 text-xs text-stone-500">
+                      画面表示ロジックへ渡す入力項目です。
+                    </p>
                   </div>
-                </section>
+                  <button
+                    className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
+                    onClick={parameterActions.addRadio}
+                    type="button"
+                  >
+                    Radioを追加
+                  </button>
+                </div>
 
-                <section>
-                  <div className="mb-3 flex items-center justify-between gap-4">
-                    <div>
-                      <h3 className="text-sm font-bold">Parameters</h3>
-                      <p className="mt-1 text-xs text-stone-500">
-                        画面表示ロジックへ渡す入力項目です。
-                      </p>
-                    </div>
-                    <button
-                      className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
-                      onClick={parameterActions.addRadio}
-                      type="button"
-                    >
-                      Radioを追加
-                    </button>
-                  </div>
-
-                  <div className="grid gap-3">
-                    {state.draft.controls.map((control, index) => (
-                      <ControlEditor
-                        control={control}
-                        key={index}
-                        onChange={(nextControl) => parameterActions.update(index, nextControl)}
-                        onRemove={() => parameterActions.remove(index)}
-                      />
-                    ))}
-                    {state.draft.controls.length === 0 && (
-                      <p className="rounded-lg border border-dashed border-stone-300 p-5 text-center text-xs text-stone-500">
-                        Parameterはまだありません。
-                      </p>
-                    )}
-                  </div>
-                </section>
-              </>
+                <div className="grid gap-3">
+                  {state.draft.controls.map((control, index) => (
+                    <ControlEditor
+                      control={control}
+                      key={index}
+                      onChange={(nextControl) => parameterActions.update(index, nextControl)}
+                      onRemove={() => parameterActions.remove(index)}
+                    />
+                  ))}
+                  {state.draft.controls.length === 0 && (
+                    <p className="rounded-lg border border-dashed border-stone-300 p-5 text-center text-xs text-stone-500">
+                      Parameterはまだありません。
+                    </p>
+                  )}
+                </div>
+              </section>
             ) : (
               <section>
                 <div className="mb-3 flex items-center justify-between gap-4">

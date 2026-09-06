@@ -4,6 +4,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { DashboardBuilder } from "@/builder/ui/DashboardBuilder";
+import { EditButton } from "@/components/EditButton";
 import { DashboardContent } from "@/components/contents/DashboardContent";
 import { DashboardTabs } from "@/components/contents/DashboardTabs";
 import { ControlPanel } from "@/components/controls/ControlPanel";
@@ -34,6 +35,7 @@ const App = () => {
           <Dashboard
             dashboard={dashboard}
             key={revision}
+            onEditHeader={actions.openHeader}
             onEditParameters={actions.openParameters}
             onEditTabs={actions.openTabs}
           />
@@ -47,11 +49,12 @@ const App = () => {
 
 interface DashboardProps {
   dashboard: DashboardSchema;
+  onEditHeader?: () => void;
   onEditParameters?: () => void;
   onEditTabs?: () => void;
 }
 
-const Dashboard = ({ dashboard, onEditParameters, onEditTabs }: DashboardProps) => {
+const Dashboard = ({ dashboard, onEditHeader, onEditParameters, onEditTabs }: DashboardProps) => {
   const defaultTabPath = `/${dashboard.tabs[0].id}`;
   const [params, setParams] = useState<Record<string, string>>(() =>
     Object.fromEntries(dashboard.controls.map((control) => [control.key, control.defaultValue])),
@@ -84,23 +87,26 @@ const Dashboard = ({ dashboard, onEditParameters, onEditTabs }: DashboardProps) 
               {dashboard.description}
             </p>
           </div>
-          <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-medium text-stone-600">
-            <i
-              className={clsx(
-                "h-2 w-2 rounded-full",
-                analysis.isPending
-                  ? "animate-pulse bg-amber-500"
-                  : analysis.isError
-                    ? "bg-red-600"
-                    : "bg-emerald-600 shadow-[0_0_0_3px_#dcece4]",
-              )}
-            />
-            {analysis.isPending
-              ? "Pythonを準備中"
-              : analysis.isError
-                ? "実行エラー"
-                : "オフライン実行中"}
-          </span>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 max-sm:justify-start">
+            {onEditHeader && <EditButton onClick={onEditHeader}>ヘッダーを編集</EditButton>}
+            <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-medium text-stone-600">
+              <i
+                className={clsx(
+                  "h-2 w-2 rounded-full",
+                  analysis.isPending
+                    ? "animate-pulse bg-amber-500"
+                    : analysis.isError
+                      ? "bg-red-600"
+                      : "bg-emerald-600 shadow-[0_0_0_3px_#dcece4]",
+                )}
+              />
+              {analysis.isPending
+                ? "Pythonを準備中"
+                : analysis.isError
+                  ? "実行エラー"
+                  : "オフライン実行中"}
+            </span>
+          </div>
         </div>
       </header>
 
@@ -130,13 +136,9 @@ const Dashboard = ({ dashboard, onEditParameters, onEditTabs }: DashboardProps) 
 
             {onEditParameters && (
               <div className="border-t border-stone-100 p-3">
-                <button
-                  className="hover:border-brand hover:text-brand w-full cursor-pointer rounded-md border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-600 transition hover:bg-red-50"
-                  onClick={onEditParameters}
-                  type="button"
-                >
+                <EditButton className="w-full" onClick={onEditParameters}>
                   パラメータを編集
-                </button>
+                </EditButton>
               </div>
             )}
           </aside>
