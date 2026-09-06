@@ -30,8 +30,13 @@ const App = () => {
   if (import.meta.env.DEV) {
     return (
       <DashboardBuilder initialDashboard={dashboardResult.data}>
-        {(dashboard, revision, openBuilder) => (
-          <Dashboard dashboard={dashboard} key={revision} onOpenBuilder={openBuilder} />
+        {(dashboard, revision, actions) => (
+          <Dashboard
+            dashboard={dashboard}
+            key={revision}
+            onEditParameters={actions.openParameters}
+            onEditTabs={actions.openTabs}
+          />
         )}
       </DashboardBuilder>
     );
@@ -42,10 +47,11 @@ const App = () => {
 
 interface DashboardProps {
   dashboard: DashboardSchema;
-  onOpenBuilder?: () => void;
+  onEditParameters?: () => void;
+  onEditTabs?: () => void;
 }
 
-const Dashboard = ({ dashboard, onOpenBuilder }: DashboardProps) => {
+const Dashboard = ({ dashboard, onEditParameters, onEditTabs }: DashboardProps) => {
   const defaultTabPath = `/${dashboard.tabs[0].id}`;
   const [params, setParams] = useState<Record<string, string>>(() =>
     Object.fromEntries(dashboard.controls.map((control) => [control.key, control.defaultValue])),
@@ -122,11 +128,11 @@ const Dashboard = ({ dashboard, onOpenBuilder }: DashboardProps) => {
               />
             </div>
 
-            {onOpenBuilder && (
+            {onEditParameters && (
               <div className="border-t border-stone-100 p-3">
                 <button
                   className="hover:border-brand hover:text-brand w-full cursor-pointer rounded-md border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-600 transition hover:bg-red-50"
-                  onClick={onOpenBuilder}
+                  onClick={onEditParameters}
                   type="button"
                 >
                   パラメータを編集
@@ -136,7 +142,7 @@ const Dashboard = ({ dashboard, onOpenBuilder }: DashboardProps) => {
           </aside>
 
           <div className="min-w-0 flex-1">
-            <DashboardTabs tabs={dashboard.tabs} />
+            <DashboardTabs onEdit={onEditTabs} tabs={dashboard.tabs} />
 
             <div className="mt-5">
               {analysis.isError ? (

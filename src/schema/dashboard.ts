@@ -78,7 +78,7 @@ const tabSchema = z.object({
   id: identifierSchema,
   label: z.string().min(1),
   layout: z.discriminatedUnion("type", [gridLayoutSchema]),
-  contents: z.array(contentSchema).min(1),
+  contents: z.array(contentSchema),
 });
 
 export const dashboardSchema = z

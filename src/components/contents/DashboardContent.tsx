@@ -33,8 +33,12 @@ const Content = ({ content, result }: ContentProps) => {
 
 export const DashboardContent = ({ tab, result }: DashboardContentProps) => (
   <section className={`grid gap-5 ${gridColumns[tab.layout.columns]}`}>
-    {tab.contents.map((content) => (
-      <Content content={content} key={content.id} result={result} />
-    ))}
+    {tab.contents.length > 0 ? (
+      tab.contents.map((content) => <Content content={content} key={content.id} result={result} />)
+    ) : (
+      <p className="rounded-xl border border-dashed border-stone-300 bg-white p-10 text-center text-sm text-stone-500">
+        このタブにはコンテンツがありません。
+      </p>
+    )}
   </section>
 );
