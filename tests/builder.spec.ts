@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("builds, validates, and exports dashboard controls in development", async ({ page }) => {
+test("edits, validates, and saves the dashboard configuration in development", async ({ page }) => {
   let savedDashboard: { title?: string; tabs?: { id: string; label: string }[] } | undefined;
   await page.route("**/__dashlet/dashboard", async (route) => {
     savedDashboard = route.request().postDataJSON();

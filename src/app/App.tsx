@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { DashboardBuilder } from "@/builder/DashboardBuilder";
+import { DashboardBuilder } from "@/builder/ui/DashboardBuilder";
 import { DashboardContent } from "@/components/contents/DashboardContent";
 import { DashboardTabs } from "@/components/contents/DashboardTabs";
 import { ControlPanel } from "@/components/controls/ControlPanel";

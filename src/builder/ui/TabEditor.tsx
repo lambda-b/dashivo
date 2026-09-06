@@ -29,7 +29,7 @@ export const TabEditor = ({
   onMoveUp,
   onRemove,
 }: TabEditorProps) => (
-  <fieldset className="rounded-lg border border-stone-200 p-4">
+  <fieldset aria-label={`タブ${index + 1}`} className="rounded-lg border border-stone-200 p-4">
     <div className="mb-4 flex items-center justify-between gap-4">
       <legend className="text-xs font-bold tracking-wide text-stone-500">TAB {index + 1}</legend>
       <div className="flex items-center gap-1">

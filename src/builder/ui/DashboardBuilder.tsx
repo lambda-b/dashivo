@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from "react";
-import { ControlEditor } from "@/builder/ControlEditor";
-import { TabEditor } from "@/builder/TabEditor";
-import { useDashboardDraft } from "@/builder/useDashboardDraft";
-import { useParameterActions } from "@/builder/useParameterActions";
-import { useTabActions } from "@/builder/useTabActions";
+import { useDashboardDraft } from "@/builder/hooks/useDashboardDraft";
+import { useParameterActions } from "@/builder/hooks/useParameterActions";
+import { useTabActions } from "@/builder/hooks/useTabActions";
+import { ControlEditor } from "@/builder/ui/ControlEditor";
+import { TabEditor } from "@/builder/ui/TabEditor";
 import type { DashboardSchema } from "@/schema/dashboard";
 
 interface DashboardBuilderProps {

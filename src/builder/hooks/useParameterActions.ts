@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { ControlDefinition, DashboardSchema } from "@/schema/dashboard";
 
-const createControlKey = (dashboard: DashboardSchema) => {
+const createParameterKey = (dashboard: DashboardSchema) => {
   const keys = new Set(dashboard.controls.map((control) => control.key));
   let index = dashboard.controls.length + 1;
   while (keys.has(`control_${index}`)) index += 1;
@@ -18,7 +18,7 @@ export const useParameterActions = (
 
     return {
       addRadio: () => {
-        const key = createControlKey(draft);
+        const key = createParameterKey(draft);
         editControls([
           ...draft.controls,
           {

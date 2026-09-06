@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { parseDashboardJson, serializeDashboard } from "@/builder/schema";
 import { validateDatasetBindings } from "@/runtime/bindings";
 import { analysisResultSchema, dashboardSchema } from "@/schema/dashboard";
 
@@ -105,13 +104,6 @@ test("rejects duplicate tab and content identifiers", () => {
     ),
   };
   expect(() => dashboardSchema.parse(duplicateContent)).toThrow("content ids must be unique");
-});
-
-test("round-trips a dashboard through the builder schema editor", () => {
-  const dashboard = dashboardSchema.parse(dashboardSource);
-
-  expect(parseDashboardJson(serializeDashboard(dashboard))).toEqual(dashboard);
-  expect(() => parseDashboardJson("{ invalid json }")).toThrow();
 });
 
 test("rejects a missing result dataset", () => {

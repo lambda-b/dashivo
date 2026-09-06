@@ -8,8 +8,8 @@ const createTabId = (dashboard: DashboardSchema) => {
   return `tab-${index}`;
 };
 
-const moveItem = <Item>(items: Item[], index: number, offset: -1 | 1) => {
-  const destination = index + offset;
+const moveItem = <Item>(items: Item[], index: number, direction: -1 | 1) => {
+  const destination = index + direction;
   if (destination < 0 || destination >= items.length) return items;
   const nextItems = [...items];
   [nextItems[index], nextItems[destination]] = [nextItems[destination], nextItems[index]];
@@ -36,7 +36,7 @@ export const useTabActions = (
         ]),
       update: (index: number, tab: TabDefinition) =>
         editTabs(draft.tabs.map((current, tabIndex) => (tabIndex === index ? tab : current))),
-      move: (index: number, offset: -1 | 1) => editTabs(moveItem(draft.tabs, index, offset)),
+      move: (index: number, direction: -1 | 1) => editTabs(moveItem(draft.tabs, index, direction)),
       remove: (index: number) => editTabs(draft.tabs.filter((_, tabIndex) => tabIndex !== index)),
     };
   }, [draft, editDashboard]);

@@ -1,6 +1,23 @@
 import { useReducer } from "react";
-import { saveDashboardFile } from "@/builder/dashboard-file";
 import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
+
+const dashboardEditorEndpoint = "/__dashlet/dashboard";
+
+const saveDashboardFile = async (dashboard: DashboardSchema): Promise<void> => {
+  const response = await fetch(dashboardEditorEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dashboard),
+  });
+
+  if (response.ok) return;
+  const result: unknown = await response.json();
+  const message =
+    typeof result === "object" && result !== null && "error" in result
+      ? String(result.error)
+      : "dashboard.jsonを保存できませんでした。";
+  throw new Error(message);
+};
 
 interface DashboardDraftState {
   draft: DashboardSchema;

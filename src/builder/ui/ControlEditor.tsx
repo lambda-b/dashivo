@@ -46,7 +46,7 @@ export const ControlEditor = ({ control, onChange, onRemove }: ControlEditorProp
   return (
     <fieldset className="rounded-lg border border-stone-200 p-4">
       <div className="mb-4 flex items-center justify-between gap-4">
-        <legend className="text-xs font-bold tracking-wide text-stone-500">RADIO CONTROL</legend>
+        <legend className="text-xs font-bold tracking-wide text-stone-500">RADIO PARAMETER</legend>
         <button
           className="cursor-pointer text-xs font-medium text-red-700 hover:underline"
           onClick={onRemove}
