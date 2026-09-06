@@ -12,37 +12,30 @@ export const validateDatasetBindings = (
 ): AnalysisResult => {
   const errors: string[] = [];
 
-  for (const visualization of dashboard.visualizations) {
-    const rows = result.datasets[visualization.dataset];
+  for (const content of dashboard.tabs.flatMap((tab) => tab.contents)) {
+    if (content.type === "metric") {
+      if (!(content.metric in result.metrics)) {
+        errors.push(`Metric「${content.title}」の値「${content.metric}」がありません。`);
+      }
+      continue;
+    }
+
+    const rows = result.datasets[content.dataset];
     if (!rows) {
       errors.push(
-        `Visualization「${visualization.title}」のdataset「${visualization.dataset}」がありません。`,
+        `${content.type === "chart" ? "Chart" : "Table"}「${content.title}」のdataset「${content.dataset}」がありません。`,
       );
       continue;
     }
 
-    const missingColumns = getMissingColumns(rows, [visualization.x, ...visualization.y]);
+    const columns =
+      content.type === "chart"
+        ? [content.chart.x, ...content.chart.y]
+        : content.columns.map((column) => column.key);
+    const missingColumns = getMissingColumns(rows, columns);
     if (missingColumns.length > 0) {
       errors.push(
-        `Visualization「${visualization.title}」に必要なcolumnがありません: ${missingColumns.join(", ")}`,
-      );
-    }
-  }
-
-  for (const table of dashboard.tables) {
-    const rows = result.datasets[table.dataset];
-    if (!rows) {
-      errors.push(`Table「${table.title}」のdataset「${table.dataset}」がありません。`);
-      continue;
-    }
-
-    const missingColumns = getMissingColumns(
-      rows,
-      table.columns.map((column) => column.key),
-    );
-    if (missingColumns.length > 0) {
-      errors.push(
-        `Table「${table.title}」に必要なcolumnがありません: ${missingColumns.join(", ")}`,
+        `${content.type === "chart" ? "Chart" : "Table"}「${content.title}」に必要なcolumnがありません: ${missingColumns.join(", ")}`,
       );
     }
   }

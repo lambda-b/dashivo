@@ -1,10 +1,10 @@
 import { useTable } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { createTableColumns, tableAdapterFeatures } from "@/components/contents/table/adapter";
-import type { DataRow, TableDefinition } from "@/schema/dashboard";
+import type { DataRow, TableContentDefinition } from "@/schema/dashboard";
 
 interface DataTableProps {
-  definition: TableDefinition;
+  definition: TableContentDefinition;
   data: DataRow[];
 }
 

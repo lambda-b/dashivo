@@ -26,18 +26,61 @@
       ]
     }
   ],
-  "visualizations": [
-    { "type": "line", "title": "月次売上", "dataset": "summary", "x": "date", "y": ["revenue"] }
-  ],
-  "tables": [
+  "tabs": [
     {
-      "title": "月次サマリー",
-      "dataset": "summary",
-      "columns": [
-        { "key": "date", "label": "月" },
-        { "key": "revenue", "label": "売上", "format": "currency" },
-        { "key": "orders", "label": "注文件数", "format": "number" },
-        { "key": "average_order_value", "label": "平均注文額", "format": "currency" }
+      "id": "summary",
+      "label": "サマリー",
+      "layout": { "type": "grid", "columns": 2 },
+      "contents": [
+        {
+          "id": "revenue",
+          "type": "metric",
+          "title": "売上",
+          "metric": "revenue",
+          "format": "currency",
+          "emphasis": "strong"
+        },
+        {
+          "id": "orders",
+          "type": "metric",
+          "title": "注文件数",
+          "metric": "orders",
+          "format": "number",
+          "emphasis": "accent"
+        }
+      ]
+    },
+    {
+      "id": "charts",
+      "label": "グラフ",
+      "layout": { "type": "grid", "columns": 1 },
+      "contents": [
+        {
+          "id": "monthly-revenue",
+          "type": "chart",
+          "title": "月次売上",
+          "dataset": "summary",
+          "chart": { "type": "line", "x": "date", "y": ["revenue"] }
+        }
+      ]
+    },
+    {
+      "id": "tables",
+      "label": "テーブル",
+      "layout": { "type": "grid", "columns": 1 },
+      "contents": [
+        {
+          "id": "monthly-summary",
+          "type": "table",
+          "title": "月次サマリー",
+          "dataset": "summary",
+          "columns": [
+            { "key": "date", "label": "月" },
+            { "key": "revenue", "label": "売上", "format": "currency" },
+            { "key": "orders", "label": "注文件数", "format": "number" },
+            { "key": "average_order_value", "label": "平均注文額", "format": "currency" }
+          ]
+        }
       ]
     }
   ]

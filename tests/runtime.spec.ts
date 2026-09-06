@@ -15,14 +15,49 @@ const dashboardSource = {
       options: [{ label: "All", value: "All" }],
     },
   ],
-  visualizations: [
-    { type: "line", title: "Revenue", dataset: "summary", x: "date", y: ["revenue"] },
-  ],
-  tables: [
+  tabs: [
     {
-      title: "Summary",
-      dataset: "summary",
-      columns: [{ key: "date", label: "Date" }],
+      id: "summary",
+      label: "Summary",
+      layout: { type: "grid", columns: 2 },
+      contents: [
+        {
+          id: "revenue",
+          type: "metric",
+          title: "Revenue",
+          metric: "revenue",
+          format: "currency",
+          emphasis: "strong",
+        },
+      ],
+    },
+    {
+      id: "charts",
+      label: "Charts",
+      layout: { type: "grid", columns: 1 },
+      contents: [
+        {
+          id: "revenue-chart",
+          type: "chart",
+          title: "Revenue",
+          dataset: "summary",
+          chart: { type: "line", x: "date", y: ["revenue"] },
+        },
+      ],
+    },
+    {
+      id: "tables",
+      label: "Tables",
+      layout: { type: "grid", columns: 1 },
+      contents: [
+        {
+          id: "summary-table",
+          type: "table",
+          title: "Summary",
+          dataset: "summary",
+          columns: [{ key: "date", label: "Date" }],
+        },
+      ],
     },
   ],
 } as const;
@@ -56,6 +91,22 @@ test("rejects duplicate control option values", () => {
   expect(() => dashboardSchema.parse(invalidDashboard)).toThrow("option values must be unique");
 });
 
+test("rejects duplicate tab and content identifiers", () => {
+  const duplicateTab = {
+    ...dashboardSource,
+    tabs: [...dashboardSource.tabs, { ...dashboardSource.tabs[0] }],
+  };
+  expect(() => dashboardSchema.parse(duplicateTab)).toThrow("tab ids must be unique");
+
+  const duplicateContent = {
+    ...dashboardSource,
+    tabs: dashboardSource.tabs.map((tab, index) =>
+      index === 1 ? { ...tab, contents: [{ ...tab.contents[0], id: "revenue" }] } : tab,
+    ),
+  };
+  expect(() => dashboardSchema.parse(duplicateContent)).toThrow("content ids must be unique");
+});
+
 test("round-trips a dashboard through the builder schema editor", () => {
   const dashboard = dashboardSchema.parse(dashboardSource);
 
@@ -73,5 +124,18 @@ test("rejects a missing result dataset", () => {
 
   expect(() => validateDatasetBindings(dashboard, result)).toThrow(
     "dataset「summary」がありません",
+  );
+});
+
+test("rejects a missing result metric", () => {
+  const dashboard = dashboardSchema.parse(dashboardSource);
+  const result = analysisResultSchema.parse({
+    runtime: { python: "3", pandas: "3", numpy: "2" },
+    datasets: { summary: [{ date: "2026-01-01", revenue: 1 }] },
+    metrics: {},
+  });
+
+  expect(() => validateDatasetBindings(dashboard, result)).toThrow(
+    "Metric「Revenue」の値「revenue」がありません",
   );
 });

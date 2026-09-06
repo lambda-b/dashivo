@@ -1,6 +1,6 @@
-import type { DataRow, VisualizationDefinition } from "@/schema/dashboard";
+import type { ChartContentDefinition, DataRow } from "@/schema/dashboard";
 
 export interface ChartAdapterProps {
-  definition: VisualizationDefinition;
+  definition: ChartContentDefinition["chart"];
   data: DataRow[];
 }

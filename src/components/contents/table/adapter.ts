@@ -1,5 +1,5 @@
 import { createColumnHelper, tableFeatures } from "@tanstack/react-table";
-import type { DataRow, TableDefinition } from "@/schema/dashboard";
+import type { DataRow, TableContentDefinition } from "@/schema/dashboard";
 
 export const tableAdapterFeatures = tableFeatures({});
 const columnHelper = createColumnHelper<typeof tableAdapterFeatures, DataRow>();
@@ -15,7 +15,7 @@ const formatValue = (value: unknown, format?: "currency" | "number") => {
   return value.toLocaleString("ja-JP");
 };
 
-export const createTableColumns = (definition: TableDefinition) =>
+export const createTableColumns = (definition: TableContentDefinition) =>
   columnHelper.columns(
     definition.columns.map((column) =>
       columnHelper.accessor((row) => row[column.key], {

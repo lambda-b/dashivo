@@ -3,9 +3,8 @@ import clsx from "clsx";
 import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { DashboardBuilder } from "@/builder/DashboardBuilder";
+import { DashboardContent } from "@/components/contents/DashboardContent";
 import { DashboardTabs } from "@/components/contents/DashboardTabs";
-import { ChartPanel } from "@/components/contents/chart/ChartPanel";
-import { DataTable } from "@/components/contents/table/DataTable";
 import { ControlPanel } from "@/components/controls/ControlPanel";
 import { validateDatasetBindings } from "@/runtime/bindings";
 import { executeAnalysis } from "@/runtime/python-worker";
@@ -13,11 +12,6 @@ import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
 import dashboardSource from "#dashboard/dashboard.json";
 
 const dashboardResult = dashboardSchema.safeParse(dashboardSource);
-const currency = new Intl.NumberFormat("ja-JP", {
-  style: "currency",
-  currency: "JPY",
-  maximumFractionDigits: 0,
-});
 
 const App = () => {
   if (!dashboardResult.success) {
@@ -51,6 +45,7 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ dashboard, onOpenBuilder }: DashboardProps) => {
+  const defaultTabPath = `/${dashboard.tabs[0].id}`;
   const [params, setParams] = useState<Record<string, string>>(() =>
     Object.fromEntries(dashboard.controls.map((control) => [control.key, control.defaultValue])),
   );
@@ -147,7 +142,7 @@ const Dashboard = ({ dashboard, onOpenBuilder }: DashboardProps) => {
           </aside>
 
           <div className="min-w-0 flex-1">
-            <DashboardTabs />
+            <DashboardTabs tabs={dashboard.tabs} />
 
             <div className="mt-5">
               {analysis.isError ? (
@@ -160,59 +155,15 @@ const Dashboard = ({ dashboard, onOpenBuilder }: DashboardProps) => {
               ) : analysis.data ? (
                 <>
                   <Routes>
-                    <Route element={<Navigate replace to="/summary" />} path="/" />
-                    <Route
-                      path="/summary"
-                      element={
-                        <section className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-                          <article className="flex flex-col gap-2 rounded-xl bg-stone-800 p-5 text-white shadow-sm">
-                            <span className="text-xs font-medium uppercase tracking-wide opacity-55">
-                              売上
-                            </span>
-                            <strong className="text-3xl tracking-tight">
-                              {currency.format(analysis.data.metrics.revenue)}
-                            </strong>
-                          </article>
-                          <article className="border-brand/20 bg-brand-soft flex flex-col gap-2 rounded-xl border p-5 shadow-sm">
-                            <span className="text-brand-dark/60 text-xs font-medium uppercase tracking-wide">
-                              注文件数
-                            </span>
-                            <strong className="text-3xl tracking-tight">
-                              {analysis.data.metrics.orders.toLocaleString("ja-JP")}
-                            </strong>
-                          </article>
-                        </section>
-                      }
-                    />
-                    <Route
-                      path="/charts"
-                      element={
-                        <div className="grid gap-5">
-                          {dashboard.visualizations.map((visualization) => (
-                            <ChartPanel
-                              data={analysis.data.datasets[visualization.dataset] ?? []}
-                              definition={visualization}
-                              key={`${visualization.type}-${visualization.dataset}`}
-                            />
-                          ))}
-                        </div>
-                      }
-                    />
-                    <Route
-                      path="/tables"
-                      element={
-                        <div className="grid gap-5">
-                          {dashboard.tables.map((table) => (
-                            <DataTable
-                              data={analysis.data.datasets[table.dataset] ?? []}
-                              definition={table}
-                              key={table.dataset}
-                            />
-                          ))}
-                        </div>
-                      }
-                    />
-                    <Route element={<Navigate replace to="/summary" />} path="*" />
+                    <Route element={<Navigate replace to={defaultTabPath} />} path="/" />
+                    {dashboard.tabs.map((tab) => (
+                      <Route
+                        element={<DashboardContent result={analysis.data} tab={tab} />}
+                        key={tab.id}
+                        path={`/${tab.id}`}
+                      />
+                    ))}
+                    <Route element={<Navigate replace to={defaultTabPath} />} path="*" />
                   </Routes>
 
                   <p className="mt-5 text-right text-xs text-stone-500">
