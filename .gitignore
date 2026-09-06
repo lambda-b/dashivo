@@ -40,7 +40,7 @@ __pycache__/
 # ===== Misc =====
 coverage/
 playwright-report/
-test-results/
+tests/results/
 .cache/
 .pyodide-cache/
 .idea/

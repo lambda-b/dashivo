@@ -2,6 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests",
+  outputDir: "./tests/results",
   timeout: 120_000,
   webServer: {
     command: "pnpm dev",
