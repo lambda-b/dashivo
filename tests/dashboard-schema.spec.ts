@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { validateDatasetBindings } from "@/runtime/bindings";
 import { analysisResultSchema, dashboardSchema } from "@/schema/dashboard";
+import { validateContentBindings } from "@/validation/content-bindings";
 
 const dashboardSource = {
   title: "Example",
@@ -114,7 +114,7 @@ test("rejects a missing result dataset", () => {
     metrics: { revenue: 0, orders: 0 },
   });
 
-  expect(() => validateDatasetBindings(dashboard, result)).toThrow(
+  expect(() => validateContentBindings(dashboard, result)).toThrow(
     "dataset「summary」がありません",
   );
 });
@@ -127,7 +127,7 @@ test("rejects a missing result metric", () => {
     metrics: {},
   });
 
-  expect(() => validateDatasetBindings(dashboard, result)).toThrow(
+  expect(() => validateContentBindings(dashboard, result)).toThrow(
     "Metric「Revenue」の値「revenue」がありません",
   );
 });

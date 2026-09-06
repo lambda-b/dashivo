@@ -6,7 +6,7 @@ const getMissingColumns = (rows: AnalysisResult["datasets"][string], columns: st
   return columns.filter((column) => !availableColumns.has(column));
 };
 
-export const validateDatasetBindings = (
+export const validateContentBindings = (
   dashboard: DashboardSchema,
   result: AnalysisResult,
 ): AnalysisResult => {

@@ -7,9 +7,9 @@ import { DashboardBuilder } from "@/builder/ui/DashboardBuilder";
 import { DashboardContent } from "@/components/contents/DashboardContent";
 import { DashboardTabs } from "@/components/contents/DashboardTabs";
 import { ControlPanel } from "@/components/controls/ControlPanel";
-import { validateDatasetBindings } from "@/runtime/bindings";
-import { executeAnalysis } from "@/runtime/python-worker";
+import { analysisPort } from "@/ports/analysis";
 import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
+import { validateContentBindings } from "@/validation/content-bindings";
 import dashboardSource from "#dashboard/dashboard.json";
 
 const dashboardResult = dashboardSchema.safeParse(dashboardSource);
@@ -58,8 +58,8 @@ const Dashboard = ({ dashboard, onEditParameters, onEditTabs }: DashboardProps) 
   );
   const analysis = useQuery({
     queryKey: ["analysis", params],
-    queryFn: () => executeAnalysis(params),
-    select: (result) => validateDatasetBindings(dashboard, result),
+    queryFn: () => analysisPort.execute(params),
+    select: (result) => validateContentBindings(dashboard, result),
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
   });
