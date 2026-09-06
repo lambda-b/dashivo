@@ -1,14 +1,17 @@
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { ContentLogicFields } from "@/builder/components/ContentLogicFields";
 import { IconButton } from "@/components/primitives/IconButton";
 import { SelectList } from "@/components/primitives/SelectList";
 import { ChartContentEditor } from "@/builder/editors/contents/ChartContentEditor";
 import type {
+  AnalysisDefinition,
   ContentDefinition,
   MetricContentDefinition,
   TableContentDefinition,
 } from "@/schema/dashboard";
 
 interface ContentEditorProps {
+  analysis: AnalysisDefinition;
   content: ContentDefinition;
   index: number;
   isFirst: boolean;
@@ -44,6 +47,7 @@ const parseOptionalNumberFormat = (
   value === "" ? undefined : parseNumberFormat(value);
 
 export const ContentEditor = ({
+  analysis,
   content,
   index,
   isFirst,
@@ -104,14 +108,15 @@ export const ContentEditor = ({
 
     {content.type === "metric" ? (
       <div className="mt-4 grid grid-cols-3 gap-3">
-        <label className="col-span-3 text-xs font-medium text-stone-600">
-          Metric key
-          <input
-            className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-            onChange={(event) => onChange({ ...content, metric: event.target.value })}
-            value={content.metric}
+        <div className="col-span-3">
+          <ContentLogicFields
+            analysis={analysis}
+            logic={content.logic}
+            onChange={(logic, metric) => onChange({ ...content, logic, metric })}
+            output={content.metric}
+            outputType="metrics"
           />
-        </label>
+        </div>
         <label className="text-xs font-medium text-stone-600">
           表示形式
           <div className="mt-1">
@@ -139,17 +144,16 @@ export const ContentEditor = ({
         </label>
       </div>
     ) : content.type === "chart" ? (
-      <ChartContentEditor content={content} onChange={onChange} />
+      <ChartContentEditor analysis={analysis} content={content} onChange={onChange} />
     ) : (
       <div className="mt-4 grid gap-3">
-        <label className="text-xs font-medium text-stone-600">
-          Dataset
-          <input
-            className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-            onChange={(event) => onChange({ ...content, dataset: event.target.value })}
-            value={content.dataset}
-          />
-        </label>
+        <ContentLogicFields
+          analysis={analysis}
+          logic={content.logic}
+          onChange={(logic, dataset) => onChange({ ...content, logic, dataset })}
+          output={content.dataset}
+          outputType="datasets"
+        />
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs font-medium text-stone-600">表示列</span>
           <button

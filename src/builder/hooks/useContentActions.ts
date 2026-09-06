@@ -12,6 +12,12 @@ const createContentId = (dashboard: DashboardSchema, type: ContentType) => {
 
 const createContent = (dashboard: DashboardSchema, type: ContentType): ContentDefinition => {
   const id = createContentId(dashboard, type);
+  const outputType = type === "metric" ? "metrics" : "datasets";
+  const logic =
+    dashboard.analysis.logic.find((candidate) => candidate.outputs[outputType].length > 0) ??
+    dashboard.analysis.logic[0];
+  const logicId = logic?.id ?? "logic";
+  const output = logic?.outputs[outputType][0] ?? (type === "metric" ? "metric" : "dataset");
 
   switch (type) {
     case "metric":
@@ -19,7 +25,8 @@ const createContent = (dashboard: DashboardSchema, type: ContentType): ContentDe
         id,
         type,
         title: "新しい指標",
-        metric: "metric_name",
+        logic: logicId,
+        metric: output,
         format: "number",
         emphasis: "accent",
       };
@@ -28,7 +35,15 @@ const createContent = (dashboard: DashboardSchema, type: ContentType): ContentDe
         id,
         type,
         title: "新しいグラフ",
-        dataset: "dataset_name",
+        logic: logicId,
+        dataset: output,
+        formatting: {
+          colors: ["#ca2420", "#e85d3f", "#f59e0b", "#78716c"],
+          legend: { visible: false, position: "bottom" },
+          gridLines: true,
+          xAxis: { title: "", format: "auto", minimum: null, maximum: null },
+          yAxis: { title: "", format: "number", minimum: null, maximum: null },
+        },
         chart: { type: "line", x: "x", y: ["y"] },
       };
     case "table":
@@ -36,7 +51,8 @@ const createContent = (dashboard: DashboardSchema, type: ContentType): ContentDe
         id,
         type,
         title: "新しいテーブル",
-        dataset: "dataset_name",
+        logic: logicId,
+        dataset: output,
         columns: [{ key: "column", label: "列" }],
       };
   }

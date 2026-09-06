@@ -1,9 +1,8 @@
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { formatChartValue, getLegendProps } from "@/components/contents/chart/formatting";
 import type { PieChartAdapterProps } from "@/components/contents/chart/types";
 
-const pieColors = ["#ca2420", "#e85d3f", "#f59e0b", "#78716c", "#991b1b", "#fb923c"];
-
-export const PieChartAdapter = ({ definition, data }: PieChartAdapterProps) => (
+export const PieChartAdapter = ({ definition, formatting, data }: PieChartAdapterProps) => (
   <ResponsiveContainer width="100%" height="100%">
     <PieChart>
       <Pie
@@ -15,10 +14,11 @@ export const PieChartAdapter = ({ definition, data }: PieChartAdapterProps) => (
         paddingAngle={2}
       >
         {data.map((_, index) => (
-          <Cell fill={pieColors[index % pieColors.length]} key={index} />
+          <Cell fill={formatting.colors[index % formatting.colors.length]} key={index} />
         ))}
       </Pie>
-      <Tooltip formatter={(value) => Number(value).toLocaleString("ja-JP")} />
+      <Tooltip formatter={(value) => formatChartValue(value, formatting.yAxis.format)} />
+      {formatting.legend.visible && <Legend {...getLegendProps(formatting.legend)} />}
     </PieChart>
   </ResponsiveContainer>
 );

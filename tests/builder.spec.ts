@@ -49,7 +49,9 @@ test("edits, validates, and saves the dashboard configuration in development", a
   await page.getByRole("button", { name: "詳細にコンテンツを追加" }).click();
   await page.getByRole("button", { name: "指標" }).click();
   await page.getByLabel("タイトル").fill("詳細注文件数");
-  await page.getByLabel("Metric key").fill("orders");
+  await expect(page.getByText("data/raw/sales.csv")).toBeVisible();
+  await expect(page.getByText("logic/analysis.py", { exact: true })).toBeVisible();
+  await page.getByLabel("出力値").selectOption("orders");
   await page.getByRole("button", { name: "プレビューへ反映" }).click();
 
   await expect(page.getByRole("heading", { level: 1, name: "Builder preview" })).toBeVisible();
@@ -59,7 +61,7 @@ test("edits, validates, and saves the dashboard configuration in development", a
 
   await page.getByRole("button", { name: "Builderを閉じる" }).click();
   await page.getByRole("button", { name: "詳細注文件数を編集" }).click();
-  await expect(page.getByLabel("Metric key")).toHaveValue("orders");
+  await expect(page.getByLabel("出力値")).toHaveValue("orders");
 
   await page.getByRole("button", { name: "dashboard.jsonを保存" }).click();
   await expect(page.getByText("保存しました")).toBeVisible();
@@ -89,4 +91,48 @@ test("edits, validates, and saves the dashboard configuration in development", a
   await expect(checkboxes.last()).toBeChecked();
   await expect(page.getByLabel("開始日").last()).toBeVisible();
   await expect(page.getByRole("region", { name: "パラメータ" }).getByRole("slider")).toHaveCount(2);
+});
+
+test("selects a chart type from the visual catalog", async ({ page }) => {
+  await page.goto("http://127.0.0.1:3030");
+  await page.getByRole("link", { name: "グラフ" }).click();
+  await page.getByRole("button", { name: "月次売上を編集" }).click();
+  await page.getByRole("button", { name: "変更" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "チャートタイプを選択" });
+  await expect(dialog.getByRole("button", { name: /折れ線グラフ/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await dialog.getByRole("button", { name: /棒グラフ/ }).click();
+
+  await expect(page.locator("strong:visible").filter({ hasText: /^棒グラフ$/ })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "チャートタイプを選択" })).not.toBeVisible();
+
+  await page.getByRole("checkbox", { name: "凡例を表示" }).check();
+  await page.getByLabel("凡例の位置").selectOption("right");
+  await page.getByText("軸の書式設定", { exact: true }).click();
+  await page.getByLabel("縦軸の軸タイトル").fill("売上額");
+  await page.getByLabel("縦軸の最小値の設定").selectOption("fixed");
+  await page.getByRole("spinbutton", { name: "縦軸の最小値", exact: true }).fill("0");
+  await page.getByRole("button", { name: "プレビューへ反映" }).click();
+
+  await expect(page.getByText("売上額", { exact: true })).toBeVisible();
+  await expect(page.getByText("revenue", { exact: true })).toBeVisible();
+});
+
+test("selects dashboard CSV and Python files for analysis logic", async ({ page, request }) => {
+  const response = await request.get("http://127.0.0.1:3030/__dashlet/assets");
+  await expect(response).toBeOK();
+  expect(await response.json()).toEqual({
+    csv: ["data/raw/sales.csv"],
+    python: ["logic/analysis.py"],
+  });
+
+  await page.goto("http://127.0.0.1:3030");
+  await page.getByRole("button", { name: "Pythonロジックを編集" }).click();
+
+  await expect(page.getByLabel("CSVファイル")).toHaveValue("data/raw/sales.csv");
+  await expect(page.getByLabel("Pythonファイル")).toHaveValue("logic/analysis.py");
+  await expect(page.getByLabel("入力CSV")).toHaveValue("sales");
 });

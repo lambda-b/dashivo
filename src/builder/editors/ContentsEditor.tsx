@@ -41,6 +41,7 @@ export const ContentsEditor = ({
 
       {content ? (
         <ContentEditor
+          analysis={dashboard.analysis}
           content={content}
           index={selectedContentIndex}
           isFirst={selectedContentIndex === 0}

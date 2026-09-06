@@ -1,14 +1,14 @@
 import { wrap } from "comlink";
 import type { PythonAnalysisWorkerApi } from "@/ports/workers/python/analysis.worker";
 import PythonAnalysisWorker from "@/ports/workers/python/analysis.worker?worker&inline";
-import { analysisResultSchema, type AnalysisResult } from "@/schema/dashboard";
+import { analysisResultsSchema, type AnalysisResults } from "@/schema/dashboard";
 
 export interface AnalysisPort {
-  execute(params: Record<string, unknown>): Promise<AnalysisResult>;
+  execute(params: Record<string, unknown>): Promise<AnalysisResults>;
 }
 
 const api = wrap<PythonAnalysisWorkerApi>(new PythonAnalysisWorker());
 
 export const analysisPort: AnalysisPort = {
-  execute: async (params) => analysisResultSchema.parse(await api.execute(params)),
+  execute: async (params) => analysisResultsSchema.parse(await api.execute(params)),
 };

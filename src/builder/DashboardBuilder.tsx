@@ -1,9 +1,11 @@
 import { useState, type ReactNode } from "react";
 import { useContentActions } from "@/builder/hooks/useContentActions";
+import { useAnalysisActions } from "@/builder/hooks/useAnalysisActions";
 import { useDashboardDraft } from "@/builder/hooks/useDashboardDraft";
 import { useParameterActions } from "@/builder/hooks/useParameterActions";
 import { useTabActions } from "@/builder/hooks/useTabActions";
 import { ContentsEditor } from "@/builder/editors/ContentsEditor";
+import { AnalysisEditor } from "@/builder/editors/AnalysisEditor";
 import { ControlEditor } from "@/builder/editors/ControlEditor";
 import { HeaderEditor } from "@/builder/editors/HeaderEditor";
 import { TabEditor } from "@/builder/editors/TabEditor";
@@ -17,6 +19,7 @@ interface DashboardBuilderProps {
     actions: {
       addContent: (tabIndex: number) => void;
       editContent: (tabIndex: number, contentIndex: number) => void;
+      openAnalysis: () => void;
       openHeader: () => void;
       openParameters: () => void;
       openTabs: () => void;
@@ -24,7 +27,7 @@ interface DashboardBuilderProps {
   ) => ReactNode;
 }
 
-type BuilderSection = "contents" | "header" | "parameters" | "tabs";
+type BuilderSection = "analysis" | "contents" | "header" | "parameters" | "tabs";
 
 interface ContentTarget {
   contentIndex?: number;
@@ -32,6 +35,7 @@ interface ContentTarget {
 }
 
 const sectionTitles: Record<BuilderSection, string> = {
+  analysis: "Pythonロジック設定",
   contents: "コンテンツ設定",
   header: "ヘッダー設定",
   parameters: "パラメータ設定",
@@ -42,6 +46,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
   const { state, editDashboard, applyDraft, saveDraft, resetDraft } =
     useDashboardDraft(initialDashboard);
   const contentActions = useContentActions(state.draft, editDashboard);
+  const analysisActions = useAnalysisActions(state.draft, editDashboard);
   const parameterActions = useParameterActions(state.draft, editDashboard);
   const tabActions = useTabActions(state.draft, editDashboard);
   const [section, setSection] = useState<BuilderSection>();
@@ -57,6 +62,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
       {children(state.dashboard, state.revision, {
         addContent: (tabIndex) => openContentEditor({ tabIndex }),
         editContent: (tabIndex, contentIndex) => openContentEditor({ tabIndex, contentIndex }),
+        openAnalysis: () => setSection("analysis"),
         openHeader: () => setSection("header"),
         openParameters: () => setSection("parameters"),
         openTabs: () => setSection("tabs"),
@@ -88,7 +94,9 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
           </header>
 
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
-            {section === "header" ? (
+            {section === "analysis" ? (
+              <AnalysisEditor actions={analysisActions} dashboard={state.draft} />
+            ) : section === "header" ? (
               <HeaderEditor dashboard={state.draft} onChange={editDashboard} />
             ) : section === "parameters" ? (
               <ControlEditor actions={parameterActions} dashboard={state.draft} />

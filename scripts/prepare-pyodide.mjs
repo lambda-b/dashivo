@@ -6,9 +6,17 @@ import { loadPyodide, version as pyodideVersion } from "pyodide";
 const root = process.cwd();
 const pyodideRoot = path.join(root, "node_modules", "pyodide");
 const cacheRoot = path.join(root, ".pyodide-cache");
-const analysisSource = await fs.readFile(
-  path.join(root, "dashboard", "logic", "analysis.py"),
-  "utf8",
+const dashboardRoot = path.join(root, "dashboard");
+const dashboard = JSON.parse(await fs.readFile(path.join(dashboardRoot, "dashboard.json"), "utf8"));
+const analysisSources = await Promise.all(
+  dashboard.analysis.logic.map(async (logic) => {
+    const logicPath = path.resolve(dashboardRoot, logic.path);
+    const relativePath = path.relative(dashboardRoot, logicPath);
+    if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
+      throw new Error(`Dashboard logic must stay within dashboard/: ${logic.path}`);
+    }
+    return fs.readFile(logicPath, "utf8");
+  }),
 );
 
 await fs.mkdir(cacheRoot, { recursive: true });
@@ -18,7 +26,7 @@ for (const file of ["pyodide.asm.wasm", "python_stdlib.zip"]) {
 }
 
 const pyodide = await loadPyodide({ packageCacheDir: cacheRoot });
-const loadedPackages = await pyodide.loadPackagesFromImports(analysisSource, {
+const loadedPackages = await pyodide.loadPackagesFromImports(analysisSources.join("\n"), {
   messageCallback: () => {},
 });
 const packageFiles = loadedPackages.map((loadedPackage) => loadedPackage.fileName);

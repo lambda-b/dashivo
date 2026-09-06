@@ -35,6 +35,7 @@ const App = () => {
           <Dashboard
             dashboard={dashboard}
             key={revision}
+            onEditAnalysis={actions.openAnalysis}
             onAddContent={actions.addContent}
             onEditContent={actions.editContent}
             onEditHeader={actions.openHeader}
@@ -53,6 +54,7 @@ interface DashboardProps {
   dashboard: DashboardSchema;
   onAddContent?: (tabIndex: number) => void;
   onEditContent?: (tabIndex: number, contentIndex: number) => void;
+  onEditAnalysis?: () => void;
   onEditHeader?: () => void;
   onEditParameters?: () => void;
   onEditTabs?: () => void;
@@ -62,6 +64,7 @@ const Dashboard = ({
   dashboard,
   onAddContent,
   onEditContent,
+  onEditAnalysis,
   onEditHeader,
   onEditParameters,
   onEditTabs,
@@ -71,12 +74,13 @@ const Dashboard = ({
     Object.fromEntries(dashboard.controls.map((control) => [control.key, control.defaultValue])),
   );
   const analysis = useQuery({
-    queryKey: ["analysis", params],
+    queryKey: ["analysis", dashboard.analysis, params],
     queryFn: () => analysisPort.execute(params),
     select: (result) => validateContentBindings(dashboard, result),
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
   });
+  const runtime = analysis.data ? Object.values(analysis.data)[0]?.runtime : undefined;
 
   return (
     <main className="min-h-screen bg-stone-100">
@@ -146,10 +150,15 @@ const Dashboard = ({
             </div>
 
             {onEditParameters && (
-              <div className="border-t border-stone-100 p-3">
+              <div className="grid gap-2 border-t border-stone-100 p-3">
                 <EditButton fullWidth onClick={onEditParameters}>
                   パラメータを編集
                 </EditButton>
+                {onEditAnalysis && (
+                  <EditButton fullWidth onClick={onEditAnalysis}>
+                    Pythonロジックを編集
+                  </EditButton>
+                )}
               </div>
             )}
           </aside>
@@ -178,7 +187,7 @@ const Dashboard = ({
                               onEditContent &&
                               ((contentIndex) => onEditContent(tabIndex, contentIndex))
                             }
-                            result={analysis.data}
+                            results={analysis.data}
                             tab={tab}
                           />
                         }
@@ -189,10 +198,11 @@ const Dashboard = ({
                     <Route element={<Navigate replace to={defaultTabPath} />} path="*" />
                   </Routes>
 
-                  <p className="mt-5 text-right text-xs text-stone-500">
-                    Python {analysis.data.runtime.python} · pandas {analysis.data.runtime.pandas} ·
-                    NumPy {analysis.data.runtime.numpy}
-                  </p>
+                  {runtime && (
+                    <p className="mt-5 text-right text-xs text-stone-500">
+                      Python {runtime.python} · pandas {runtime.pandas} · NumPy {runtime.numpy}
+                    </p>
+                  )}
                 </>
               ) : (
                 <section className="grid h-72 place-items-center rounded-xl border border-stone-200 bg-white text-sm text-stone-500 shadow-sm">

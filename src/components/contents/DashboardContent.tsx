@@ -3,13 +3,18 @@ import { EditButton } from "@/components/primitives/EditButton";
 import { MetricCard } from "@/components/contents/MetricCard";
 import { ChartPanel } from "@/components/contents/chart/ChartPanel";
 import { DataTable } from "@/components/contents/table/DataTable";
-import type { AnalysisResult, ContentDefinition, TabDefinition } from "@/schema/dashboard";
+import type {
+  AnalysisResult,
+  AnalysisResults,
+  ContentDefinition,
+  TabDefinition,
+} from "@/schema/dashboard";
 
 interface DashboardContentProps {
   onAddContent?: () => void;
   onEditContent?: (contentIndex: number) => void;
   tab: TabDefinition;
-  result: AnalysisResult;
+  results: AnalysisResults;
 }
 
 interface ContentProps {
@@ -32,13 +37,13 @@ export const DashboardContent = ({
   onAddContent,
   onEditContent,
   tab,
-  result,
+  results,
 }: DashboardContentProps) => (
   <section className="grid grid-cols-1 gap-5">
     {tab.contents.length > 0 ? (
       tab.contents.map((content, contentIndex) => (
         <div className="relative min-w-0" key={content.id}>
-          <Content content={content} result={result} />
+          <Content content={content} result={results[content.logic]} />
           {onEditContent && (
             <div className="absolute top-3 right-3 z-10 drop-shadow-sm">
               <EditButton

@@ -4,6 +4,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+import { analysisAssets } from "./vite/plugins/analysis-assets.ts";
+import { dashboardAssets } from "./vite/plugins/dashboard-assets.ts";
 import { browserOnlyWorker } from "./vite/plugins/browser-only-worker.ts";
 import { dashboardEditor } from "./vite/plugins/dashboard-editor.ts";
 import { dashboardOutput } from "./vite/plugins/dashboard-output.ts";
@@ -19,6 +21,8 @@ export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     tailwindcss(),
+    analysisAssets(projectRoot),
+    command === "serve" && dashboardAssets(projectRoot),
     pyodideRuntime(projectRoot, command),
     command === "serve" && dashboardEditor(projectRoot),
     command === "serve" && pyodideAssets(projectRoot),
@@ -32,7 +36,11 @@ export default defineConfig(({ command }) => ({
   },
   worker: {
     format: "iife",
-    plugins: () => [browserOnlyWorker(), pyodideRuntime(projectRoot, command)],
+    plugins: () => [
+      browserOnlyWorker(),
+      analysisAssets(projectRoot),
+      pyodideRuntime(projectRoot, command),
+    ],
     rollupOptions: {
       output: {
         banner: "globalThis.importScripts = undefined;",

@@ -11,7 +11,7 @@ export const ChartPanel = ({ definition, data }: ChartPanelProps) => (
     <p className="mb-2 text-xs font-bold tracking-[0.15em] text-stone-500">RECHARTS</p>
     <h2 className="mb-6 text-2xl font-bold tracking-tight">{definition.title}</h2>
     <div className="h-72 w-full">
-      <ChartRenderer definition={definition.chart} data={data} />
+      <ChartRenderer definition={definition.chart} formatting={definition.formatting} data={data} />
     </div>
   </section>
 );

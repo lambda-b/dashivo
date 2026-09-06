@@ -2,9 +2,29 @@ import { expect, test } from "@playwright/test";
 import { analysisResultSchema, dashboardSchema } from "@/schema/dashboard";
 import { validateContentBindings } from "@/schema/validation";
 
+const chartFormatting = {
+  colors: ["#ca2420", "#e85d3f"],
+  legend: { visible: true, position: "bottom" },
+  gridLines: true,
+  xAxis: { title: "Month", format: "auto", minimum: null, maximum: null },
+  yAxis: { title: "Revenue", format: "currency", minimum: 0, maximum: null },
+} as const;
+
 const dashboardSource = {
   title: "Example",
   description: "Runtime fixture",
+  analysis: {
+    inputs: [{ id: "sales", type: "csv", path: "data/raw/sales.csv" }],
+    logic: [
+      {
+        id: "sales-analysis",
+        type: "python",
+        path: "logic/analysis.py",
+        input: "sales",
+        outputs: { datasets: ["summary"], metrics: ["revenue"] },
+      },
+    ],
+  },
   controls: [
     {
       type: "radio",
@@ -23,6 +43,7 @@ const dashboardSource = {
           id: "revenue",
           type: "metric",
           title: "Revenue",
+          logic: "sales-analysis",
           metric: "revenue",
           format: "currency",
           emphasis: "strong",
@@ -37,7 +58,9 @@ const dashboardSource = {
           id: "revenue-chart",
           type: "chart",
           title: "Revenue",
+          logic: "sales-analysis",
           dataset: "summary",
+          formatting: chartFormatting,
           chart: { type: "line", x: "date", y: ["revenue"] },
         },
       ],
@@ -50,6 +73,7 @@ const dashboardSource = {
           id: "summary-table",
           type: "table",
           title: "Summary",
+          logic: "sales-analysis",
           dataset: "summary",
           columns: [{ key: "date", label: "Date" }],
         },
@@ -133,21 +157,27 @@ test("accepts the supported parameter and chart variants", () => {
                 id: "revenue-bar",
                 type: "chart",
                 title: "Revenue bar",
+                logic: "sales-analysis",
                 dataset: "summary",
+                formatting: chartFormatting,
                 chart: { type: "bar", x: "date", y: ["revenue"] },
               },
               {
                 id: "revenue-pie",
                 type: "chart",
                 title: "Revenue pie",
+                logic: "sales-analysis",
                 dataset: "summary",
+                formatting: chartFormatting,
                 chart: { type: "pie", name: "date", value: "revenue" },
               },
               {
                 id: "revenue-scatter",
                 type: "chart",
                 title: "Revenue scatter",
+                logic: "sales-analysis",
                 dataset: "summary",
+                formatting: chartFormatting,
                 chart: { type: "scatter", x: "date", y: "revenue" },
               },
             ],
@@ -193,6 +223,30 @@ test("rejects slider values outside its configured range", () => {
   );
 });
 
+test("rejects an invalid fixed chart axis range", () => {
+  const invalidDashboard = {
+    ...dashboardSource,
+    tabs: dashboardSource.tabs.map((tab) =>
+      tab.id === "charts"
+        ? {
+            ...tab,
+            contents: tab.contents.map((content) => ({
+              ...content,
+              formatting: {
+                ...content.formatting,
+                yAxis: { ...content.formatting.yAxis, minimum: 100, maximum: 10 },
+              },
+            })),
+          }
+        : tab,
+    ),
+  };
+
+  expect(() => dashboardSchema.parse(invalidDashboard)).toThrow(
+    "maximum must be greater than minimum",
+  );
+});
+
 test("rejects duplicate tab and content identifiers", () => {
   const duplicateTab = {
     ...dashboardSource,
@@ -209,6 +263,32 @@ test("rejects duplicate tab and content identifiers", () => {
   expect(() => dashboardSchema.parse(duplicateContent)).toThrow("content ids must be unique");
 });
 
+test("rejects invalid analysis logic references", () => {
+  const missingInput = {
+    ...dashboardSource,
+    analysis: {
+      ...dashboardSource.analysis,
+      logic: [{ ...dashboardSource.analysis.logic[0], input: "missing-input" }],
+    },
+  };
+  expect(() => dashboardSchema.parse(missingInput)).toThrow("input「missing-input」is not defined");
+
+  const undeclaredOutput = {
+    ...dashboardSource,
+    tabs: dashboardSource.tabs.map((tab, index) =>
+      index === 0
+        ? {
+            ...tab,
+            contents: [{ ...tab.contents[0], metric: "undeclared-metric" }],
+          }
+        : tab,
+    ),
+  };
+  expect(() => dashboardSchema.parse(undeclaredOutput)).toThrow(
+    "output「undeclared-metric」is not declared by logic「sales-analysis」",
+  );
+});
+
 test("rejects a missing result dataset", () => {
   const dashboard = dashboardSchema.parse(dashboardSource);
   const result = analysisResultSchema.parse({
@@ -217,7 +297,7 @@ test("rejects a missing result dataset", () => {
     metrics: { revenue: 0, orders: 0 },
   });
 
-  expect(() => validateContentBindings(dashboard, result)).toThrow(
+  expect(() => validateContentBindings(dashboard, { "sales-analysis": result })).toThrow(
     "dataset「summary」がありません",
   );
 });
@@ -230,7 +310,7 @@ test("rejects a missing result metric", () => {
     metrics: {},
   });
 
-  expect(() => validateContentBindings(dashboard, result)).toThrow(
+  expect(() => validateContentBindings(dashboard, { "sales-analysis": result })).toThrow(
     "Metric「Revenue」の値「revenue」がありません",
   );
 });

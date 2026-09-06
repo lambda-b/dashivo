@@ -5,6 +5,32 @@ const identifierSchema = z
   .min(1)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "must be a lowercase kebab-case identifier");
 
+const uniqueOutputNamesSchema = z
+  .array(z.string().min(1))
+  .refine((values) => new Set(values).size === values.length, "output names must be unique");
+
+const analysisSchema = z.object({
+  inputs: z.array(
+    z.object({
+      id: identifierSchema,
+      type: z.literal("csv"),
+      path: z.string().min(1),
+    }),
+  ),
+  logic: z.array(
+    z.object({
+      id: identifierSchema,
+      type: z.literal("python"),
+      path: z.string().min(1),
+      input: identifierSchema,
+      outputs: z.object({
+        datasets: uniqueOutputNamesSchema,
+        metrics: uniqueOutputNamesSchema,
+      }),
+    }),
+  ),
+});
+
 const optionSchema = z.object({ label: z.string().min(1), value: z.string().min(1) });
 const selectControlSchema = z
   .object({
@@ -121,6 +147,7 @@ const metricContentSchema = z.object({
   id: identifierSchema,
   type: z.literal("metric"),
   title: z.string().min(1),
+  logic: identifierSchema,
   metric: z.string().min(1),
   format: z.enum(["currency", "number"]),
   emphasis: z.enum(["strong", "accent"]),
@@ -150,11 +177,44 @@ const scatterPlotSchema = z.object({
   y: z.string().min(1),
 });
 
+const axisFormattingSchema = z.object({
+  title: z.string(),
+  format: z.enum(["auto", "number", "currency", "percent"]),
+  minimum: z.number().finite().nullable(),
+  maximum: z.number().finite().nullable(),
+});
+
+const chartFormattingSchema = z
+  .object({
+    colors: z.array(z.string().regex(/^#[0-9a-f]{6}$/i, "must be a six-digit hex color")).min(1),
+    legend: z.object({
+      visible: z.boolean(),
+      position: z.enum(["top", "right", "bottom", "left"]),
+    }),
+    gridLines: z.boolean(),
+    xAxis: axisFormattingSchema,
+    yAxis: axisFormattingSchema,
+  })
+  .superRefine((formatting, context) => {
+    for (const axisName of ["xAxis", "yAxis"] as const) {
+      const axis = formatting[axisName];
+      if (axis.minimum !== null && axis.maximum !== null && axis.minimum >= axis.maximum) {
+        context.addIssue({
+          code: "custom",
+          message: "maximum must be greater than minimum",
+          path: [axisName, "maximum"],
+        });
+      }
+    }
+  });
+
 const chartContentSchema = z.object({
   id: identifierSchema,
   type: z.literal("chart"),
   title: z.string().min(1),
+  logic: identifierSchema,
   dataset: z.string().min(1),
+  formatting: chartFormattingSchema,
   chart: z.discriminatedUnion("type", [
     lineChartSchema,
     barChartSchema,
@@ -167,6 +227,7 @@ const tableContentSchema = z.object({
   id: identifierSchema,
   type: z.literal("table"),
   title: z.string().min(1),
+  logic: identifierSchema,
   dataset: z.string().min(1),
   columns: z
     .array(
@@ -195,6 +256,7 @@ export const dashboardSchema = z
   .object({
     title: z.string().min(1),
     description: z.string(),
+    analysis: analysisSchema,
     controls: z.array(
       z.discriminatedUnion("type", [
         radioControlSchema,
@@ -207,6 +269,31 @@ export const dashboardSchema = z
     tabs: z.array(tabSchema).min(1),
   })
   .superRefine((dashboard, context) => {
+    const addDuplicateIdIssue = (ids: string[], path: (string | number)[]) => {
+      if (new Set(ids).size !== ids.length) {
+        context.addIssue({ code: "custom", message: "ids must be unique", path });
+      }
+    };
+
+    addDuplicateIdIssue(
+      dashboard.analysis.inputs.map((input) => input.id),
+      ["analysis", "inputs"],
+    );
+    addDuplicateIdIssue(
+      dashboard.analysis.logic.map((logic) => logic.id),
+      ["analysis", "logic"],
+    );
+    const inputIds = new Set(dashboard.analysis.inputs.map((input) => input.id));
+    dashboard.analysis.logic.forEach((logic, index) => {
+      if (!inputIds.has(logic.input)) {
+        context.addIssue({
+          code: "custom",
+          message: `input「${logic.input}」is not defined`,
+          path: ["analysis", "logic", index, "input"],
+        });
+      }
+    });
+
     if (
       new Set(dashboard.controls.map((control) => control.key)).size !== dashboard.controls.length
     ) {
@@ -229,6 +316,32 @@ export const dashboardSchema = z
         path: ["tabs"],
       });
     }
+
+    const logic = new Map(
+      dashboard.analysis.logic.map((definition) => [definition.id, definition]),
+    );
+    for (const content of contents) {
+      const definition = logic.get(content.logic);
+      if (!definition) {
+        context.addIssue({
+          code: "custom",
+          message: `logic「${content.logic}」is not defined`,
+          path: ["tabs"],
+        });
+        continue;
+      }
+
+      const output = content.type === "metric" ? content.metric : content.dataset;
+      const availableOutputs =
+        content.type === "metric" ? definition.outputs.metrics : definition.outputs.datasets;
+      if (!availableOutputs.includes(output)) {
+        context.addIssue({
+          code: "custom",
+          message: `output「${output}」is not declared by logic「${definition.id}」`,
+          path: ["tabs"],
+        });
+      }
+    }
   });
 
 const dataValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
@@ -237,8 +350,11 @@ export const analysisResultSchema = z.object({
   datasets: z.record(z.string(), z.array(z.record(z.string(), dataValueSchema))),
   metrics: z.record(z.string(), z.number()),
 });
+export const analysisResultsSchema = z.record(identifierSchema, analysisResultSchema);
 
 export type DashboardSchema = z.infer<typeof dashboardSchema>;
+export type AnalysisDefinition = DashboardSchema["analysis"];
+export type AnalysisLogicDefinition = AnalysisDefinition["logic"][number];
 export type ControlDefinition = DashboardSchema["controls"][number];
 export type ParameterValue = ControlDefinition["defaultValue"];
 export type ChoiceControlDefinition = Extract<ControlDefinition, { type: "radio" | "select" }>;
@@ -251,6 +367,9 @@ export type TabDefinition = DashboardSchema["tabs"][number];
 export type ContentDefinition = TabDefinition["contents"][number];
 export type MetricContentDefinition = Extract<ContentDefinition, { type: "metric" }>;
 export type ChartContentDefinition = Extract<ContentDefinition, { type: "chart" }>;
+export type ChartFormattingDefinition = ChartContentDefinition["formatting"];
+export type AxisFormattingDefinition = ChartFormattingDefinition["xAxis"];
 export type TableContentDefinition = Extract<ContentDefinition, { type: "table" }>;
 export type AnalysisResult = z.infer<typeof analysisResultSchema>;
+export type AnalysisResults = z.infer<typeof analysisResultsSchema>;
 export type DataRow = AnalysisResult["datasets"][string][number];

@@ -1,7 +1,12 @@
-import type { ChartContentDefinition, DataRow } from "@/schema/dashboard";
+import type {
+  ChartContentDefinition,
+  ChartFormattingDefinition,
+  DataRow,
+} from "@/schema/dashboard";
 
 interface ChartAdapterProps<Definition> {
   definition: Definition;
+  formatting: ChartFormattingDefinition;
   data: DataRow[];
 }
 

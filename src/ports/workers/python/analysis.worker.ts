@@ -1,6 +1,5 @@
 import { expose } from "comlink";
-import sourceData from "#dashboard/data/raw/sales.csv?raw";
-import analysisSource from "#dashboard/logic/analysis.py?raw";
+import { analysisDefinitions } from "virtual:dashlet/analysis-assets";
 import { initializePyodide } from "virtual:dashlet/pyodide-runtime";
 
 export interface PythonAnalysisWorkerApi {
@@ -8,21 +7,43 @@ export interface PythonAnalysisWorkerApi {
 }
 
 const analysisPromise = initializePyodide().then(async (pyodide) => {
-  await pyodide.loadPackagesFromImports(analysisSource);
-  pyodide.FS.writeFile("/home/pyodide/analysis.py", analysisSource);
-  return { pyodide, analysis: pyodide.pyimport("analysis") };
+  const analyses = [];
+  for (const [index, definition] of analysisDefinitions.entries()) {
+    await pyodide.loadPackagesFromImports(definition.analysisSource);
+    const moduleName = `dashlet_analysis_${index}`;
+    pyodide.FS.writeFile(`/home/pyodide/${moduleName}.py`, definition.analysisSource);
+    const module = pyodide.pyimport(moduleName);
+    const execute = module.execute;
+    if (typeof execute !== "function") {
+      throw new Error(
+        `Python logic「${definition.id}」(${definition.path})にexecute関数がありません。`,
+      );
+    }
+    analyses.push({
+      id: definition.id,
+      sourceData: definition.sourceData,
+      execute,
+    });
+  }
+  return { pyodide, analyses };
 });
 
 const api: PythonAnalysisWorkerApi = {
   execute: async (params) => {
-    const { pyodide, analysis } = await analysisPromise;
-    using pythonParams = pyodide.toPy({ ...params, source_data: sourceData });
-    using pythonResult = analysis.execute(pythonParams);
+    const { pyodide, analyses } = await analysisPromise;
+    const results: Record<string, unknown> = {};
 
-    return pythonResult.toJs({
-      dict_converter: Object.fromEntries,
-      create_pyproxies: false,
-    });
+    for (const { id, sourceData, execute } of analyses) {
+      using pythonParams = pyodide.toPy({ ...params, source_data: sourceData });
+      using pythonResult = execute(pythonParams);
+
+      results[id] = pythonResult.toJs({
+        dict_converter: Object.fromEntries,
+        create_pyproxies: false,
+      });
+    }
+
+    return results;
   },
 };
 

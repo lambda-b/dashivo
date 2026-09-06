@@ -1,7 +1,10 @@
-import { SelectList } from "@/components/primitives/SelectList";
-import type { ChartContentDefinition } from "@/schema/dashboard";
+import { ContentLogicFields } from "@/builder/components/ContentLogicFields";
+import { ChartFormattingEditor } from "@/builder/editors/contents/ChartFormattingEditor";
+import { ChartTypeSelector } from "@/builder/editors/contents/ChartTypeSelector";
+import type { AnalysisDefinition, ChartContentDefinition } from "@/schema/dashboard";
 
 interface ChartContentEditorProps {
+  analysis: AnalysisDefinition;
   content: ChartContentDefinition;
   onChange: (content: ChartContentDefinition) => void;
 }
@@ -9,27 +12,31 @@ interface ChartContentEditorProps {
 type ChartDefinition = ChartContentDefinition["chart"];
 type ChartType = ChartDefinition["type"];
 
-const chartTypes: ReadonlyArray<{ label: string; value: ChartType }> = [
-  { label: "折れ線グラフ", value: "line" },
-  { label: "棒グラフ", value: "bar" },
-  { label: "円グラフ", value: "pie" },
-  { label: "散布図", value: "scatter" },
-];
+const createChartDefinition = (type: ChartType, current: ChartDefinition): ChartDefinition => {
+  if (type === current.type) return current;
 
-const createChartDefinition = (type: ChartType): ChartDefinition => {
   switch (type) {
     case "line":
     case "bar":
-      return { type, x: "", y: [] };
+      return current.type === "line" || current.type === "bar"
+        ? { type, x: current.x, y: current.y }
+        : current.type === "pie"
+          ? { type, x: current.name, y: [current.value] }
+          : { type, x: current.x, y: [current.y] };
     case "pie":
-      return { type, name: "", value: "" };
+      return current.type === "line" || current.type === "bar"
+        ? { type, name: current.x, value: current.y[0] ?? "" }
+        : current.type === "scatter"
+          ? { type, name: current.x, value: current.y }
+          : current;
     case "scatter":
-      return { type, x: "", y: "" };
+      return current.type === "line" || current.type === "bar"
+        ? { type, x: current.x, y: current.y[0] ?? "" }
+        : current.type === "pie"
+          ? { type, x: current.name, y: current.value }
+          : current;
   }
 };
-
-const parseChartType = (value: string): ChartType =>
-  chartTypes.find((chartType) => chartType.value === value)?.value ?? "line";
 
 interface ChartFieldsProps {
   chart: ChartDefinition;
@@ -116,30 +123,29 @@ const ChartFields = ({ chart, onChange }: ChartFieldsProps) => {
   );
 };
 
-export const ChartContentEditor = ({ content, onChange }: ChartContentEditorProps) => (
+export const ChartContentEditor = ({ analysis, content, onChange }: ChartContentEditorProps) => (
   <div className="mt-4 grid gap-3">
-    <label className="text-xs font-medium text-stone-600">
-      チャートタイプ
-      <div className="mt-1">
-        <SelectList
-          onChange={(value) =>
-            onChange({ ...content, chart: createChartDefinition(parseChartType(value)) })
-          }
-          options={chartTypes}
-          value={content.chart.type}
-        />
-      </div>
-    </label>
+    <ChartTypeSelector
+      onChange={(type) =>
+        onChange({ ...content, chart: createChartDefinition(type, content.chart) })
+      }
+      value={content.chart.type}
+    />
 
-    <label className="text-xs font-medium text-stone-600">
-      Dataset
-      <input
-        className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-        onChange={(event) => onChange({ ...content, dataset: event.target.value })}
-        value={content.dataset}
-      />
-    </label>
+    <ContentLogicFields
+      analysis={analysis}
+      logic={content.logic}
+      onChange={(logic, dataset) => onChange({ ...content, logic, dataset })}
+      output={content.dataset}
+      outputType="datasets"
+    />
 
     <ChartFields chart={content.chart} onChange={(chart) => onChange({ ...content, chart })} />
+
+    <ChartFormattingEditor
+      chartType={content.chart.type}
+      formatting={content.formatting}
+      onChange={(formatting) => onChange({ ...content, formatting })}
+    />
   </div>
 );

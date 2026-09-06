@@ -1,4 +1,4 @@
-import type { AnalysisResult, DashboardSchema } from "@/schema/dashboard";
+import type { AnalysisResult, AnalysisResults, DashboardSchema } from "@/schema/dashboard";
 
 const getMissingColumns = (rows: AnalysisResult["datasets"][string], columns: string[]) => {
   if (rows.length === 0) return [];
@@ -8,11 +8,17 @@ const getMissingColumns = (rows: AnalysisResult["datasets"][string], columns: st
 
 export const validateContentBindings = (
   dashboard: DashboardSchema,
-  result: AnalysisResult,
-): AnalysisResult => {
+  results: AnalysisResults,
+): AnalysisResults => {
   const errors: string[] = [];
 
   for (const content of dashboard.tabs.flatMap((tab) => tab.contents)) {
+    const result = results[content.logic];
+    if (!result) {
+      errors.push(`Content「${content.title}」のlogic「${content.logic}」の実行結果がありません。`);
+      continue;
+    }
+
     if (content.type === "metric") {
       if (!(content.metric in result.metrics)) {
         errors.push(`Metric「${content.title}」の値「${content.metric}」がありません。`);
@@ -45,5 +51,5 @@ export const validateContentBindings = (
   }
 
   if (errors.length > 0) throw new Error(errors.join("\n"));
-  return result;
+  return results;
 };

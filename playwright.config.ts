@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: "./tests",
   outputDir: "./tests/results",
   timeout: 120_000,
+  workers: 1,
   webServer: {
     command: "pnpm dev",
     url: "http://127.0.0.1:3030",
