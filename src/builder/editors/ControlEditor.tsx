@@ -4,6 +4,7 @@ import { ControlCatalogDialog } from "@/builder/components/ControlCatalogDialog"
 import { CheckboxControlEditor } from "@/builder/editors/controls/CheckboxControlEditor";
 import { ChoiceControlEditor } from "@/builder/editors/controls/ChoiceControlEditor";
 import { DateRangeControlEditor } from "@/builder/editors/controls/DateRangeControlEditor";
+import { SliderControlEditor } from "@/builder/editors/controls/SliderControlEditor";
 import type { ControlDefinition, DashboardSchema } from "@/schema/dashboard";
 
 interface ControlActions {
@@ -64,6 +65,15 @@ export const ControlEditor = ({ actions, dashboard }: ControlEditorProps) => {
                 <DateRangeControlEditor
                   key={index}
                   control={control}
+                  onChange={(nextControl) => actions.update(index, nextControl)}
+                  onRemove={() => actions.remove(index)}
+                />
+              );
+            case "slider":
+              return (
+                <SliderControlEditor
+                  control={control}
+                  key={index}
                   onChange={(nextControl) => actions.update(index, nextControl)}
                   onRemove={() => actions.remove(index)}
                 />

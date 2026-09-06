@@ -113,6 +113,15 @@ test("accepts the supported parameter and chart variants", () => {
         displayName: "Period",
         defaultValue: { from: "2026-01-01", to: "2026-12-31" },
       },
+      {
+        type: "slider",
+        key: "revenue-range",
+        displayName: "Revenue range",
+        defaultValue: [25, 75],
+        min: 0,
+        max: 100,
+        step: 5,
+      },
     ],
     tabs: dashboardSource.tabs.map((tab) =>
       tab.id === "charts"
@@ -152,6 +161,7 @@ test("accepts the supported parameter and chart variants", () => {
     "select",
     "checkbox",
     "date-range",
+    "slider",
   ]);
   expect(dashboard.tabs[1].contents.map((content) => content.type)).toEqual([
     "chart",
@@ -159,6 +169,28 @@ test("accepts the supported parameter and chart variants", () => {
     "chart",
     "chart",
   ]);
+});
+
+test("rejects slider values outside its configured range", () => {
+  const invalidDashboard = {
+    ...dashboardSource,
+    controls: [
+      ...dashboardSource.controls,
+      {
+        type: "slider",
+        key: "revenue-range",
+        displayName: "Revenue range",
+        defaultValue: [20, 120],
+        min: 0,
+        max: 100,
+        step: 5,
+      },
+    ],
+  };
+
+  expect(() => dashboardSchema.parse(invalidDashboard)).toThrow(
+    "defaultValue must be within the slider range",
+  );
 });
 
 test("rejects duplicate tab and content identifiers", () => {

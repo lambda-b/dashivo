@@ -29,7 +29,7 @@ test("runs pandas and NumPy from a standalone file", async ({ page }) => {
   await expect(page).toHaveURL(/#\/tables$/);
   await expect(page.getByRole("heading", { name: "月次サマリー" })).toBeVisible();
 
-  await page.getByRole("button", { name: "West" }).click();
+  await page.getByRole("radio", { name: "West" }).check();
   await page.getByRole("link", { name: "サマリー" }).click();
   await expect(page.getByText("￥335,000")).toBeVisible({ timeout: 120_000 });
   expect(networkRequests).toEqual([]);

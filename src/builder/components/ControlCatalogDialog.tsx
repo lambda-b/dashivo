@@ -42,6 +42,12 @@ const catalog = [
     technicalName: "Date Range",
     description: "開始日と終了日を指定します。",
   },
+  {
+    type: "slider",
+    label: "数値スライダー",
+    technicalName: "Slider",
+    description: "範囲内の数値を、単一または複数のつまみで指定します。",
+  },
 ] as const satisfies ReadonlyArray<CatalogItem>;
 
 const ControlPreview = ({ type }: { type: ControlType }) => {
@@ -95,6 +101,16 @@ const ControlPreview = ({ type }: { type: ControlType }) => {
             <span className="block rounded-md border border-stone-300 bg-white px-2 py-2">
               年/月/日
             </span>
+          </span>
+        </div>
+      );
+    case "slider":
+      return (
+        <div className="flex h-9 items-center px-1">
+          <span className="relative block h-2 w-full rounded-full bg-stone-200">
+            <span className="bg-brand absolute left-1/4 right-1/4 h-full rounded-full" />
+            <span className="border-brand absolute left-1/4 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-white" />
+            <span className="border-brand absolute right-1/4 top-1/2 size-4 translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-white" />
           </span>
         </div>
       );

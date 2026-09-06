@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
+import { dashboardSchema } from "@/schema/dashboard";
 import { writeDashboardFile } from "@vite/plugins/dashboard-editor";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
 
@@ -14,7 +15,7 @@ test("validates and writes dashboard.json", async () => {
     const saved = JSON.parse(
       await fs.readFile(path.join(projectRoot, "dashboard", "dashboard.json"), "utf8"),
     );
-    expect(saved).toEqual(dashboardSource);
+    expect(saved).toEqual(dashboardSchema.parse(dashboardSource));
     await expect(writeDashboardFile(projectRoot, { title: "Invalid" })).rejects.toThrow();
   } finally {
     await fs.rm(projectRoot, { recursive: true });

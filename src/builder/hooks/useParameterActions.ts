@@ -38,6 +38,16 @@ const createControl = (type: ControlDefinition["type"], key: string): ControlDef
       };
     case "date-range":
       return { type, key, displayName: "新しい条件", defaultValue: { from: "", to: "" } };
+    case "slider":
+      return {
+        type,
+        key,
+        displayName: "新しい数値条件",
+        defaultValue: [50],
+        min: 0,
+        max: 100,
+        step: 1,
+      };
   }
 };
 

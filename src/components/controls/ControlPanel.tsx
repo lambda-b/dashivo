@@ -2,6 +2,7 @@ import { CheckboxControl } from "@/components/controls/CheckboxControl";
 import { DateRangeControl } from "@/components/controls/DateRangeControl";
 import { RadioControl } from "@/components/controls/RadioControl";
 import { SelectControl } from "@/components/controls/SelectControl";
+import { SliderControl } from "@/components/controls/SliderControl";
 import type { DashboardSchema, ParameterValue } from "@/schema/dashboard";
 
 interface ControlPanelProps {
@@ -40,7 +41,11 @@ export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) 
               control={control}
               key={control.key}
               onChange={(nextValue) => onChange(control.key, nextValue)}
-              value={Array.isArray(value) ? value : control.defaultValue}
+              value={
+                Array.isArray(value) && value.every((item) => typeof item === "string")
+                  ? value
+                  : control.defaultValue
+              }
             />
           );
         case "date-range":
@@ -51,6 +56,19 @@ export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) 
               onChange={(nextValue) => onChange(control.key, nextValue)}
               value={
                 typeof value === "object" && !Array.isArray(value) ? value : control.defaultValue
+              }
+            />
+          );
+        case "slider":
+          return (
+            <SliderControl
+              control={control}
+              key={control.key}
+              onChange={(nextValue) => onChange(control.key, nextValue)}
+              value={
+                Array.isArray(value) && value.every((item) => typeof item === "number")
+                  ? value
+                  : control.defaultValue
               }
             />
           );

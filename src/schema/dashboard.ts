@@ -58,6 +58,46 @@ const dateRangeControlSchema = z.object({
   defaultValue: z.object({ from: z.string(), to: z.string() }),
 });
 
+const sliderControlSchema = z
+  .object({
+    type: z.literal("slider"),
+    key: z.string().min(1),
+    displayName: z.string().min(1),
+    defaultValue: z.array(z.number().finite()).min(1),
+    min: z.number().finite(),
+    max: z.number().finite(),
+    step: z.number().positive().finite(),
+  })
+  .superRefine((control, context) => {
+    if (control.min >= control.max) {
+      context.addIssue({
+        code: "custom",
+        message: "max must be greater than min",
+        path: ["max"],
+      });
+    }
+
+    if (control.defaultValue.some((value) => value < control.min || value > control.max)) {
+      context.addIssue({
+        code: "custom",
+        message: "defaultValue must be within the slider range",
+        path: ["defaultValue"],
+      });
+    }
+
+    if (
+      control.defaultValue.some(
+        (value, index) => index > 0 && value < control.defaultValue[index - 1],
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "defaultValue must be in ascending order",
+        path: ["defaultValue"],
+      });
+    }
+  });
+
 const radioControlSchema = z
   .object({
     type: z.literal("radio"),
@@ -161,6 +201,7 @@ export const dashboardSchema = z
         selectControlSchema,
         checkboxControlSchema,
         dateRangeControlSchema,
+        sliderControlSchema,
       ]),
     ),
     tabs: z.array(tabSchema).min(1),
@@ -205,6 +246,7 @@ export type RadioControlDefinition = Extract<ControlDefinition, { type: "radio" 
 export type SelectControlDefinition = Extract<ControlDefinition, { type: "select" }>;
 export type CheckboxControlDefinition = Extract<ControlDefinition, { type: "checkbox" }>;
 export type DateRangeControlDefinition = Extract<ControlDefinition, { type: "date-range" }>;
+export type SliderControlDefinition = Extract<ControlDefinition, { type: "slider" }>;
 export type TabDefinition = DashboardSchema["tabs"][number];
 export type ContentDefinition = TabDefinition["contents"][number];
 export type MetricContentDefinition = Extract<ContentDefinition, { type: "metric" }>;

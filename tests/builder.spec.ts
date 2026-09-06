@@ -29,6 +29,12 @@ test("edits, validates, and saves the dashboard configuration in development", a
 
   await page.getByRole("button", { name: "項目を追加" }).click();
   await page.getByRole("button", { name: "日付範囲を追加" }).click();
+  await page.getByRole("button", { name: "項目を追加" }).click();
+  await page.getByRole("button", { name: "数値スライダーを追加" }).click();
+  const sliderEditor = page.locator("fieldset").filter({ hasText: "SLIDER PARAMETER" });
+  await sliderEditor.getByRole("button", { name: "値を追加" }).click();
+  await sliderEditor.getByRole("spinbutton", { name: "デフォルト値1" }).fill("25");
+  await sliderEditor.getByRole("spinbutton", { name: "デフォルト値2" }).fill("75");
   await page.getByRole("button", { name: "Builderを閉じる" }).click();
 
   await page.getByRole("button", { name: "タブを編集" }).click();
@@ -82,4 +88,5 @@ test("edits, validates, and saves the dashboard configuration in development", a
   await checkboxes.last().check();
   await expect(checkboxes.last()).toBeChecked();
   await expect(page.getByLabel("開始日").last()).toBeVisible();
+  await expect(page.getByRole("region", { name: "パラメータ" }).getByRole("slider")).toHaveCount(2);
 });
