@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
-import { EditorIconButton } from "@/builder/components/EditorIconButton";
+import { IconButton } from "@/components/primitives/IconButton";
 import type { TabDefinition } from "@/schema/dashboard";
 
 interface TabEditorProps {
@@ -29,19 +29,19 @@ export const TabEditor = ({
     <div className="mb-4 flex items-center justify-between gap-4">
       <legend className="text-xs font-bold tracking-wide text-stone-500">TAB {index + 1}</legend>
       <div className="flex items-center gap-1">
-        <EditorIconButton
+        <IconButton
           disabled={isFirst}
           icon={ArrowUp}
           label={`${tab.label}を上へ移動`}
           onClick={onMoveUp}
         />
-        <EditorIconButton
+        <IconButton
           disabled={isLast}
           icon={ArrowDown}
           label={`${tab.label}を下へ移動`}
           onClick={onMoveDown}
         />
-        <EditorIconButton
+        <IconButton
           disabled={!canRemove}
           icon={Trash2}
           label={`${tab.label}を削除`}

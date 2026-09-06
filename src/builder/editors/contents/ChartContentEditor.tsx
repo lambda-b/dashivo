@@ -1,3 +1,4 @@
+import { SelectList } from "@/components/primitives/SelectList";
 import type { ChartContentDefinition } from "@/schema/dashboard";
 
 interface ChartContentEditorProps {
@@ -119,19 +120,15 @@ export const ChartContentEditor = ({ content, onChange }: ChartContentEditorProp
   <div className="mt-4 grid gap-3">
     <label className="text-xs font-medium text-stone-600">
       チャートタイプ
-      <select
-        className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none"
-        onChange={(event) =>
-          onChange({ ...content, chart: createChartDefinition(parseChartType(event.target.value)) })
-        }
-        value={content.chart.type}
-      >
-        {chartTypes.map((chartType) => (
-          <option key={chartType.value} value={chartType.value}>
-            {chartType.label}
-          </option>
-        ))}
-      </select>
+      <div className="mt-1">
+        <SelectList
+          onChange={(value) =>
+            onChange({ ...content, chart: createChartDefinition(parseChartType(value)) })
+          }
+          options={chartTypes}
+          value={content.chart.type}
+        />
+      </div>
     </label>
 
     <label className="text-xs font-medium text-stone-600">

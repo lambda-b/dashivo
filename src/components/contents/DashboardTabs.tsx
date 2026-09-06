@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { NavLink } from "react-router-dom";
-import { EditButton } from "@/components/EditButton";
+import { EditButton } from "@/components/primitives/EditButton";
 import type { DashboardSchema } from "@/schema/dashboard";
 
 interface DashboardTabsProps {
@@ -30,7 +30,7 @@ export const DashboardTabs = ({ tabs, onEditTabs }: DashboardTabsProps) => (
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {onEditTabs && (
-          <EditButton className="px-2 py-1" onClick={onEditTabs}>
+          <EditButton onClick={onEditTabs} size="compact">
             タブを編集
           </EditButton>
         )}

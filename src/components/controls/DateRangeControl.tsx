@@ -1,3 +1,4 @@
+import { DateInput } from "@/components/primitives/DateInput";
 import type { DateRangeControlDefinition } from "@/schema/dashboard";
 
 interface DateRangeControlProps {
@@ -12,21 +13,15 @@ export const DateRangeControl = ({ control, onChange, value }: DateRangeControlP
     <div className="grid grid-cols-2 gap-2">
       <label className="min-w-0 text-xs text-stone-500">
         開始日
-        <input
-          className="focus:border-brand mt-1 min-w-0 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-          onChange={(event) => onChange({ ...value, from: event.target.value })}
-          type="date"
-          value={value.from}
-        />
+        <div className="mt-1">
+          <DateInput onChange={(from) => onChange({ ...value, from })} value={value.from} />
+        </div>
       </label>
       <label className="min-w-0 text-xs text-stone-500">
         終了日
-        <input
-          className="focus:border-brand mt-1 min-w-0 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-          onChange={(event) => onChange({ ...value, to: event.target.value })}
-          type="date"
-          value={value.to}
-        />
+        <div className="mt-1">
+          <DateInput onChange={(to) => onChange({ ...value, to })} value={value.to} />
+        </div>
       </label>
     </div>
   </fieldset>

@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
-import { EditorIconButton } from "@/builder/components/EditorIconButton";
+import { IconButton } from "@/components/primitives/IconButton";
+import { SelectList } from "@/components/primitives/SelectList";
 import { ChartContentEditor } from "@/builder/editors/contents/ChartContentEditor";
 import type {
   ContentDefinition,
@@ -24,9 +25,18 @@ const contentTypeLabels: Record<ContentDefinition["type"], string> = {
   table: "TABLE",
 };
 
-const numberFormats = ["number", "currency"] as const;
+const numberFormatOptions = [
+  { label: "数値", value: "number" },
+  { label: "通貨", value: "currency" },
+] as const;
+const emphasisOptions = [
+  { label: "アクセント", value: "accent" },
+  { label: "強い強調", value: "strong" },
+] as const;
+const optionalNumberFormatOptions = [{ label: "標準", value: "" }, ...numberFormatOptions] as const;
+
 const parseNumberFormat = (value: string): MetricContentDefinition["format"] =>
-  numberFormats.find((format) => format === value) ?? "number";
+  numberFormatOptions.find((option) => option.value === value)?.value ?? "number";
 
 const parseOptionalNumberFormat = (
   value: string,
@@ -52,19 +62,19 @@ export const ContentEditor = ({
         {contentTypeLabels[content.type]}
       </legend>
       <div className="flex items-center gap-1">
-        <EditorIconButton
+        <IconButton
           disabled={isFirst}
           icon={ArrowUp}
           label={`${content.title}を上へ移動`}
           onClick={onMoveUp}
         />
-        <EditorIconButton
+        <IconButton
           disabled={isLast}
           icon={ArrowDown}
           label={`${content.title}を下へ移動`}
           onClick={onMoveDown}
         />
-        <EditorIconButton
+        <IconButton
           icon={Trash2}
           label={`${content.title}を削除`}
           onClick={onRemove}
@@ -104,32 +114,28 @@ export const ContentEditor = ({
         </label>
         <label className="text-xs font-medium text-stone-600">
           表示形式
-          <select
-            className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none"
-            onChange={(event) =>
-              onChange({ ...content, format: parseNumberFormat(event.target.value) })
-            }
-            value={content.format}
-          >
-            <option value="number">数値</option>
-            <option value="currency">通貨</option>
-          </select>
+          <div className="mt-1">
+            <SelectList
+              onChange={(value) => onChange({ ...content, format: parseNumberFormat(value) })}
+              options={numberFormatOptions}
+              value={content.format}
+            />
+          </div>
         </label>
         <label className="col-span-2 text-xs font-medium text-stone-600">
           強調
-          <select
-            className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none"
-            onChange={(event) =>
-              onChange({
-                ...content,
-                emphasis: event.target.value === "strong" ? "strong" : "accent",
-              })
-            }
-            value={content.emphasis}
-          >
-            <option value="accent">アクセント</option>
-            <option value="strong">強い強調</option>
-          </select>
+          <div className="mt-1">
+            <SelectList
+              onChange={(value) =>
+                onChange({
+                  ...content,
+                  emphasis: value === "strong" ? "strong" : "accent",
+                })
+              }
+              options={emphasisOptions}
+              value={content.emphasis}
+            />
+          </div>
         </label>
       </div>
     ) : content.type === "chart" ? (
@@ -187,26 +193,22 @@ export const ContentEditor = ({
               }
               value={column.label}
             />
-            <select
-              aria-label={`列${columnIndex + 1}の表示形式`}
-              className="focus:border-brand min-w-0 rounded-md border border-stone-300 bg-white px-2 py-2 text-sm outline-none"
-              onChange={(event) =>
+            <SelectList
+              ariaLabel={`列${columnIndex + 1}の表示形式`}
+              onChange={(value) =>
                 onChange({
                   ...content,
                   columns: content.columns.map((current, index) =>
                     index === columnIndex
-                      ? { ...current, format: parseOptionalNumberFormat(event.target.value) }
+                      ? { ...current, format: parseOptionalNumberFormat(value) }
                       : current,
                   ),
                 })
               }
+              options={optionalNumberFormatOptions}
               value={column.format ?? ""}
-            >
-              <option value="">標準</option>
-              <option value="number">数値</option>
-              <option value="currency">通貨</option>
-            </select>
-            <EditorIconButton
+            />
+            <IconButton
               disabled={content.columns.length === 1}
               icon={Trash2}
               label={`列${columnIndex + 1}を削除`}

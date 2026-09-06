@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import type { LucideIcon } from "lucide-react";
 
-interface EditorIconButtonProps {
+interface IconButtonProps {
   disabled?: boolean;
   icon: LucideIcon;
   label: string;
@@ -9,13 +9,13 @@ interface EditorIconButtonProps {
   variant?: "default" | "danger";
 }
 
-export const EditorIconButton = ({
+export const IconButton = ({
   disabled,
   icon: Icon,
   label,
   onClick,
   variant = "default",
-}: EditorIconButtonProps) => (
+}: IconButtonProps) => (
   <button
     aria-label={label}
     className={clsx(

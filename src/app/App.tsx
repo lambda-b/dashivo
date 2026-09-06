@@ -4,7 +4,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { DashboardBuilder } from "@/builder/DashboardBuilder";
-import { EditButton } from "@/components/EditButton";
+import { EditButton } from "@/components/primitives/EditButton";
 import { DashboardContent } from "@/components/contents/DashboardContent";
 import { DashboardTabs } from "@/components/contents/DashboardTabs";
 import { ControlPanel } from "@/components/controls/ControlPanel";
@@ -147,7 +147,7 @@ const Dashboard = ({
 
             {onEditParameters && (
               <div className="border-t border-stone-100 p-3">
-                <EditButton className="w-full" onClick={onEditParameters}>
+                <EditButton fullWidth onClick={onEditParameters}>
                   パラメータを編集
                 </EditButton>
               </div>

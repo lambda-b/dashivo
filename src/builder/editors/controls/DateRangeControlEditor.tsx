@@ -1,5 +1,6 @@
 import { ControlEditorCard } from "@/builder/components/ControlEditorCard";
 import { ControlIdentityFields } from "@/builder/components/ControlIdentityFields";
+import { DateInput } from "@/components/primitives/DateInput";
 import type { DateRangeControlDefinition } from "@/schema/dashboard";
 
 interface DateRangeControlEditorProps {
@@ -27,34 +28,32 @@ export const DateRangeControlEditor = ({
       <div className="grid grid-cols-2 gap-3">
         <label className="text-xs font-medium text-stone-600">
           開始日のデフォルト
-          <input
-            className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-            onChange={(event) =>
-              onChange({
-                ...control,
-                defaultValue: { ...control.defaultValue, from: event.target.value },
-              })
-            }
-            placeholder="YYYY-MM-DD"
-            type="date"
-            value={control.defaultValue.from}
-          />
+          <div className="mt-1">
+            <DateInput
+              onChange={(from) =>
+                onChange({
+                  ...control,
+                  defaultValue: { ...control.defaultValue, from },
+                })
+              }
+              value={control.defaultValue.from}
+            />
+          </div>
         </label>
 
         <label className="text-xs font-medium text-stone-600">
           終了日のデフォルト
-          <input
-            className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-            onChange={(event) =>
-              onChange({
-                ...control,
-                defaultValue: { ...control.defaultValue, to: event.target.value },
-              })
-            }
-            placeholder="YYYY-MM-DD"
-            type="date"
-            value={control.defaultValue.to}
-          />
+          <div className="mt-1">
+            <DateInput
+              onChange={(to) =>
+                onChange({
+                  ...control,
+                  defaultValue: { ...control.defaultValue, to },
+                })
+              }
+              value={control.defaultValue.to}
+            />
+          </div>
         </label>
       </div>
     </div>

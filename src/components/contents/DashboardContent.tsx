@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { EditButton } from "@/components/EditButton";
+import { EditButton } from "@/components/primitives/EditButton";
 import { MetricCard } from "@/components/contents/MetricCard";
 import { ChartPanel } from "@/components/contents/chart/ChartPanel";
 import { DataTable } from "@/components/contents/table/DataTable";
@@ -40,13 +40,15 @@ export const DashboardContent = ({
         <div className="relative min-w-0" key={content.id}>
           <Content content={content} result={result} />
           {onEditContent && (
-            <EditButton
-              ariaLabel={`${content.title}を編集`}
-              className="absolute top-3 right-3 z-10 px-2 py-1 shadow-sm"
-              onClick={() => onEditContent(contentIndex)}
-            >
-              編集
-            </EditButton>
+            <div className="absolute top-3 right-3 z-10 drop-shadow-sm">
+              <EditButton
+                ariaLabel={`${content.title}を編集`}
+                onClick={() => onEditContent(contentIndex)}
+                size="compact"
+              >
+                編集
+              </EditButton>
+            </div>
           )}
         </div>
       ))

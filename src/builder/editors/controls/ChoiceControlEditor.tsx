@@ -1,7 +1,8 @@
 import { ControlEditorCard } from "@/builder/components/ControlEditorCard";
 import { ControlIdentityFields } from "@/builder/components/ControlIdentityFields";
 import { ControlLayoutField } from "@/builder/components/ControlLayoutField";
-import { EditorIconButton } from "@/builder/components/EditorIconButton";
+import { IconButton } from "@/components/primitives/IconButton";
+import { RadioGroup } from "@/components/primitives/RadioGroup";
 import { Trash2 } from "lucide-react";
 import type { ChoiceControlDefinition } from "@/schema/dashboard";
 
@@ -66,37 +67,51 @@ export const ChoiceControlEditor = ({ control, onChange, onRemove }: ChoiceContr
           <span className="text-center">デフォルト</span>
           <span />
         </div>
-        {control.options.map((option, index) => (
-          <div className="grid grid-cols-[1fr_1fr_5rem_2.25rem] items-center gap-2" key={index}>
-            <input
-              aria-label={`選択肢${index + 1}の値`}
-              className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-              onChange={(event) => updateOption(index, "value", event.target.value)}
-              value={option.value}
-            />
-            <input
-              aria-label={`選択肢${index + 1}のラベル`}
-              className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-              onChange={(event) => updateOption(index, "label", event.target.value)}
-              value={option.label}
-            />
-            <input
-              aria-label={`選択肢${index + 1}をデフォルトに設定`}
-              checked={control.defaultValue === option.value}
-              className="accent-brand mx-auto size-4 cursor-pointer"
-              name={`${control.key}-default`}
-              onChange={() => onChange({ ...control, defaultValue: option.value })}
-              type="radio"
-            />
-            <EditorIconButton
-              disabled={control.options.length === 1}
-              icon={Trash2}
-              label={`選択肢${index + 1}を削除`}
-              onClick={() => removeOption(index)}
-              variant="danger"
-            />
+        <div className="grid grid-cols-[1fr_1fr_5rem_2.25rem] gap-2">
+          <div className="col-span-2 grid gap-2">
+            {control.options.map((option, index) => (
+              <div className="grid grid-cols-2 gap-2" key={index}>
+                <input
+                  aria-label={`選択肢${index + 1}の値`}
+                  className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
+                  onChange={(event) => updateOption(index, "value", event.target.value)}
+                  value={option.value}
+                />
+                <input
+                  aria-label={`選択肢${index + 1}のラベル`}
+                  className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
+                  onChange={(event) => updateOption(index, "label", event.target.value)}
+                  value={option.label}
+                />
+              </div>
+            ))}
           </div>
-        ))}
+          <RadioGroup
+            ariaLabel="デフォルト値"
+            labelVisibility="hidden"
+            layout="vertical"
+            name={`${control.key}-default`}
+            onChange={(defaultValue) => onChange({ ...control, defaultValue })}
+            options={control.options.map((option, index) => ({
+              label: `選択肢${index + 1}をデフォルトに設定`,
+              value: option.value,
+            }))}
+            value={control.defaultValue}
+          />
+          <div className="grid gap-2">
+            {control.options.map((_, index) => (
+              <span className="grid h-[2.375rem] place-items-center" key={index}>
+                <IconButton
+                  disabled={control.options.length === 1}
+                  icon={Trash2}
+                  label={`選択肢${index + 1}を削除`}
+                  onClick={() => removeOption(index)}
+                  variant="danger"
+                />
+              </span>
+            ))}
+          </div>
+        </div>
         <button
           className="mt-1 cursor-pointer rounded-md border border-dashed border-stone-300 px-3 py-2 text-xs font-medium text-stone-600 hover:bg-stone-50"
           onClick={addOption}
