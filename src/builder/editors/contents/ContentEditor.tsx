@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { EditorIconButton } from "@/builder/components/EditorIconButton";
 import type {
   ContentDefinition,
   MetricContentDefinition,
@@ -50,32 +51,24 @@ export const ContentEditor = ({
         {contentTypeLabels[content.type]}
       </legend>
       <div className="flex items-center gap-1">
-        <button
-          aria-label={`${content.title}を上へ移動`}
-          className="cursor-pointer rounded-md p-2 text-stone-500 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-30"
+        <EditorIconButton
           disabled={isFirst}
+          icon={ArrowUp}
+          label={`${content.title}を上へ移動`}
           onClick={onMoveUp}
-          type="button"
-        >
-          <ArrowUp aria-hidden="true" className="size-3.5" />
-        </button>
-        <button
-          aria-label={`${content.title}を下へ移動`}
-          className="cursor-pointer rounded-md p-2 text-stone-500 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-30"
+        />
+        <EditorIconButton
           disabled={isLast}
+          icon={ArrowDown}
+          label={`${content.title}を下へ移動`}
           onClick={onMoveDown}
-          type="button"
-        >
-          <ArrowDown aria-hidden="true" className="size-3.5" />
-        </button>
-        <button
-          aria-label={`${content.title}を削除`}
-          className="cursor-pointer rounded-md p-2 text-red-700 hover:bg-red-50"
+        />
+        <EditorIconButton
+          icon={Trash2}
+          label={`${content.title}を削除`}
           onClick={onRemove}
-          type="button"
-        >
-          <Trash2 aria-hidden="true" className="size-3.5" />
-        </button>
+          variant="danger"
+        />
       </div>
     </div>
 
@@ -253,20 +246,18 @@ export const ContentEditor = ({
               <option value="number">数値</option>
               <option value="currency">通貨</option>
             </select>
-            <button
-              aria-label={`列${columnIndex + 1}を削除`}
-              className="cursor-pointer rounded-md border border-stone-200 px-3 text-stone-500 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-30"
+            <EditorIconButton
               disabled={content.columns.length === 1}
+              icon={Trash2}
+              label={`列${columnIndex + 1}を削除`}
               onClick={() =>
                 onChange({
                   ...content,
                   columns: content.columns.filter((_, index) => index !== columnIndex),
                 })
               }
-              type="button"
-            >
-              −
-            </button>
+              variant="danger"
+            />
           </div>
         ))}
       </div>

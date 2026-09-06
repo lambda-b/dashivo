@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { EditorIconButton } from "@/builder/components/EditorIconButton";
 import type { TabDefinition } from "@/schema/dashboard";
 
 interface TabEditorProps {
@@ -28,33 +29,25 @@ export const TabEditor = ({
     <div className="mb-4 flex items-center justify-between gap-4">
       <legend className="text-xs font-bold tracking-wide text-stone-500">TAB {index + 1}</legend>
       <div className="flex items-center gap-1">
-        <button
-          aria-label={`${tab.label}を上へ移動`}
-          className="cursor-pointer rounded-md p-2 text-stone-500 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-30"
+        <EditorIconButton
           disabled={isFirst}
+          icon={ArrowUp}
+          label={`${tab.label}を上へ移動`}
           onClick={onMoveUp}
-          type="button"
-        >
-          <ArrowUp aria-hidden="true" className="size-3.5" />
-        </button>
-        <button
-          aria-label={`${tab.label}を下へ移動`}
-          className="cursor-pointer rounded-md p-2 text-stone-500 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-30"
+        />
+        <EditorIconButton
           disabled={isLast}
+          icon={ArrowDown}
+          label={`${tab.label}を下へ移動`}
           onClick={onMoveDown}
-          type="button"
-        >
-          <ArrowDown aria-hidden="true" className="size-3.5" />
-        </button>
-        <button
-          aria-label={`${tab.label}を削除`}
-          className="cursor-pointer rounded-md p-2 text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30"
+        />
+        <EditorIconButton
           disabled={!canRemove}
+          icon={Trash2}
+          label={`${tab.label}を削除`}
           onClick={onRemove}
-          type="button"
-        >
-          <Trash2 aria-hidden="true" className="size-3.5" />
-        </button>
+          variant="danger"
+        />
       </div>
     </div>
 

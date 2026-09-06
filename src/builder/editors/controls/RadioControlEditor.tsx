@@ -1,3 +1,5 @@
+import { Trash2 } from "lucide-react";
+import { EditorIconButton } from "@/builder/components/EditorIconButton";
 import type { ControlDefinition } from "@/schema/dashboard";
 
 interface RadioControlEditorProps {
@@ -47,13 +49,12 @@ export const RadioControlEditor = ({ control, onChange, onRemove }: RadioControl
     <fieldset className="rounded-lg border border-stone-200 p-4">
       <div className="mb-4 flex items-center justify-between gap-4">
         <legend className="text-xs font-bold tracking-wide text-stone-500">RADIO PARAMETER</legend>
-        <button
-          className="cursor-pointer text-xs font-medium text-red-700 hover:underline"
+        <EditorIconButton
+          icon={Trash2}
+          label={`${control.label}を削除`}
           onClick={onRemove}
-          type="button"
-        >
-          削除
-        </button>
+          variant="danger"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -91,15 +92,13 @@ export const RadioControlEditor = ({ control, onChange, onRemove }: RadioControl
               onChange={(event) => updateOption(index, "value", event.target.value)}
               value={option.value}
             />
-            <button
-              aria-label={`選択肢${index + 1}を削除`}
-              className="cursor-pointer rounded-md border border-stone-200 px-3 text-stone-500 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-40"
+            <EditorIconButton
               disabled={control.options.length === 1}
+              icon={Trash2}
+              label={`選択肢${index + 1}を削除`}
               onClick={() => removeOption(index)}
-              type="button"
-            >
-              −
-            </button>
+              variant="danger"
+            />
           </div>
         ))}
         <button
