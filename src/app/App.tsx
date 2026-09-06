@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
+import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { DashboardBuilder } from "@/builder/DashboardBuilder";
@@ -102,15 +103,8 @@ const Dashboard = ({ dashboard, onOpenBuilder }: DashboardProps) => {
           <aside className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm lg:sticky lg:top-5">
             <div className="flex h-12 items-center justify-between border-b border-stone-100 px-4 text-xs font-semibold text-stone-600">
               <div className="flex items-center gap-2">
-                <svg aria-hidden="true" className="size-3.5" fill="none" viewBox="0 0 16 16">
-                  <path
-                    d="M2 3h12L9.5 8v3.5l-3 1.5V8L2 3Z"
-                    stroke="currentColor"
-                    strokeLinejoin="round"
-                    strokeWidth="1.4"
-                  />
-                </svg>
-                <span>表示条件</span>
+                <SlidersHorizontal aria-hidden="true" className="size-3.5" />
+                <span>パラメータ</span>
               </div>
               <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[0.625rem] text-stone-500">
                 {dashboard.controls.length}
@@ -135,7 +129,7 @@ const Dashboard = ({ dashboard, onOpenBuilder }: DashboardProps) => {
                   onClick={onOpenBuilder}
                   type="button"
                 >
-                  Controlを編集
+                  パラメータを編集
                 </button>
               </div>
             )}

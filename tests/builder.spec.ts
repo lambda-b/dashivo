@@ -7,7 +7,7 @@ test("builds, validates, and exports dashboard controls in development", async (
     await route.fulfill({ json: { dashboard: savedDashboard } });
   });
   await page.goto("http://127.0.0.1:3030");
-  await page.getByRole("complementary").getByRole("button", { name: "Controlを編集" }).click();
+  await page.getByRole("complementary").getByRole("button", { name: "パラメータを編集" }).click();
 
   await page.getByLabel("タイトル").fill("Builder preview");
   await page.getByRole("button", { name: "Radioを追加" }).click();

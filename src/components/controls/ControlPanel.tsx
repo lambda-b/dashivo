@@ -20,7 +20,7 @@ interface ControlPanelProps {
 
 export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) => {
   return (
-    <section className="flex flex-col gap-5" aria-label="絞り込み条件">
+    <section className="flex flex-col gap-5" aria-label="パラメータ">
       {controls.map((control) => {
         const Control = controlCatalog[control.type];
         return (
