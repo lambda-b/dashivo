@@ -6,6 +6,38 @@ const identifierSchema = z
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "must be a lowercase kebab-case identifier");
 
 const optionSchema = z.object({ label: z.string().min(1), value: z.string().min(1) });
+const selectControlSchema = z
+  .object({
+    type: z.literal("select"),
+    key: z.string().min(1),
+    label: z.string().min(1),
+    defaultValue: z.string(),
+    options: z.array(optionSchema).min(1),
+  })
+  .refine(
+    (control) =>
+      new Set(control.options.map((option) => option.value)).size === control.options.length,
+    { message: "option values must be unique", path: ["options"] },
+  )
+  .refine((control) => control.options.some((option) => option.value === control.defaultValue), {
+    message: "defaultValue must match one of the control options",
+    path: ["defaultValue"],
+  });
+
+const checkboxControlSchema = z.object({
+  type: z.literal("checkbox"),
+  key: z.string().min(1),
+  label: z.string().min(1),
+  defaultValue: z.boolean(),
+});
+
+const dateRangeControlSchema = z.object({
+  type: z.literal("date-range"),
+  key: z.string().min(1),
+  label: z.string().min(1),
+  defaultValue: z.object({ from: z.string(), to: z.string() }),
+});
+
 const radioControlSchema = z
   .object({
     type: z.literal("radio"),
@@ -39,12 +71,35 @@ const lineChartSchema = z.object({
   y: z.array(z.string().min(1)).min(1),
 });
 
+const barChartSchema = z.object({
+  type: z.literal("bar"),
+  x: z.string().min(1),
+  y: z.array(z.string().min(1)).min(1),
+});
+
+const pieChartSchema = z.object({
+  type: z.literal("pie"),
+  name: z.string().min(1),
+  value: z.string().min(1),
+});
+
+const scatterPlotSchema = z.object({
+  type: z.literal("scatter"),
+  x: z.string().min(1),
+  y: z.string().min(1),
+});
+
 const chartContentSchema = z.object({
   id: identifierSchema,
   type: z.literal("chart"),
   title: z.string().min(1),
   dataset: z.string().min(1),
-  chart: z.discriminatedUnion("type", [lineChartSchema]),
+  chart: z.discriminatedUnion("type", [
+    lineChartSchema,
+    barChartSchema,
+    pieChartSchema,
+    scatterPlotSchema,
+  ]),
 });
 
 const tableContentSchema = z.object({
@@ -79,7 +134,14 @@ export const dashboardSchema = z
   .object({
     title: z.string().min(1),
     description: z.string(),
-    controls: z.array(radioControlSchema),
+    controls: z.array(
+      z.discriminatedUnion("type", [
+        radioControlSchema,
+        selectControlSchema,
+        checkboxControlSchema,
+        dateRangeControlSchema,
+      ]),
+    ),
     tabs: z.array(tabSchema).min(1),
   })
   .superRefine((dashboard, context) => {
@@ -116,6 +178,12 @@ export const analysisResultSchema = z.object({
 
 export type DashboardSchema = z.infer<typeof dashboardSchema>;
 export type ControlDefinition = DashboardSchema["controls"][number];
+export type ParameterValue = ControlDefinition["defaultValue"];
+export type ChoiceControlDefinition = Extract<ControlDefinition, { type: "radio" | "select" }>;
+export type RadioControlDefinition = Extract<ControlDefinition, { type: "radio" }>;
+export type SelectControlDefinition = Extract<ControlDefinition, { type: "select" }>;
+export type CheckboxControlDefinition = Extract<ControlDefinition, { type: "checkbox" }>;
+export type DateRangeControlDefinition = Extract<ControlDefinition, { type: "date-range" }>;
 export type TabDefinition = DashboardSchema["tabs"][number];
 export type ContentDefinition = TabDefinition["contents"][number];
 export type MetricContentDefinition = Extract<ContentDefinition, { type: "metric" }>;

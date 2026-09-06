@@ -87,6 +87,73 @@ test("rejects duplicate control option values", () => {
   expect(() => dashboardSchema.parse(invalidDashboard)).toThrow("option values must be unique");
 });
 
+test("accepts the supported parameter and chart variants", () => {
+  const dashboard = dashboardSchema.parse({
+    ...dashboardSource,
+    controls: [
+      ...dashboardSource.controls,
+      {
+        type: "select",
+        key: "segment",
+        label: "Segment",
+        defaultValue: "all",
+        options: [{ label: "All", value: "all" }],
+      },
+      { type: "checkbox", key: "comparison", label: "Comparison", defaultValue: true },
+      {
+        type: "date-range",
+        key: "period",
+        label: "Period",
+        defaultValue: { from: "2026-01-01", to: "2026-12-31" },
+      },
+    ],
+    tabs: dashboardSource.tabs.map((tab) =>
+      tab.id === "charts"
+        ? {
+            ...tab,
+            contents: [
+              ...tab.contents,
+              {
+                id: "revenue-bar",
+                type: "chart",
+                title: "Revenue bar",
+                dataset: "summary",
+                chart: { type: "bar", x: "date", y: ["revenue"] },
+              },
+              {
+                id: "revenue-pie",
+                type: "chart",
+                title: "Revenue pie",
+                dataset: "summary",
+                chart: { type: "pie", name: "date", value: "revenue" },
+              },
+              {
+                id: "revenue-scatter",
+                type: "chart",
+                title: "Revenue scatter",
+                dataset: "summary",
+                chart: { type: "scatter", x: "date", y: "revenue" },
+              },
+            ],
+          }
+        : tab,
+    ),
+  });
+
+  expect(dashboard.controls.map((control) => control.type)).toEqual([
+    "radio",
+    "select",
+    "checkbox",
+    "date-range",
+  ]);
+  expect(dashboard.tabs[1].contents.map((content) => content.type)).toEqual([
+    "chart",
+    "chart",
+    "chart",
+    "chart",
+  ]);
+});
+
 test("rejects duplicate tab and content identifiers", () => {
   const duplicateTab = {
     ...dashboardSource,

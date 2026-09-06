@@ -8,6 +8,24 @@ const createParameterKey = (dashboard: DashboardSchema) => {
   return `control_${index}`;
 };
 
+const createControl = (type: ControlDefinition["type"], key: string): ControlDefinition => {
+  switch (type) {
+    case "radio":
+    case "select":
+      return {
+        type,
+        key,
+        label: "新しい条件",
+        defaultValue: "option-1",
+        options: [{ label: "選択肢1", value: "option-1" }],
+      };
+    case "checkbox":
+      return { type, key, label: "新しい条件", defaultValue: false };
+    case "date-range":
+      return { type, key, label: "新しい条件", defaultValue: { from: "", to: "" } };
+  }
+};
+
 export const useParameterActions = (
   draft: DashboardSchema,
   editDashboard: (dashboard: DashboardSchema) => void,
@@ -17,18 +35,9 @@ export const useParameterActions = (
       editDashboard({ ...draft, controls });
 
     return {
-      addRadio: () => {
+      add: (type: ControlDefinition["type"]) => {
         const key = createParameterKey(draft);
-        editControls([
-          ...draft.controls,
-          {
-            type: "radio",
-            key,
-            label: "新しい条件",
-            defaultValue: "option-1",
-            options: [{ label: "選択肢1", value: "option-1" }],
-          },
-        ]);
+        editControls([...draft.controls, createControl(type, key)]);
       },
       update: (index: number, control: ControlDefinition) =>
         editControls(

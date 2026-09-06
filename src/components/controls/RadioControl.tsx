@@ -1,8 +1,8 @@
 import clsx from "clsx";
-import type { ControlDefinition } from "@/schema/dashboard";
+import type { RadioControlDefinition } from "@/schema/dashboard";
 
 interface RadioControlProps {
-  control: ControlDefinition;
+  control: RadioControlDefinition;
   value: string;
   onChange: (value: string) => void;
 }

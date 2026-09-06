@@ -30,7 +30,11 @@ export const validateContentBindings = (
 
     const columns =
       content.type === "chart"
-        ? [content.chart.x, ...content.chart.y]
+        ? content.chart.type === "pie"
+          ? [content.chart.name, content.chart.value]
+          : content.chart.type === "scatter"
+            ? [content.chart.x, content.chart.y]
+            : [content.chart.x, ...content.chart.y]
         : content.columns.map((column) => column.key);
     const missingColumns = getMissingColumns(rows, columns);
     if (missingColumns.length > 0) {

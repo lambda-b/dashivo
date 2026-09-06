@@ -9,7 +9,7 @@ import { DashboardContent } from "@/components/contents/DashboardContent";
 import { DashboardTabs } from "@/components/contents/DashboardTabs";
 import { ControlPanel } from "@/components/controls/ControlPanel";
 import { analysisPort } from "@/ports/analysis";
-import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
+import { dashboardSchema, type DashboardSchema, type ParameterValue } from "@/schema/dashboard";
 import { validateContentBindings } from "@/schema/validation";
 import dashboardSource from "#dashboard/dashboard.json";
 
@@ -67,7 +67,7 @@ const Dashboard = ({
   onEditTabs,
 }: DashboardProps) => {
   const defaultTabPath = `/${dashboard.tabs[0].id}`;
-  const [params, setParams] = useState<Record<string, string>>(() =>
+  const [params, setParams] = useState<Record<string, ParameterValue>>(() =>
     Object.fromEntries(dashboard.controls.map((control) => [control.key, control.defaultValue])),
   );
   const analysis = useQuery({

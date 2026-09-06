@@ -7,9 +7,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { ChartAdapterProps } from "@/components/contents/chart/types";
+import type { LineChartAdapterProps } from "@/components/contents/chart/types";
 
-export const LineChartAdapter = ({ definition, data }: ChartAdapterProps) => (
+export const LineChartAdapter = ({ definition, data }: LineChartAdapterProps) => (
   <ResponsiveContainer width="100%" height="100%">
     <LineChart data={data} margin={{ left: 8, right: 24 }}>
       <CartesianGrid stroke="#e7e5e4" vertical={false} />

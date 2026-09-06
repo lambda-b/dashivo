@@ -1,37 +1,58 @@
-import type { ComponentType } from "react";
+import { CheckboxControl } from "@/components/controls/CheckboxControl";
+import { DateRangeControl } from "@/components/controls/DateRangeControl";
 import { RadioControl } from "@/components/controls/RadioControl";
-import type { ControlDefinition, DashboardSchema } from "@/schema/dashboard";
-
-interface ControlComponentProps {
-  control: ControlDefinition;
-  value: string;
-  onChange: (value: string) => void;
-}
-
-const controlCatalog = {
-  radio: RadioControl,
-} satisfies Record<ControlDefinition["type"], ComponentType<ControlComponentProps>>;
+import { SelectControl } from "@/components/controls/SelectControl";
+import type { DashboardSchema, ParameterValue } from "@/schema/dashboard";
 
 interface ControlPanelProps {
   controls: DashboardSchema["controls"];
-  params: Record<string, string>;
-  onChange: (key: string, value: string) => void;
+  onChange: (key: string, value: ParameterValue) => void;
+  params: Record<string, ParameterValue>;
 }
 
-export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) => {
-  return (
-    <section className="flex flex-col gap-5" aria-label="パラメータ">
-      {controls.map((control) => {
-        const Control = controlCatalog[control.type];
-        return (
-          <Control
-            control={control}
-            key={control.key}
-            onChange={(value) => onChange(control.key, value)}
-            value={params[control.key] ?? control.defaultValue}
-          />
-        );
-      })}
-    </section>
-  );
-};
+export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) => (
+  <section aria-label="パラメータ" className="flex flex-col gap-5">
+    {controls.map((control) => {
+      const value = params[control.key] ?? control.defaultValue;
+
+      switch (control.type) {
+        case "radio":
+          return (
+            <RadioControl
+              control={control}
+              key={control.key}
+              onChange={(nextValue) => onChange(control.key, nextValue)}
+              value={typeof value === "string" ? value : control.defaultValue}
+            />
+          );
+        case "select":
+          return (
+            <SelectControl
+              control={control}
+              key={control.key}
+              onChange={(nextValue) => onChange(control.key, nextValue)}
+              value={typeof value === "string" ? value : control.defaultValue}
+            />
+          );
+        case "checkbox":
+          return (
+            <CheckboxControl
+              control={control}
+              key={control.key}
+              onChange={(nextValue) => onChange(control.key, nextValue)}
+              value={typeof value === "boolean" ? value : control.defaultValue}
+            />
+          );
+        case "date-range":
+          return (
+            <DateRangeControl
+              control={control}
+              key={control.key}
+              onChange={(nextValue) => onChange(control.key, nextValue)}
+              value={typeof value === "object" ? value : control.defaultValue}
+            />
+          );
+      }
+    })}
+  </section>
+);

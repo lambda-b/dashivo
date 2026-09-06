@@ -14,6 +14,9 @@ test("edits, validates, and saves the dashboard configuration in development", a
 
   await page.getByRole("complementary").getByRole("button", { name: "パラメータを編集" }).click();
   await page.getByRole("button", { name: "Radioを追加" }).click();
+  await page.getByRole("button", { name: "Selectを追加" }).click();
+  await page.getByRole("button", { name: "Checkboxを追加" }).click();
+  await page.getByRole("button", { name: "Date Rangeを追加" }).click();
   await page.getByRole("button", { name: "Builderを閉じる" }).click();
 
   await page.getByRole("button", { name: "タブを編集" }).click();
@@ -57,5 +60,9 @@ test("edits, validates, and saves the dashboard configuration in development", a
   await expect(page.getByRole("alert")).toBeVisible();
 
   await page.getByRole("button", { name: "Builderを閉じる" }).click();
-  await expect(page.getByText("新しい条件")).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "パラメータ" }).getByText("新しい条件").first(),
+  ).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "新しい条件" })).toBeVisible();
+  await expect(page.getByLabel("開始日")).toBeVisible();
 });

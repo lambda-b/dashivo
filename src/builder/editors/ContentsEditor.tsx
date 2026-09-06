@@ -20,7 +20,7 @@ interface ContentsEditorProps {
 
 const catalog = [
   { type: "metric", label: "指標", icon: Gauge },
-  { type: "chart", label: "折れ線グラフ", icon: ChartLine },
+  { type: "chart", label: "グラフ", icon: ChartLine },
   { type: "table", label: "テーブル", icon: Table2 },
 ] as const;
 

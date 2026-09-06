@@ -1,21 +1,23 @@
-import { Trash2 } from "lucide-react";
+import { ControlEditorCard } from "@/builder/components/ControlEditorCard";
+import { ControlIdentityFields } from "@/builder/components/ControlIdentityFields";
 import { EditorIconButton } from "@/builder/components/EditorIconButton";
-import type { ControlDefinition } from "@/schema/dashboard";
+import { Trash2 } from "lucide-react";
+import type { ChoiceControlDefinition } from "@/schema/dashboard";
 
-interface RadioControlEditorProps {
-  control: ControlDefinition;
-  onChange: (control: ControlDefinition) => void;
+interface ChoiceControlEditorProps {
+  control: ChoiceControlDefinition;
+  onChange: (control: ChoiceControlDefinition) => void;
   onRemove: () => void;
 }
 
-const createOptionValue = (control: ControlDefinition) => {
+const createOptionValue = (control: ChoiceControlDefinition) => {
   const values = new Set(control.options.map((option) => option.value));
   let index = control.options.length + 1;
   while (values.has(`option-${index}`)) index += 1;
   return `option-${index}`;
 };
 
-export const RadioControlEditor = ({ control, onChange, onRemove }: RadioControlEditorProps) => {
+export const ChoiceControlEditor = ({ control, onChange, onRemove }: ChoiceControlEditorProps) => {
   const updateOption = (index: number, field: "label" | "value", value: string) => {
     const previousValue = control.options[index]?.value;
     const options = control.options.map((option, optionIndex) =>
@@ -46,35 +48,15 @@ export const RadioControlEditor = ({ control, onChange, onRemove }: RadioControl
   };
 
   return (
-    <fieldset className="rounded-lg border border-stone-200 p-4">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <legend className="text-xs font-bold tracking-wide text-stone-500">RADIO PARAMETER</legend>
-        <EditorIconButton
-          icon={Trash2}
-          label={`${control.label}を削除`}
-          onClick={onRemove}
-          variant="danger"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <label className="text-xs font-medium text-stone-600">
-          キー
-          <input
-            className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-            onChange={(event) => onChange({ ...control, key: event.target.value })}
-            value={control.key}
-          />
-        </label>
-        <label className="text-xs font-medium text-stone-600">
-          ラベル
-          <input
-            className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-            onChange={(event) => onChange({ ...control, label: event.target.value })}
-            value={control.label}
-          />
-        </label>
-      </div>
+    <ControlEditorCard
+      controlLabel={control.label}
+      onRemove={onRemove}
+      typeLabel={control.type === "radio" ? "RADIO PARAMETER" : "SELECT PARAMETER"}
+    >
+      <ControlIdentityFields
+        control={control}
+        onChange={(identity) => onChange({ ...control, ...identity })}
+      />
 
       <div className="mt-4 grid gap-2">
         <span className="text-xs font-medium text-stone-600">選択肢</span>
@@ -124,6 +106,6 @@ export const RadioControlEditor = ({ control, onChange, onRemove }: RadioControl
           ))}
         </select>
       </label>
-    </fieldset>
+    </ControlEditorCard>
   );
 };

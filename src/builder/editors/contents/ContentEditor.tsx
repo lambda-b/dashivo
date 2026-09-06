@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { EditorIconButton } from "@/builder/components/EditorIconButton";
+import { ChartContentEditor } from "@/builder/editors/contents/ChartContentEditor";
 import type {
   ContentDefinition,
   MetricContentDefinition,
@@ -19,7 +20,7 @@ interface ContentEditorProps {
 
 const contentTypeLabels: Record<ContentDefinition["type"], string> = {
   metric: "METRIC",
-  chart: "LINE CHART",
+  chart: "CHART",
   table: "TABLE",
 };
 
@@ -132,48 +133,7 @@ export const ContentEditor = ({
         </label>
       </div>
     ) : content.type === "chart" ? (
-      <div className="mt-4 grid gap-3">
-        <label className="text-xs font-medium text-stone-600">
-          Dataset
-          <input
-            className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-            onChange={(event) => onChange({ ...content, dataset: event.target.value })}
-            value={content.dataset}
-          />
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="text-xs font-medium text-stone-600">
-            X軸の列
-            <input
-              className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-              onChange={(event) =>
-                onChange({ ...content, chart: { ...content.chart, x: event.target.value } })
-              }
-              value={content.chart.x}
-            />
-          </label>
-          <label className="text-xs font-medium text-stone-600">
-            Y軸の列
-            <input
-              className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-              onChange={(event) =>
-                onChange({
-                  ...content,
-                  chart: {
-                    ...content.chart,
-                    y: event.target.value
-                      .split(",")
-                      .map((column) => column.trim())
-                      .filter(Boolean),
-                  },
-                })
-              }
-              value={content.chart.y.join(", ")}
-            />
-          </label>
-        </div>
-        <p className="text-xs text-stone-400">複数系列はカンマ区切りで入力します。</p>
-      </div>
+      <ChartContentEditor content={content} onChange={onChange} />
     ) : (
       <div className="mt-4 grid gap-3">
         <label className="text-xs font-medium text-stone-600">
