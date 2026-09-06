@@ -9,7 +9,7 @@ import { DashboardTabs } from "@/components/contents/DashboardTabs";
 import { ControlPanel } from "@/components/controls/ControlPanel";
 import { analysisPort } from "@/ports/analysis";
 import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
-import { validateContentBindings } from "@/validation/content-bindings";
+import { validateContentBindings } from "@/schema/validation";
 import dashboardSource from "#dashboard/dashboard.json";
 
 const dashboardResult = dashboardSchema.safeParse(dashboardSource);

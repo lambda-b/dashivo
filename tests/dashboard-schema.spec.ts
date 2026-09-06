@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { analysisResultSchema, dashboardSchema } from "@/schema/dashboard";
-import { validateContentBindings } from "@/validation/content-bindings";
+import { validateContentBindings } from "@/schema/validation";
 
 const dashboardSource = {
   title: "Example",
