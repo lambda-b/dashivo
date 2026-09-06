@@ -10,7 +10,7 @@ const createContentId = (dashboard: DashboardSchema, type: ContentType) => {
   return `${type}-${index}`;
 };
 
-const createContent = (dashboard: DashboardSchema, type: ContentType): ContentDefinition => {
+export const createContent = (dashboard: DashboardSchema, type: ContentType): ContentDefinition => {
   const id = createContentId(dashboard, type);
   const outputType = type === "metric" ? "metrics" : "datasets";
   const logic =
@@ -83,11 +83,6 @@ export const useContentActions = (
       });
 
     return {
-      add: (tabIndex: number, type: ContentType) => {
-        const content = createContent(draft, type);
-        editContents(tabIndex, (contents) => [...contents, content]);
-        return content;
-      },
       update: (tabIndex: number, contentIndex: number, content: ContentDefinition) =>
         editContents(tabIndex, (contents) =>
           contents.map((current, index) => (index === contentIndex ? content : current)),

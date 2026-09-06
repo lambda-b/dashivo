@@ -1,23 +1,6 @@
 import { useReducer } from "react";
+import { saveDashboardFile } from "@/builder/api/dashboardFile";
 import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
-
-const dashboardEditorEndpoint = "/__dashlet/dashboard";
-
-const saveDashboardFile = async (dashboard: DashboardSchema): Promise<void> => {
-  const response = await fetch(dashboardEditorEndpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(dashboard),
-  });
-
-  if (response.ok) return;
-  const result: unknown = await response.json();
-  const message =
-    typeof result === "object" && result !== null && "error" in result
-      ? String(result.error)
-      : "dashboard.jsonを保存できませんでした。";
-  throw new Error(message);
-};
 
 interface DashboardDraftState {
   draft: DashboardSchema;
@@ -79,7 +62,10 @@ export const useDashboardDraft = (initialDashboard: DashboardSchema) => {
     }
   };
 
-  const applyDraft = () => runWithValidDraft((dashboard) => dispatch({ type: "apply", dashboard }));
+  const applyDashboard = (dashboard: DashboardSchema) =>
+    dispatch({ type: "apply", dashboard: dashboardSchema.parse(dashboard) });
+
+  const applyDraft = () => runWithValidDraft(applyDashboard);
 
   const saveDraft = () =>
     runWithValidDraft(async (dashboard) => {
@@ -90,5 +76,5 @@ export const useDashboardDraft = (initialDashboard: DashboardSchema) => {
 
   const resetDraft = () => dispatch({ type: "apply", dashboard: initialDashboard });
 
-  return { state, editDashboard, applyDraft, saveDraft, resetDraft };
+  return { state, editDashboard, applyDashboard, applyDraft, saveDraft, resetDraft };
 };

@@ -1,6 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { FileCode2, Plus, Save, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
+import { loadPythonSource, savePythonSource } from "@/builder/api/pythonSource";
+import { PythonCodeEditor } from "@/builder/components/PythonCodeEditor";
 import { IconButton } from "@/components/primitives/IconButton";
 import { SelectList } from "@/components/primitives/SelectList";
 import type { AnalysisLogicDefinition, DashboardSchema } from "@/schema/dashboard";
@@ -41,6 +44,50 @@ const parseOutputs = (source: string) =>
     .map((value) => value.trim())
     .filter(Boolean);
 
+const PythonSourceEditor = ({ path }: { path: string }) => {
+  const sourceQuery = useQuery({
+    queryKey: ["python-source", path],
+    queryFn: () => loadPythonSource(path),
+  });
+  const [source, setSource] = useState("");
+  const save = useMutation({ mutationFn: () => savePythonSource(path, source) });
+
+  useEffect(() => {
+    if (sourceQuery.data !== undefined) setSource(sourceQuery.data);
+  }, [sourceQuery.data]);
+
+  if (sourceQuery.isPending) return <p className="text-xs text-stone-500">読み込み中…</p>;
+  if (sourceQuery.isError) {
+    return <p className="text-xs text-red-700">{sourceQuery.error.message}</p>;
+  }
+
+  return (
+    <div className="grid gap-3">
+      <PythonCodeEditor
+        ariaLabel={`${path}のPythonソース`}
+        onChange={(nextSource) => {
+          save.reset();
+          setSource(nextSource);
+        }}
+        source={source}
+      />
+      <div className="flex items-center justify-end gap-3">
+        {save.isError && <span className="text-xs text-red-700">{save.error.message}</span>}
+        {save.isSuccess && <span className="text-xs text-emerald-700">保存しました</span>}
+        <button
+          className="bg-brand hover:bg-brand-dark inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-xs font-semibold text-white disabled:cursor-wait disabled:opacity-60"
+          disabled={save.isPending || source === sourceQuery.data}
+          onClick={() => save.mutate()}
+          type="button"
+        >
+          <Save aria-hidden="true" className="size-3.5" />
+          {save.isPending ? "保存中…" : "Pythonを保存"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export const AnalysisEditor = ({ actions, dashboard }: AnalysisEditorProps) => {
   const catalog = useQuery({ queryKey: ["dashboard-assets"], queryFn: loadAssetCatalog });
 
@@ -49,10 +96,10 @@ export const AnalysisEditor = ({ actions, dashboard }: AnalysisEditorProps) => {
       <div>
         <h3 className="text-sm font-bold">Pythonロジック</h3>
         <p className="mt-1 text-xs leading-5 text-stone-500">
-          Pythonファイル、入力CSV、呼び出す関数と出力名を定義します。
+          コンテンツから参照するPythonファイル、入力CSV、出力名を管理します。
         </p>
         <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-[0.6875rem] leading-5 text-amber-800">
-          ファイルの変更はdashboard.jsonを保存するとWorkerへ読み込まれます。
+          ID、入出力、参照ファイルの変更はdashboard.jsonへ保存してください。Pythonソースは専用ボタンで直接保存します。
         </p>
       </div>
 
@@ -218,6 +265,15 @@ export const AnalysisEditor = ({ actions, dashboard }: AnalysisEditorProps) => {
                   />
                 </label>
               </div>
+              <details className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                <summary className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-stone-700">
+                  <FileCode2 aria-hidden="true" className="size-3.5" />
+                  Pythonソースを編集
+                </summary>
+                <div className="mt-3">
+                  <PythonSourceEditor path={logic.path} />
+                </div>
+              </details>
             </fieldset>
           );
         })}

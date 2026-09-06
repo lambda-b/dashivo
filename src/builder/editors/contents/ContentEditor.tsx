@@ -144,7 +144,16 @@ export const ContentEditor = ({
         </label>
       </div>
     ) : content.type === "chart" ? (
-      <ChartContentEditor analysis={analysis} content={content} onChange={onChange} />
+      <div className="mt-4 grid gap-3">
+        <ContentLogicFields
+          analysis={analysis}
+          logic={content.logic}
+          onChange={(logic, dataset) => onChange({ ...content, logic, dataset })}
+          output={content.dataset}
+          outputType="datasets"
+        />
+        <ChartContentEditor content={content} onChange={onChange} />
+      </div>
     ) : (
       <div className="mt-4 grid gap-3">
         <ContentLogicFields

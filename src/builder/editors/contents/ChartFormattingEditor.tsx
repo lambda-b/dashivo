@@ -13,6 +13,7 @@ interface ChartFormattingEditorProps {
   chartType: ChartContentDefinition["chart"]["type"];
   formatting: ChartFormattingDefinition;
   onChange: (formatting: ChartFormattingDefinition) => void;
+  sections?: "all" | "axes" | "chart";
 }
 
 const legendPositions = [
@@ -116,109 +117,117 @@ export const ChartFormattingEditor = ({
   chartType,
   formatting,
   onChange,
+  sections = "all",
 }: ChartFormattingEditorProps) => (
   <div className="grid gap-3">
-    <details className="rounded-lg border border-stone-200 bg-white p-3" open>
-      <summary className="cursor-pointer text-xs font-bold text-stone-700">
-        グラフの書式設定
-      </summary>
-      <div className="mt-4 grid gap-4">
-        <div className="grid grid-cols-2 gap-3">
-          <Checkbox
-            layout="vertical"
-            name="chart-legend-visible"
-            onChange={(options) =>
-              onChange({
-                ...formatting,
-                legend: { ...formatting.legend, visible: options[0].checked },
-              })
-            }
-            options={{
-              checked: formatting.legend.visible,
-              label: "凡例を表示",
-              value: "visible",
-            }}
-          />
-          {formatting.legend.visible && (
-            <label className="text-xs font-medium text-stone-600">
-              凡例の位置
-              <div className="mt-1">
-                <SelectList
-                  onChange={(position) =>
-                    onChange({
-                      ...formatting,
-                      legend: { ...formatting.legend, position: parseLegendPosition(position) },
-                    })
-                  }
-                  options={legendPositions}
-                  value={formatting.legend.position}
-                />
-              </div>
-            </label>
-          )}
-          {chartType !== "pie" && (
+    {sections !== "axes" && (
+      <details className="rounded-lg border border-stone-200 bg-white p-3" open>
+        <summary className="cursor-pointer text-xs font-bold text-stone-700">
+          グラフの書式設定
+        </summary>
+        <div className="mt-4 grid gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <Checkbox
               layout="vertical"
-              name="chart-grid-lines"
-              onChange={(options) => onChange({ ...formatting, gridLines: options[0].checked })}
+              name="chart-legend-visible"
+              onChange={(options) =>
+                onChange({
+                  ...formatting,
+                  legend: { ...formatting.legend, visible: options[0].checked },
+                })
+              }
               options={{
-                checked: formatting.gridLines,
-                label: "目盛線を表示",
+                checked: formatting.legend.visible,
+                label: "凡例を表示",
                 value: "visible",
               }}
             />
-          )}
-        </div>
-
-        <div className="grid gap-2">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs font-medium text-stone-600">系列色</span>
-            <button
-              className="inline-flex cursor-pointer items-center gap-1 text-xs font-semibold text-stone-600 hover:text-stone-900"
-              onClick={() => onChange({ ...formatting, colors: [...formatting.colors, "#ca2420"] })}
-              type="button"
-            >
-              <Plus aria-hidden="true" className="size-3.5" />
-              色を追加
-            </button>
+            {formatting.legend.visible && (
+              <label className="text-xs font-medium text-stone-600">
+                凡例の位置
+                <div className="mt-1">
+                  <SelectList
+                    onChange={(position) =>
+                      onChange({
+                        ...formatting,
+                        legend: { ...formatting.legend, position: parseLegendPosition(position) },
+                      })
+                    }
+                    options={legendPositions}
+                    value={formatting.legend.position}
+                  />
+                </div>
+              </label>
+            )}
+            {chartType !== "pie" && (
+              <Checkbox
+                layout="vertical"
+                name="chart-grid-lines"
+                onChange={(options) => onChange({ ...formatting, gridLines: options[0].checked })}
+                options={{
+                  checked: formatting.gridLines,
+                  label: "目盛線を表示",
+                  value: "visible",
+                }}
+              />
+            )}
           </div>
-          {formatting.colors.map((color, index) => (
-            <div className="grid grid-cols-[3rem_1fr_2.25rem] items-center gap-2" key={index}>
-              <input
-                aria-label={`系列色${index + 1}`}
-                className="h-9 w-full cursor-pointer rounded border border-stone-300 bg-white p-1"
-                onChange={(event) =>
-                  onChange({
-                    ...formatting,
-                    colors: formatting.colors.map((current, colorIndex) =>
-                      colorIndex === index ? event.target.value : current,
-                    ),
-                  })
-                }
-                type="color"
-                value={color}
-              />
-              <code className="text-xs text-stone-600">{color}</code>
-              <IconButton
-                disabled={formatting.colors.length === 1}
-                icon={Trash2}
-                label={`系列色${index + 1}を削除`}
-                onClick={() =>
-                  onChange({
-                    ...formatting,
-                    colors: formatting.colors.filter((_, colorIndex) => colorIndex !== index),
-                  })
-                }
-                variant="danger"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    </details>
 
-    {chartType !== "pie" && (
-      <details className="rounded-lg border border-stone-200 bg-white p-3">
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-medium text-stone-600">系列色</span>
+              <button
+                className="inline-flex cursor-pointer items-center gap-1 text-xs font-semibold text-stone-600 hover:text-stone-900"
+                onClick={() =>
+                  onChange({ ...formatting, colors: [...formatting.colors, "#ca2420"] })
+                }
+                type="button"
+              >
+                <Plus aria-hidden="true" className="size-3.5" />
+                色を追加
+              </button>
+            </div>
+            {formatting.colors.map((color, index) => (
+              <div className="grid grid-cols-[3rem_1fr_2.25rem] items-center gap-2" key={index}>
+                <input
+                  aria-label={`系列色${index + 1}`}
+                  className="h-9 w-full cursor-pointer rounded border border-stone-300 bg-white p-1"
+                  onChange={(event) =>
+                    onChange({
+                      ...formatting,
+                      colors: formatting.colors.map((current, colorIndex) =>
+                        colorIndex === index ? event.target.value : current,
+                      ),
+                    })
+                  }
+                  type="color"
+                  value={color}
+                />
+                <code className="text-xs text-stone-600">{color}</code>
+                <IconButton
+                  disabled={formatting.colors.length === 1}
+                  icon={Trash2}
+                  label={`系列色${index + 1}を削除`}
+                  onClick={() =>
+                    onChange({
+                      ...formatting,
+                      colors: formatting.colors.filter((_, colorIndex) => colorIndex !== index),
+                    })
+                  }
+                  variant="danger"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </details>
+    )}
+
+    {sections !== "chart" && chartType !== "pie" && (
+      <details
+        className="rounded-lg border border-stone-200 bg-white p-3"
+        open={sections === "axes"}
+      >
         <summary className="cursor-pointer text-xs font-bold text-stone-700">軸の書式設定</summary>
         <div className="mt-4 grid gap-3">
           <AxisFormattingEditor

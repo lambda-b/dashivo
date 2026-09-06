@@ -1,10 +1,7 @@
-import { ChartLine, Gauge, Table2 } from "lucide-react";
-import type { ContentType } from "@/builder/hooks/useContentActions";
 import { ContentEditor } from "@/builder/editors/contents/ContentEditor";
 import type { ContentDefinition, DashboardSchema } from "@/schema/dashboard";
 
 interface ContentActions {
-  add: (tabIndex: number, type: ContentType) => ContentDefinition;
   update: (tabIndex: number, contentIndex: number, content: ContentDefinition) => void;
   move: (tabIndex: number, contentIndex: number, direction: -1 | 1) => void;
   remove: (tabIndex: number, contentIndex: number) => void;
@@ -17,12 +14,6 @@ interface ContentsEditorProps {
   onSelect: (contentIndex?: number) => void;
   tabIndex: number;
 }
-
-const catalog = [
-  { type: "metric", label: "指標", icon: Gauge },
-  { type: "chart", label: "グラフ", icon: ChartLine },
-  { type: "table", label: "テーブル", icon: Table2 },
-] as const;
 
 export const ContentsEditor = ({
   actions,
@@ -61,26 +52,9 @@ export const ContentsEditor = ({
           }}
         />
       ) : (
-        <div>
-          <h3 className="text-sm font-bold">コンポーネントを追加</h3>
-          <p className="mt-1 text-xs text-stone-500">表示要素を選択して配置します。</p>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {catalog.map(({ type, label, icon: Icon }) => (
-              <button
-                className="cursor-pointer rounded-lg border border-stone-200 p-3 text-left text-stone-600 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
-                key={type}
-                onClick={() => {
-                  actions.add(tabIndex, type);
-                  onSelect(tab.contents.length);
-                }}
-                type="button"
-              >
-                <Icon aria-hidden="true" className="mb-2 size-4" />
-                <span className="block text-xs font-semibold">{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <p className="rounded-lg border border-dashed border-stone-300 p-5 text-center text-xs text-stone-500">
+          編集対象のコンテンツが見つかりません。
+        </p>
       )}
     </section>
   );

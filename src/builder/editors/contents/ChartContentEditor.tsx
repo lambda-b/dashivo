@@ -1,12 +1,11 @@
-import { ContentLogicFields } from "@/builder/components/ContentLogicFields";
 import { ChartFormattingEditor } from "@/builder/editors/contents/ChartFormattingEditor";
 import { ChartTypeSelector } from "@/builder/editors/contents/ChartTypeSelector";
-import type { AnalysisDefinition, ChartContentDefinition } from "@/schema/dashboard";
+import type { ChartContentDefinition } from "@/schema/dashboard";
 
 interface ChartContentEditorProps {
-  analysis: AnalysisDefinition;
   content: ChartContentDefinition;
   onChange: (content: ChartContentDefinition) => void;
+  section?: "all" | "appearance" | "axes";
 }
 
 type ChartDefinition = ChartContentDefinition["chart"];
@@ -123,29 +122,36 @@ const ChartFields = ({ chart, onChange }: ChartFieldsProps) => {
   );
 };
 
-export const ChartContentEditor = ({ analysis, content, onChange }: ChartContentEditorProps) => (
+export const ChartContentEditor = ({
+  content,
+  onChange,
+  section = "all",
+}: ChartContentEditorProps) => (
   <div className="mt-4 grid gap-3">
-    <ChartTypeSelector
-      onChange={(type) =>
-        onChange({ ...content, chart: createChartDefinition(type, content.chart) })
-      }
-      value={content.chart.type}
-    />
-
-    <ContentLogicFields
-      analysis={analysis}
-      logic={content.logic}
-      onChange={(logic, dataset) => onChange({ ...content, logic, dataset })}
-      output={content.dataset}
-      outputType="datasets"
-    />
-
-    <ChartFields chart={content.chart} onChange={(chart) => onChange({ ...content, chart })} />
-
-    <ChartFormattingEditor
-      chartType={content.chart.type}
-      formatting={content.formatting}
-      onChange={(formatting) => onChange({ ...content, formatting })}
-    />
+    {section !== "axes" && (
+      <>
+        <ChartTypeSelector
+          onChange={(type) =>
+            onChange({ ...content, chart: createChartDefinition(type, content.chart) })
+          }
+          value={content.chart.type}
+        />
+        <ChartFields chart={content.chart} onChange={(chart) => onChange({ ...content, chart })} />
+        <ChartFormattingEditor
+          chartType={content.chart.type}
+          formatting={content.formatting}
+          onChange={(formatting) => onChange({ ...content, formatting })}
+          sections="chart"
+        />
+      </>
+    )}
+    {section !== "appearance" && (
+      <ChartFormattingEditor
+        chartType={content.chart.type}
+        formatting={content.formatting}
+        onChange={(formatting) => onChange({ ...content, formatting })}
+        sections="axes"
+      />
+    )}
   </div>
 );

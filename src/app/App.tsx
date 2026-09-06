@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { SlidersHorizontal } from "lucide-react";
+import { FileCode2, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { DashboardBuilder } from "@/builder/DashboardBuilder";
@@ -127,41 +127,69 @@ const Dashboard = ({
 
       <div className="mx-auto max-w-7xl p-5 sm:p-8 lg:p-10">
         <div className="grid items-start gap-5 lg:grid-cols-[20rem_minmax(0,1fr)]">
-          <aside className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm lg:sticky lg:top-5">
-            <div className="flex h-12 items-center justify-between border-b border-stone-100 px-4 text-xs font-semibold text-stone-600">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal aria-hidden="true" className="size-3.5" />
-                <span>パラメータ</span>
+          <div className="grid gap-4 lg:sticky lg:top-5">
+            <aside className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+              <div className="flex h-12 items-center justify-between border-b border-stone-100 px-4 text-xs font-semibold text-stone-600">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal aria-hidden="true" className="size-3.5" />
+                  <span>パラメータ</span>
+                </div>
+                <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[0.625rem] text-stone-500">
+                  {dashboard.controls.length}
+                </span>
               </div>
-              <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[0.625rem] text-stone-500">
-                {dashboard.controls.length}
-              </span>
-            </div>
 
-            <div className="p-5">
-              <p className="mb-5 text-xs leading-5 text-stone-400">
-                ダッシュボード全体へ適用します
-              </p>
-              <ControlPanel
-                controls={dashboard.controls}
-                params={params}
-                onChange={(key, value) => setParams((current) => ({ ...current, [key]: value }))}
-              />
-            </div>
+              <div className="p-5">
+                <p className="mb-5 text-xs leading-5 text-stone-400">
+                  ダッシュボード全体へ適用します
+                </p>
+                <ControlPanel
+                  controls={dashboard.controls}
+                  params={params}
+                  onChange={(key, value) => setParams((current) => ({ ...current, [key]: value }))}
+                />
+              </div>
 
-            {onEditParameters && (
-              <div className="grid gap-2 border-t border-stone-100 p-3">
-                <EditButton fullWidth onClick={onEditParameters}>
-                  パラメータを編集
-                </EditButton>
-                {onEditAnalysis && (
-                  <EditButton fullWidth onClick={onEditAnalysis}>
-                    Pythonロジックを編集
+              {onEditParameters && (
+                <div className="grid gap-2 border-t border-stone-100 p-3">
+                  <EditButton fullWidth onClick={onEditParameters}>
+                    パラメータを編集
                   </EditButton>
-                )}
-              </div>
+                </div>
+              )}
+            </aside>
+
+            {onEditAnalysis && (
+              <aside className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+                <div className="flex h-12 items-center justify-between border-b border-stone-100 px-4 text-xs font-semibold text-stone-600">
+                  <div className="flex items-center gap-2">
+                    <FileCode2 aria-hidden="true" className="size-3.5" />
+                    <span>Pythonロジック</span>
+                  </div>
+                  <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[0.625rem] text-stone-500">
+                    {dashboard.analysis.logic.length}
+                  </span>
+                </div>
+                <div className="grid gap-2 p-4">
+                  {dashboard.analysis.logic.map((logic) => (
+                    <div className="min-w-0 rounded-md bg-stone-50 px-3 py-2" key={logic.id}>
+                      <strong className="block truncate font-mono text-xs text-stone-700">
+                        {logic.id}
+                      </strong>
+                      <span className="mt-0.5 block truncate font-mono text-[0.625rem] text-stone-400">
+                        {logic.path}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-stone-100 p-3">
+                  <EditButton fullWidth onClick={onEditAnalysis}>
+                    Pythonロジックを管理
+                  </EditButton>
+                </div>
+              </aside>
             )}
-          </aside>
+          </div>
 
           <div className="min-w-0 flex-1">
             <DashboardTabs onEditTabs={onEditTabs} tabs={dashboard.tabs} />

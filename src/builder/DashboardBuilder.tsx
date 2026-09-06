@@ -1,4 +1,6 @@
 import { useState, type ReactNode } from "react";
+import { saveDashboardFile } from "@/builder/api/dashboardFile";
+import { savePythonSource } from "@/builder/api/pythonSource";
 import { useContentActions } from "@/builder/hooks/useContentActions";
 import { useAnalysisActions } from "@/builder/hooks/useAnalysisActions";
 import { useDashboardDraft } from "@/builder/hooks/useDashboardDraft";
@@ -9,7 +11,8 @@ import { AnalysisEditor } from "@/builder/editors/AnalysisEditor";
 import { ControlEditor } from "@/builder/editors/ControlEditor";
 import { HeaderEditor } from "@/builder/editors/HeaderEditor";
 import { TabEditor } from "@/builder/editors/TabEditor";
-import type { DashboardSchema } from "@/schema/dashboard";
+import { ContentWizard, type ContentWizardResult } from "@/builder/wizards/ContentWizard";
+import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
 
 interface DashboardBuilderProps {
   initialDashboard: DashboardSchema;
@@ -43,13 +46,14 @@ const sectionTitles: Record<BuilderSection, string> = {
 };
 
 export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilderProps) => {
-  const { state, editDashboard, applyDraft, saveDraft, resetDraft } =
+  const { state, editDashboard, applyDashboard, applyDraft, saveDraft, resetDraft } =
     useDashboardDraft(initialDashboard);
   const contentActions = useContentActions(state.draft, editDashboard);
   const analysisActions = useAnalysisActions(state.draft, editDashboard);
   const parameterActions = useParameterActions(state.draft, editDashboard);
   const tabActions = useTabActions(state.draft, editDashboard);
   const [section, setSection] = useState<BuilderSection>();
+  const [contentWizardTab, setContentWizardTab] = useState<number>();
   const [contentTarget, setContentTarget] = useState<ContentTarget>({ tabIndex: 0 });
 
   const openContentEditor = (target: ContentTarget) => {
@@ -57,10 +61,36 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
     setSection("contents");
   };
 
+  const completeContent = async ({ content, logic, pythonSource }: ContentWizardResult) => {
+    if (contentWizardTab === undefined) return;
+    if (logic && state.draft.analysis.logic.some((definition) => definition.path === logic.path)) {
+      throw new Error(`Pythonファイル「${logic.path}」はすでに登録されています。`);
+    }
+    if (logic && !pythonSource?.match(/^\s*def\s+execute\s*\(/m)) {
+      throw new Error("Pythonロジックにはexecute(params)関数を定義してください。");
+    }
+    const dashboard = dashboardSchema.parse({
+      ...state.draft,
+      analysis: logic
+        ? { ...state.draft.analysis, logic: [...state.draft.analysis.logic, logic] }
+        : state.draft.analysis,
+      tabs: state.draft.tabs.map((tab, index) =>
+        index === contentWizardTab ? { ...tab, contents: [...tab.contents, content] } : tab,
+      ),
+    });
+    if (logic && pythonSource !== undefined) {
+      await savePythonSource(logic.path, pythonSource);
+      await saveDashboardFile(dashboard);
+      window.location.reload();
+      return;
+    }
+    applyDashboard(dashboard);
+  };
+
   return (
     <>
       {children(state.dashboard, state.revision, {
-        addContent: (tabIndex) => openContentEditor({ tabIndex }),
+        addContent: (tabIndex) => setContentWizardTab(tabIndex),
         editContent: (tabIndex, contentIndex) => openContentEditor({ tabIndex, contentIndex }),
         openAnalysis: () => setSection("analysis"),
         openHeader: () => setSection("header"),
@@ -71,7 +101,11 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
       {section ? (
         <aside
           aria-label="Dashboard Builder"
-          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col border-l border-stone-300 bg-white shadow-2xl"
+          className={
+            section === "analysis" || section === "contents"
+              ? "fixed inset-4 z-50 mx-auto flex w-[min(64rem,calc(100%-2rem))] flex-col overflow-hidden rounded-2xl border border-stone-300 bg-white shadow-2xl"
+              : "fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col border-l border-stone-300 bg-white shadow-2xl"
+          }
         >
           <header className="flex items-start justify-between gap-6 border-b border-stone-200 p-5">
             <div>
@@ -186,6 +220,14 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
           </footer>
         </aside>
       ) : null}
+
+      <ContentWizard
+        dashboard={state.draft}
+        onClose={() => setContentWizardTab(undefined)}
+        onComplete={completeContent}
+        open={contentWizardTab !== undefined}
+        tabIndex={contentWizardTab ?? 0}
+      />
     </>
   );
 };
