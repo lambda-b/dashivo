@@ -30,7 +30,6 @@ export const useTabActions = (
           {
             id: createTabId(draft),
             label: "新しいタブ",
-            layout: { type: "grid", columns: 1 },
             contents: [],
           },
         ]),

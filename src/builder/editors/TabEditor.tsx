@@ -13,11 +13,6 @@ interface TabEditorProps {
   onRemove: () => void;
 }
 
-const columnOptions = [1, 2, 3, 4] as const;
-
-const parseColumns = (value: string): TabDefinition["layout"]["columns"] =>
-  columnOptions.find((columns) => columns === Number(value)) ?? 1;
-
 export const TabEditor = ({
   tab,
   index,
@@ -81,23 +76,6 @@ export const TabEditor = ({
         />
       </label>
     </div>
-
-    <label className="mt-4 block text-xs font-medium text-stone-600">
-      Grid列数
-      <select
-        className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none"
-        onChange={(event) =>
-          onChange({ ...tab, layout: { ...tab.layout, columns: parseColumns(event.target.value) } })
-        }
-        value={tab.layout.columns}
-      >
-        {columnOptions.map((columns) => (
-          <option key={columns} value={columns}>
-            {columns}列
-          </option>
-        ))}
-      </select>
-    </label>
 
     <p className="mt-3 text-xs text-stone-400">コンテンツ {tab.contents.length}件</p>
   </fieldset>

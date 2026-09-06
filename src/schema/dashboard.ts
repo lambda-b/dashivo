@@ -69,15 +69,9 @@ const contentSchema = z.discriminatedUnion("type", [
   tableContentSchema,
 ]);
 
-const gridLayoutSchema = z.object({
-  type: z.literal("grid"),
-  columns: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
-});
-
 const tabSchema = z.object({
   id: identifierSchema,
   label: z.string().min(1),
-  layout: z.discriminatedUnion("type", [gridLayoutSchema]),
   contents: z.array(contentSchema),
 });
 

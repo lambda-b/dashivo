@@ -30,7 +30,6 @@
     {
       "id": "summary",
       "label": "サマリー",
-      "layout": { "type": "grid", "columns": 2 },
       "contents": [
         {
           "id": "revenue",
@@ -53,7 +52,6 @@
     {
       "id": "charts",
       "label": "グラフ",
-      "layout": { "type": "grid", "columns": 1 },
       "contents": [
         {
           "id": "monthly-revenue",
@@ -67,7 +65,6 @@
     {
       "id": "tables",
       "label": "テーブル",
-      "layout": { "type": "grid", "columns": 1 },
       "contents": [
         {
           "id": "monthly-summary",

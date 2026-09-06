@@ -18,7 +18,6 @@ const dashboardSource = {
     {
       id: "summary",
       label: "Summary",
-      layout: { type: "grid", columns: 2 },
       contents: [
         {
           id: "revenue",
@@ -33,7 +32,6 @@ const dashboardSource = {
     {
       id: "charts",
       label: "Charts",
-      layout: { type: "grid", columns: 1 },
       contents: [
         {
           id: "revenue-chart",
@@ -47,7 +45,6 @@ const dashboardSource = {
     {
       id: "tables",
       label: "Tables",
-      layout: { type: "grid", columns: 1 },
       contents: [
         {
           id: "summary-table",
