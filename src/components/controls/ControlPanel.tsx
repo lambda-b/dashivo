@@ -40,7 +40,7 @@ export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) 
               control={control}
               key={control.key}
               onChange={(nextValue) => onChange(control.key, nextValue)}
-              value={typeof value === "boolean" ? value : control.defaultValue}
+              value={Array.isArray(value) ? value : control.defaultValue}
             />
           );
         case "date-range":
@@ -49,7 +49,9 @@ export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) 
               control={control}
               key={control.key}
               onChange={(nextValue) => onChange(control.key, nextValue)}
-              value={typeof value === "object" ? value : control.defaultValue}
+              value={
+                typeof value === "object" && !Array.isArray(value) ? value : control.defaultValue
+              }
             />
           );
       }

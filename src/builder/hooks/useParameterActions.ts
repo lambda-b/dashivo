@@ -11,18 +11,33 @@ const createParameterKey = (dashboard: DashboardSchema) => {
 const createControl = (type: ControlDefinition["type"], key: string): ControlDefinition => {
   switch (type) {
     case "radio":
+      return {
+        type,
+        key,
+        displayName: "新しい条件",
+        defaultValue: "option-1",
+        options: [{ label: "選択肢1", value: "option-1" }],
+        layout: "horizontal",
+      };
     case "select":
       return {
         type,
         key,
-        label: "新しい条件",
+        displayName: "新しい条件",
         defaultValue: "option-1",
         options: [{ label: "選択肢1", value: "option-1" }],
       };
     case "checkbox":
-      return { type, key, label: "新しい条件", defaultValue: false };
+      return {
+        type,
+        key,
+        displayName: "新しい条件",
+        defaultValue: [],
+        options: [{ label: "選択肢1", value: "option-1" }],
+        layout: "horizontal",
+      };
     case "date-range":
-      return { type, key, label: "新しい条件", defaultValue: { from: "", to: "" } };
+      return { type, key, displayName: "新しい条件", defaultValue: { from: "", to: "" } };
   }
 };
 

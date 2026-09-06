@@ -10,7 +10,7 @@ const selectControlSchema = z
   .object({
     type: z.literal("select"),
     key: z.string().min(1),
-    label: z.string().min(1),
+    displayName: z.string().min(1),
     defaultValue: z.string(),
     options: z.array(optionSchema).min(1),
   })
@@ -24,17 +24,37 @@ const selectControlSchema = z
     path: ["defaultValue"],
   });
 
-const checkboxControlSchema = z.object({
-  type: z.literal("checkbox"),
-  key: z.string().min(1),
-  label: z.string().min(1),
-  defaultValue: z.boolean(),
-});
+const checkboxControlSchema = z
+  .object({
+    type: z.literal("checkbox"),
+    key: z.string().min(1),
+    displayName: z.string().min(1),
+    defaultValue: z
+      .array(z.string())
+      .refine((values) => new Set(values).size === values.length, "values must be unique"),
+    options: z.array(optionSchema).min(1),
+    layout: z.enum(["horizontal", "vertical"]).default("horizontal"),
+  })
+  .refine(
+    (control) =>
+      new Set(control.options.map((option) => option.value)).size === control.options.length,
+    { message: "option values must be unique", path: ["options"] },
+  )
+  .refine(
+    (control) =>
+      control.defaultValue.every((value) =>
+        control.options.some((option) => option.value === value),
+      ),
+    {
+      message: "defaultValue must only contain control options",
+      path: ["defaultValue"],
+    },
+  );
 
 const dateRangeControlSchema = z.object({
   type: z.literal("date-range"),
   key: z.string().min(1),
-  label: z.string().min(1),
+  displayName: z.string().min(1),
   defaultValue: z.object({ from: z.string(), to: z.string() }),
 });
 
@@ -42,9 +62,10 @@ const radioControlSchema = z
   .object({
     type: z.literal("radio"),
     key: z.string().min(1),
-    label: z.string().min(1),
+    displayName: z.string().min(1),
     defaultValue: z.string(),
     options: z.array(optionSchema).min(1),
+    layout: z.enum(["horizontal", "vertical"]).default("horizontal"),
   })
   .refine(
     (control) =>

@@ -14,7 +14,7 @@ export const DateRangeControlEditor = ({
   onRemove,
 }: DateRangeControlEditorProps) => (
   <ControlEditorCard
-    controlLabel={control.label}
+    controlDisplayName={control.displayName}
     onRemove={onRemove}
     typeLabel="DATE RANGE PARAMETER"
   >

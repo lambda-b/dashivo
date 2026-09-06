@@ -8,7 +8,7 @@ interface SelectControlProps {
 
 export const SelectControl = ({ control, onChange, value }: SelectControlProps) => (
   <label className="text-xs font-medium text-stone-600">
-    {control.label}
+    {control.displayName}
     <select
       className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none"
       onChange={(event) => onChange(event.target.value)}

@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import type { RadioControlDefinition } from "@/schema/dashboard";
 
 interface RadioControlProps {
@@ -9,21 +8,25 @@ interface RadioControlProps {
 
 export const RadioControl = ({ control, value, onChange }: RadioControlProps) => (
   <fieldset>
-    <legend className="mb-2 text-xs font-semibold text-stone-500">{control.label}</legend>
-    <div className="grid gap-1 rounded-lg bg-stone-100 p-1 max-lg:grid-cols-3">
+    <legend className="mb-2 text-xs font-semibold text-stone-500">{control.displayName}</legend>
+    <div
+      className={control.layout === "horizontal" ? "flex flex-wrap gap-x-4 gap-y-2" : "grid gap-2"}
+    >
       {control.options.map((option) => (
-        <button
-          aria-pressed={value === option.value}
-          className={clsx(
-            "cursor-pointer rounded-md px-3 py-2 text-left text-sm text-stone-500 transition hover:bg-white hover:text-stone-800 max-lg:text-center",
-            value === option.value && "text-brand-dark bg-white shadow-sm",
-          )}
+        <label
+          className="flex cursor-pointer items-center gap-2 text-sm text-stone-700"
           key={option.value}
-          onClick={() => onChange(option.value)}
-          type="button"
         >
-          {option.label}
-        </button>
+          <input
+            checked={value === option.value}
+            className="accent-brand size-4 cursor-pointer"
+            name={control.key}
+            onChange={() => onChange(option.value)}
+            type="radio"
+            value={option.value}
+          />
+          <span>{option.label}</span>
+        </label>
       ))}
     </div>
   </fieldset>

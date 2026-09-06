@@ -4,14 +4,14 @@ import { EditorIconButton } from "@/builder/components/EditorIconButton";
 
 interface ControlEditorCardProps {
   children: ReactNode;
-  controlLabel: string;
+  controlDisplayName: string;
   typeLabel: string;
   onRemove: () => void;
 }
 
 export const ControlEditorCard = ({
   children,
-  controlLabel,
+  controlDisplayName,
   typeLabel,
   onRemove,
 }: ControlEditorCardProps) => (
@@ -20,7 +20,7 @@ export const ControlEditorCard = ({
       <legend className="text-xs font-bold tracking-wide text-stone-500">{typeLabel}</legend>
       <EditorIconButton
         icon={Trash2}
-        label={`${controlLabel}を削除`}
+        label={`${controlDisplayName}を削除`}
         onClick={onRemove}
         variant="danger"
       />

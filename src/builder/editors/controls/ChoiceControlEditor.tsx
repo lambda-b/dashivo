@@ -1,5 +1,6 @@
 import { ControlEditorCard } from "@/builder/components/ControlEditorCard";
 import { ControlIdentityFields } from "@/builder/components/ControlIdentityFields";
+import { ControlLayoutField } from "@/builder/components/ControlLayoutField";
 import { EditorIconButton } from "@/builder/components/EditorIconButton";
 import { Trash2 } from "lucide-react";
 import type { ChoiceControlDefinition } from "@/schema/dashboard";
@@ -49,7 +50,7 @@ export const ChoiceControlEditor = ({ control, onChange, onRemove }: ChoiceContr
 
   return (
     <ControlEditorCard
-      controlLabel={control.label}
+      controlDisplayName={control.displayName}
       onRemove={onRemove}
       typeLabel={control.type === "radio" ? "RADIO PARAMETER" : "SELECT PARAMETER"}
     >
@@ -59,9 +60,20 @@ export const ChoiceControlEditor = ({ control, onChange, onRemove }: ChoiceContr
       />
 
       <div className="mt-4 grid gap-2">
-        <span className="text-xs font-medium text-stone-600">選択肢</span>
+        <div className="grid grid-cols-[1fr_1fr_5rem_2.25rem] gap-2 text-xs font-medium text-stone-600">
+          <span>値</span>
+          <span>ラベル</span>
+          <span className="text-center">デフォルト</span>
+          <span />
+        </div>
         {control.options.map((option, index) => (
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-2" key={index}>
+          <div className="grid grid-cols-[1fr_1fr_5rem_2.25rem] items-center gap-2" key={index}>
+            <input
+              aria-label={`選択肢${index + 1}の値`}
+              className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
+              onChange={(event) => updateOption(index, "value", event.target.value)}
+              value={option.value}
+            />
             <input
               aria-label={`選択肢${index + 1}のラベル`}
               className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
@@ -69,10 +81,12 @@ export const ChoiceControlEditor = ({ control, onChange, onRemove }: ChoiceContr
               value={option.label}
             />
             <input
-              aria-label={`選択肢${index + 1}の値`}
-              className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-              onChange={(event) => updateOption(index, "value", event.target.value)}
-              value={option.value}
+              aria-label={`選択肢${index + 1}をデフォルトに設定`}
+              checked={control.defaultValue === option.value}
+              className="accent-brand mx-auto size-4 cursor-pointer"
+              name={`${control.key}-default`}
+              onChange={() => onChange({ ...control, defaultValue: option.value })}
+              type="radio"
             />
             <EditorIconButton
               disabled={control.options.length === 1}
@@ -92,20 +106,14 @@ export const ChoiceControlEditor = ({ control, onChange, onRemove }: ChoiceContr
         </button>
       </div>
 
-      <label className="mt-4 block text-xs font-medium text-stone-600">
-        初期値
-        <select
-          className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none"
-          onChange={(event) => onChange({ ...control, defaultValue: event.target.value })}
-          value={control.defaultValue}
-        >
-          {control.options.map((option, index) => (
-            <option key={index} value={option.value}>
-              {option.label || option.value || `選択肢${index + 1}`}
-            </option>
-          ))}
-        </select>
-      </label>
+      {control.type === "radio" && (
+        <div className="mt-4">
+          <ControlLayoutField
+            layout={control.layout}
+            onChange={(layout) => onChange({ ...control, layout })}
+          />
+        </div>
+      )}
     </ControlEditorCard>
   );
 };

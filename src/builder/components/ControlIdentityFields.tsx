@@ -1,6 +1,6 @@
 interface ControlIdentity {
+  displayName: string;
   key: string;
-  label: string;
 }
 
 interface ControlIdentityFieldsProps {
@@ -14,16 +14,18 @@ export const ControlIdentityFields = ({ control, onChange }: ControlIdentityFiel
       キー
       <input
         className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-        onChange={(event) => onChange({ key: event.target.value, label: control.label })}
+        onChange={(event) =>
+          onChange({ displayName: control.displayName, key: event.target.value })
+        }
         value={control.key}
       />
     </label>
     <label className="text-xs font-medium text-stone-600">
-      ラベル
+      表示名
       <input
         className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-        onChange={(event) => onChange({ key: control.key, label: event.target.value })}
-        value={control.label}
+        onChange={(event) => onChange({ displayName: event.target.value, key: control.key })}
+        value={control.displayName}
       />
     </label>
   </div>

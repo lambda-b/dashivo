@@ -5,7 +5,7 @@
     {
       "type": "radio",
       "key": "region",
-      "label": "営業地域",
+      "displayName": "営業地域",
       "defaultValue": "All",
       "options": [
         { "label": "すべて", "value": "All" },
@@ -14,16 +14,10 @@
       ]
     },
     {
-      "type": "radio",
+      "type": "date-range",
       "key": "date_1",
-      "label": "日付",
-      "defaultValue": "All",
-      "options": [
-        { "label": "すべて", "value": "All" },
-        { "label": "1月", "value": "2026-01-01" },
-        { "label": "2月", "value": "2026-02-01" },
-        { "label": "3月", "value": "2026-03-01" }
-      ]
+      "displayName": "対象期間",
+      "defaultValue": { "from": "2026-01-01", "to": "2026-03-31" }
     }
   ],
   "tabs": [

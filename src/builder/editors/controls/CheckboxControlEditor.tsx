@@ -1,5 +1,8 @@
+import { Trash2 } from "lucide-react";
 import { ControlEditorCard } from "@/builder/components/ControlEditorCard";
 import { ControlIdentityFields } from "@/builder/components/ControlIdentityFields";
+import { ControlLayoutField } from "@/builder/components/ControlLayoutField";
+import { EditorIconButton } from "@/builder/components/EditorIconButton";
 import type { CheckboxControlDefinition } from "@/schema/dashboard";
 
 interface CheckboxControlEditorProps {
@@ -8,30 +11,117 @@ interface CheckboxControlEditorProps {
   onRemove: () => void;
 }
 
+const createOptionValue = (control: CheckboxControlDefinition) => {
+  const values = new Set(control.options.map((option) => option.value));
+  let index = control.options.length + 1;
+  while (values.has(`option-${index}`)) index += 1;
+  return `option-${index}`;
+};
+
 export const CheckboxControlEditor = ({
   control,
   onChange,
   onRemove,
-}: CheckboxControlEditorProps) => (
-  <ControlEditorCard
-    controlLabel={control.label}
-    onRemove={onRemove}
-    typeLabel="CHECKBOX PARAMETER"
-  >
-    <div className="space-y-3">
-      <ControlIdentityFields
-        control={control}
-        onChange={(identity) => onChange({ ...control, ...identity })}
-      />
+}: CheckboxControlEditorProps) => {
+  const updateOption = (index: number, field: "label" | "value", value: string) => {
+    const previousValue = control.options[index]?.value;
+    onChange({
+      ...control,
+      options: control.options.map((option, optionIndex) =>
+        optionIndex === index ? { ...option, [field]: value } : option,
+      ),
+      defaultValue:
+        field === "value" && previousValue
+          ? control.defaultValue.map((current) => (current === previousValue ? value : current))
+          : control.defaultValue,
+    });
+  };
 
-      <label className="flex items-center gap-2">
-        <input
-          checked={control.defaultValue === true}
-          onChange={(event) => onChange({ ...control, defaultValue: event.target.checked })}
-          type="checkbox"
+  const toggleDefault = (value: string, checked: boolean) =>
+    onChange({
+      ...control,
+      defaultValue: checked
+        ? [...control.defaultValue, value]
+        : control.defaultValue.filter((current) => current !== value),
+    });
+
+  const removeOption = (index: number) => {
+    const removedValue = control.options[index]?.value;
+    onChange({
+      ...control,
+      options: control.options.filter((_, optionIndex) => optionIndex !== index),
+      defaultValue: control.defaultValue.filter((value) => value !== removedValue),
+    });
+  };
+
+  const addOption = () => {
+    const value = createOptionValue(control);
+    onChange({ ...control, options: [...control.options, { label: "新しい選択肢", value }] });
+  };
+
+  return (
+    <ControlEditorCard
+      controlDisplayName={control.displayName}
+      onRemove={onRemove}
+      typeLabel="CHECKBOX PARAMETER"
+    >
+      <div className="grid gap-4">
+        <ControlIdentityFields
+          control={control}
+          onChange={(identity) => onChange({ ...control, ...identity })}
         />
-        <span className="text-xs font-medium text-stone-600">デフォルトでチェック</span>
-      </label>
-    </div>
-  </ControlEditorCard>
-);
+
+        <div className="grid gap-2">
+          <div className="grid grid-cols-[1fr_1fr_5rem_2.25rem] gap-2 text-xs font-medium text-stone-600">
+            <span>値</span>
+            <span>ラベル</span>
+            <span className="text-center">デフォルト</span>
+            <span />
+          </div>
+          {control.options.map((option, index) => (
+            <div className="grid grid-cols-[1fr_1fr_5rem_2.25rem] items-center gap-2" key={index}>
+              <input
+                aria-label={`選択肢${index + 1}の値`}
+                className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
+                onChange={(event) => updateOption(index, "value", event.target.value)}
+                value={option.value}
+              />
+              <input
+                aria-label={`選択肢${index + 1}のラベル`}
+                className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
+                onChange={(event) => updateOption(index, "label", event.target.value)}
+                value={option.label}
+              />
+              <input
+                aria-label={`選択肢${index + 1}をデフォルトでチェック`}
+                checked={control.defaultValue.includes(option.value)}
+                className="accent-brand mx-auto size-4 cursor-pointer"
+                onChange={(event) => toggleDefault(option.value, event.target.checked)}
+                type="checkbox"
+              />
+              <EditorIconButton
+                disabled={control.options.length === 1}
+                icon={Trash2}
+                label={`選択肢${index + 1}を削除`}
+                onClick={() => removeOption(index)}
+                variant="danger"
+              />
+            </div>
+          ))}
+          <button
+            className="mt-1 cursor-pointer rounded-md border border-dashed border-stone-300 px-3 py-2 text-xs font-medium text-stone-600 hover:bg-stone-50"
+            onClick={addOption}
+            type="button"
+          >
+            選択肢を追加
+          </button>
+        </div>
+
+        <ControlLayoutField
+          layout={control.layout}
+          onChange={(layout) => onChange({ ...control, layout })}
+        />
+      </div>
+    </ControlEditorCard>
+  );
+};

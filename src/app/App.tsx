@@ -122,7 +122,7 @@ const Dashboard = ({
       </header>
 
       <div className="mx-auto max-w-7xl p-5 sm:p-8 lg:p-10">
-        <div className="grid items-start gap-5 lg:grid-cols-[16rem_minmax(0,1fr)]">
+        <div className="grid items-start gap-5 lg:grid-cols-[20rem_minmax(0,1fr)]">
           <aside className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm lg:sticky lg:top-5">
             <div className="flex h-12 items-center justify-between border-b border-stone-100 px-4 text-xs font-semibold text-stone-600">
               <div className="flex items-center gap-2">

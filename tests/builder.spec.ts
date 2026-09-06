@@ -13,10 +13,22 @@ test("edits, validates, and saves the dashboard configuration in development", a
   await page.getByRole("button", { name: "Builderを閉じる" }).click();
 
   await page.getByRole("complementary").getByRole("button", { name: "パラメータを編集" }).click();
-  await page.getByRole("button", { name: "Radioを追加" }).click();
-  await page.getByRole("button", { name: "Selectを追加" }).click();
-  await page.getByRole("button", { name: "Checkboxを追加" }).click();
-  await page.getByRole("button", { name: "Date Rangeを追加" }).click();
+  await page.getByRole("button", { name: "項目を追加" }).click();
+  await page.getByRole("button", { name: "単一選択（ボタン）を追加" }).click();
+  await page.getByRole("button", { name: "項目を追加" }).click();
+  await page.getByRole("button", { name: "単一選択（リスト）を追加" }).click();
+  await page.getByRole("button", { name: "項目を追加" }).click();
+  await page.getByRole("button", { name: "複数選択を追加" }).click();
+  const checkboxEditor = page.locator("fieldset").filter({ hasText: "CHECKBOX PARAMETER" });
+  await checkboxEditor.getByRole("button", { name: "選択肢を追加" }).click();
+  await checkboxEditor.getByLabel("選択肢1をデフォルトでチェック").check();
+  await checkboxEditor.getByRole("radio", { name: "縦並び" }).check();
+
+  const addedRadioEditor = page.locator("fieldset").filter({ hasText: "RADIO PARAMETER" }).last();
+  await addedRadioEditor.getByRole("radio", { name: "縦並び" }).check();
+
+  await page.getByRole("button", { name: "項目を追加" }).click();
+  await page.getByRole("button", { name: "日付範囲を追加" }).click();
   await page.getByRole("button", { name: "Builderを閉じる" }).click();
 
   await page.getByRole("button", { name: "タブを編集" }).click();
@@ -63,6 +75,11 @@ test("edits, validates, and saves the dashboard configuration in development", a
   await expect(
     page.getByRole("region", { name: "パラメータ" }).getByText("新しい条件").first(),
   ).toBeVisible();
-  await expect(page.getByRole("checkbox", { name: "新しい条件" })).toBeVisible();
-  await expect(page.getByLabel("開始日")).toBeVisible();
+  await expect(page.getByRole("radio", { name: "選択肢1" })).toBeChecked();
+  const checkboxes = page.getByRole("region", { name: "パラメータ" }).getByRole("checkbox");
+  await expect(checkboxes).toHaveCount(2);
+  await expect(checkboxes.first()).toBeChecked();
+  await checkboxes.last().check();
+  await expect(checkboxes.last()).toBeChecked();
+  await expect(page.getByLabel("開始日").last()).toBeVisible();
 });
