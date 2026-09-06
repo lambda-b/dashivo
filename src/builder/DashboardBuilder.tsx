@@ -1,9 +1,10 @@
-import { useReducer, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { ControlEditor } from "@/builder/ControlEditor";
 import { TabEditor } from "@/builder/TabEditor";
-import { saveDashboardFile } from "@/builder/dashboard-file";
-import { builderReducer, createBuilderState } from "@/builder/state";
-import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
+import { useDashboardDraft } from "@/builder/useDashboardDraft";
+import { useParameterActions } from "@/builder/useParameterActions";
+import { useTabActions } from "@/builder/useTabActions";
+import type { DashboardSchema } from "@/schema/dashboard";
 
 interface DashboardBuilderProps {
   initialDashboard: DashboardSchema;
@@ -16,93 +17,12 @@ interface DashboardBuilderProps {
 
 type BuilderSection = "parameters" | "tabs";
 
-const createControlKey = (dashboard: DashboardSchema) => {
-  const keys = new Set(dashboard.controls.map((control) => control.key));
-  let index = dashboard.controls.length + 1;
-  while (keys.has(`control_${index}`)) index += 1;
-  return `control_${index}`;
-};
-
-const createTabId = (dashboard: DashboardSchema) => {
-  const ids = new Set(dashboard.tabs.map((tab) => tab.id));
-  let index = dashboard.tabs.length + 1;
-  while (ids.has(`tab-${index}`)) index += 1;
-  return `tab-${index}`;
-};
-
-const moveItem = <Item,>(items: Item[], index: number, offset: -1 | 1) => {
-  const destination = index + offset;
-  if (destination < 0 || destination >= items.length) return items;
-  const nextItems = [...items];
-  [nextItems[index], nextItems[destination]] = [nextItems[destination], nextItems[index]];
-  return nextItems;
-};
-
 export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilderProps) => {
-  const [state, dispatch] = useReducer(builderReducer, initialDashboard, createBuilderState);
+  const { state, editDashboard, applyDraft, saveDraft, resetDraft } =
+    useDashboardDraft(initialDashboard);
+  const parameterActions = useParameterActions(state.draft, editDashboard);
+  const tabActions = useTabActions(state.draft, editDashboard);
   const [section, setSection] = useState<BuilderSection>();
-
-  const editDashboard = (dashboard: DashboardSchema) => dispatch({ type: "edit", dashboard });
-
-  const applyDraft = () => {
-    const result = dashboardSchema.safeParse(state.draft);
-    if (!result.success) {
-      dispatch({ type: "error", message: result.error.message });
-      return;
-    }
-    dispatch({ type: "apply", dashboard: result.data });
-  };
-
-  const saveDraft = async () => {
-    const result = dashboardSchema.safeParse(state.draft);
-    if (!result.success) {
-      dispatch({ type: "error", message: result.error.message });
-      return;
-    }
-    dispatch({ type: "saving" });
-    try {
-      await saveDashboardFile(result.data);
-      dispatch({ type: "saved" });
-    } catch (error) {
-      dispatch({
-        type: "error",
-        message: error instanceof Error ? error.message : "dashboard.jsonを保存できませんでした。",
-      });
-    }
-  };
-
-  const addRadioControl = () => {
-    const key = createControlKey(state.draft);
-    editDashboard({
-      ...state.draft,
-      controls: [
-        ...state.draft.controls,
-        {
-          type: "radio",
-          key,
-          label: "新しい条件",
-          defaultValue: "option-1",
-          options: [{ label: "選択肢1", value: "option-1" }],
-        },
-      ],
-    });
-  };
-
-  const addTab = () => {
-    const id = createTabId(state.draft);
-    editDashboard({
-      ...state.draft,
-      tabs: [
-        ...state.draft.tabs,
-        {
-          id,
-          label: "新しいタブ",
-          layout: { type: "grid", columns: 1 },
-          contents: [],
-        },
-      ],
-    });
-  };
 
   return (
     <>
@@ -177,7 +97,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
                     </div>
                     <button
                       className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
-                      onClick={addRadioControl}
+                      onClick={parameterActions.addRadio}
                       type="button"
                     >
                       Radioを追加
@@ -189,22 +109,8 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
                       <ControlEditor
                         control={control}
                         key={index}
-                        onChange={(nextControl) =>
-                          editDashboard({
-                            ...state.draft,
-                            controls: state.draft.controls.map((current, controlIndex) =>
-                              controlIndex === index ? nextControl : current,
-                            ),
-                          })
-                        }
-                        onRemove={() =>
-                          editDashboard({
-                            ...state.draft,
-                            controls: state.draft.controls.filter(
-                              (_, controlIndex) => controlIndex !== index,
-                            ),
-                          })
-                        }
+                        onChange={(nextControl) => parameterActions.update(index, nextControl)}
+                        onRemove={() => parameterActions.remove(index)}
                       />
                     ))}
                     {state.draft.controls.length === 0 && (
@@ -226,7 +132,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
                   </div>
                   <button
                     className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
-                    onClick={addTab}
+                    onClick={tabActions.add}
                     type="button"
                   >
                     タブを追加
@@ -241,32 +147,10 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
                       isFirst={index === 0}
                       isLast={index === state.draft.tabs.length - 1}
                       key={index}
-                      onChange={(nextTab) =>
-                        editDashboard({
-                          ...state.draft,
-                          tabs: state.draft.tabs.map((current, tabIndex) =>
-                            tabIndex === index ? nextTab : current,
-                          ),
-                        })
-                      }
-                      onMoveDown={() =>
-                        editDashboard({
-                          ...state.draft,
-                          tabs: moveItem(state.draft.tabs, index, 1),
-                        })
-                      }
-                      onMoveUp={() =>
-                        editDashboard({
-                          ...state.draft,
-                          tabs: moveItem(state.draft.tabs, index, -1),
-                        })
-                      }
-                      onRemove={() =>
-                        editDashboard({
-                          ...state.draft,
-                          tabs: state.draft.tabs.filter((_, tabIndex) => tabIndex !== index),
-                        })
-                      }
+                      onChange={(nextTab) => tabActions.update(index, nextTab)}
+                      onMoveDown={() => tabActions.move(index, 1)}
+                      onMoveUp={() => tabActions.move(index, -1)}
+                      onRemove={() => tabActions.remove(index)}
                       tab={tab}
                     />
                   ))}
@@ -288,7 +172,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
             <div className="flex gap-2">
               <button
                 className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
-                onClick={() => dispatch({ type: "reset", dashboard: initialDashboard })}
+                onClick={resetDraft}
                 type="button"
               >
                 元に戻す
