@@ -112,9 +112,7 @@ export const ContentEditor = ({
           <ContentLogicFields
             analysis={analysis}
             logic={content.logic}
-            onChange={(logic, metric) => onChange({ ...content, logic, metric })}
-            output={content.metric}
-            outputType="metrics"
+            onChange={(logic) => onChange({ ...content, logic })}
           />
         </div>
         <label className="text-xs font-medium text-stone-600">
@@ -148,9 +146,7 @@ export const ContentEditor = ({
         <ContentLogicFields
           analysis={analysis}
           logic={content.logic}
-          onChange={(logic, dataset) => onChange({ ...content, logic, dataset })}
-          output={content.dataset}
-          outputType="datasets"
+          onChange={(logic) => onChange({ ...content, logic })}
         />
         <ChartContentEditor content={content} onChange={onChange} />
       </div>
@@ -159,9 +155,7 @@ export const ContentEditor = ({
         <ContentLogicFields
           analysis={analysis}
           logic={content.logic}
-          onChange={(logic, dataset) => onChange({ ...content, logic, dataset })}
-          output={content.dataset}
-          outputType="datasets"
+          onChange={(logic) => onChange({ ...content, logic })}
         />
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs font-medium text-stone-600">表示列</span>

@@ -38,12 +38,6 @@ const loadAssetCatalog = async () => {
 const toOptions = (paths: string[], current?: string) =>
   [...new Set(current ? [current, ...paths] : paths)].map((path) => ({ label: path, value: path }));
 
-const parseOutputs = (source: string) =>
-  source
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-
 const PythonSourceEditor = ({ path }: { path: string }) => {
   const sourceQuery = useQuery({
     queryKey: ["python-source", path],
@@ -96,10 +90,10 @@ export const AnalysisEditor = ({ actions, dashboard }: AnalysisEditorProps) => {
       <div>
         <h3 className="text-sm font-bold">Pythonロジック</h3>
         <p className="mt-1 text-xs leading-5 text-stone-500">
-          コンテンツから参照するPythonファイル、入力CSV、出力名を管理します。
+          コンテンツから参照するPythonファイルと入力CSVを管理します。
         </p>
         <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-[0.6875rem] leading-5 text-amber-800">
-          ID、入出力、参照ファイルの変更はdashboard.jsonへ保存してください。Pythonソースは専用ボタンで直接保存します。
+          ID、入力CSV、参照ファイルの変更はdashboard.jsonへ保存してください。Pythonソースは専用ボタンで直接保存します。
         </p>
       </div>
 
@@ -235,36 +229,6 @@ export const AnalysisEditor = ({ actions, dashboard }: AnalysisEditorProps) => {
                   />
                 </div>
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="text-xs font-medium text-stone-600">
-                  出力Dataset
-                  <input
-                    className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-                    onChange={(event) =>
-                      actions.updateLogic(index, {
-                        ...logic,
-                        outputs: { ...logic.outputs, datasets: parseOutputs(event.target.value) },
-                      })
-                    }
-                    placeholder="summary, details"
-                    value={logic.outputs.datasets.join(", ")}
-                  />
-                </label>
-                <label className="text-xs font-medium text-stone-600">
-                  出力Metric
-                  <input
-                    className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-                    onChange={(event) =>
-                      actions.updateLogic(index, {
-                        ...logic,
-                        outputs: { ...logic.outputs, metrics: parseOutputs(event.target.value) },
-                      })
-                    }
-                    placeholder="revenue, orders"
-                    value={logic.outputs.metrics.join(", ")}
-                  />
-                </label>
-              </div>
               <details className="rounded-lg border border-stone-200 bg-stone-50 p-3">
                 <summary className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-stone-700">
                   <FileCode2 aria-hidden="true" className="size-3.5" />

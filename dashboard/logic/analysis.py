@@ -1,11 +1,9 @@
-import io
-
 import numpy as np
 import pandas as pd
 
 
-def execute(params):
-    frame = pd.read_csv(io.StringIO(params["source_data"]))
+def execute(data: pd.DataFrame, params: dict):
+    frame = data
     region = params.get("region", "All")
     if region != "All":
         frame = frame[frame["region"] == region]
@@ -19,15 +17,4 @@ def execute(params):
         summary["revenue"], summary["orders"]
     ).round(2)
 
-    return {
-        "runtime": {
-            "python": __import__("sys").version.split()[0],
-            "pandas": pd.__version__,
-            "numpy": np.__version__,
-        },
-        "datasets": {"summary": summary.to_dict(orient="records")},
-        "metrics": {
-            "revenue": int(summary["revenue"].sum()),
-            "orders": int(summary["orders"].sum()),
-        },
-    }
+    return summary.to_dict(orient="records")

@@ -52,7 +52,7 @@ test("edits, validates, and saves the dashboard configuration in development", a
   await page.getByRole("button", { name: "次へ" }).click();
   await expect(contentWizard.getByText("data/raw/sales.csv")).toBeVisible();
   await expect(contentWizard.getByText("logic/analysis.py", { exact: true })).toBeVisible();
-  await page.getByLabel("出力値").selectOption("orders");
+  await contentWizard.getByLabel("Pythonロジック").selectOption("sales-orders");
   await page.getByRole("button", { name: "次へ" }).click();
   await page.getByLabel("タイトル").fill("詳細注文件数");
   await page.getByRole("button", { name: "コンテンツを作成" }).click();
@@ -63,7 +63,7 @@ test("edits, validates, and saves the dashboard configuration in development", a
   await expect(page.getByText("255")).toBeVisible();
 
   await page.getByRole("button", { name: "詳細注文件数を編集" }).click();
-  await expect(page.getByLabel("出力値")).toHaveValue("orders");
+  await expect(page.getByLabel("Pythonロジック")).toHaveValue("sales-orders");
 
   await page.getByRole("button", { name: "dashboard.jsonを保存" }).click();
   await expect(page.getByText("保存しました")).toBeVisible();
@@ -146,15 +146,15 @@ test("selects dashboard CSV and Python files for analysis logic", async ({ page,
   await expect(response).toBeOK();
   expect(await response.json()).toEqual({
     csv: ["data/raw/sales.csv"],
-    python: ["logic/analysis.py"],
+    python: ["logic/analysis.py", "logic/orders.py", "logic/revenue.py"],
   });
 
   await page.goto("http://127.0.0.1:3030");
   await page.getByRole("button", { name: "Pythonロジックを管理" }).click();
 
   await expect(page.getByLabel("CSVファイル")).toHaveValue("data/raw/sales.csv");
-  await expect(page.getByLabel("Pythonファイル")).toHaveValue("logic/analysis.py");
-  await expect(page.getByLabel("入力CSV")).toHaveValue("sales");
-  await page.getByText("Pythonソースを編集").click();
+  await expect(page.getByLabel("Pythonファイル").first()).toHaveValue("logic/analysis.py");
+  await expect(page.getByLabel("入力CSV").first()).toHaveValue("sales");
+  await page.getByText("Pythonソースを編集").first().click();
   await expect(page.getByLabel("logic/analysis.pyのPythonソース")).toBeVisible();
 });

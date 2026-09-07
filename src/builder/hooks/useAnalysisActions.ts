@@ -57,7 +57,6 @@ export const useAnalysisActions = (
           type: "python",
           path,
           input: draft.analysis.inputs[0]?.id ?? "input",
-          outputs: { datasets: [], metrics: [] },
         };
         editAnalysis({ ...draft.analysis, logic: [...draft.analysis.logic, definition] });
       },

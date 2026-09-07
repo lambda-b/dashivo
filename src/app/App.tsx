@@ -80,8 +80,6 @@ const Dashboard = ({
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
   });
-  const runtime = analysis.data ? Object.values(analysis.data)[0]?.runtime : undefined;
-
   return (
     <main className="min-h-screen bg-stone-100">
       <header className="border-b border-stone-200 bg-white/85 px-5 py-6 backdrop-blur-sm sm:px-8 lg:px-10">
@@ -203,35 +201,27 @@ const Dashboard = ({
                   </pre>
                 </section>
               ) : analysis.data ? (
-                <>
-                  <Routes>
-                    <Route element={<Navigate replace to={defaultTabPath} />} path="/" />
-                    {dashboard.tabs.map((tab, tabIndex) => (
-                      <Route
-                        element={
-                          <DashboardContent
-                            onAddContent={onAddContent && (() => onAddContent(tabIndex))}
-                            onEditContent={
-                              onEditContent &&
-                              ((contentIndex) => onEditContent(tabIndex, contentIndex))
-                            }
-                            results={analysis.data}
-                            tab={tab}
-                          />
-                        }
-                        key={tab.id}
-                        path={`/${tab.id}`}
-                      />
-                    ))}
-                    <Route element={<Navigate replace to={defaultTabPath} />} path="*" />
-                  </Routes>
-
-                  {runtime && (
-                    <p className="mt-5 text-right text-xs text-stone-500">
-                      Python {runtime.python} · pandas {runtime.pandas} · NumPy {runtime.numpy}
-                    </p>
-                  )}
-                </>
+                <Routes>
+                  <Route element={<Navigate replace to={defaultTabPath} />} path="/" />
+                  {dashboard.tabs.map((tab, tabIndex) => (
+                    <Route
+                      element={
+                        <DashboardContent
+                          onAddContent={onAddContent && (() => onAddContent(tabIndex))}
+                          onEditContent={
+                            onEditContent &&
+                            ((contentIndex) => onEditContent(tabIndex, contentIndex))
+                          }
+                          results={analysis.data}
+                          tab={tab}
+                        />
+                      }
+                      key={tab.id}
+                      path={`/${tab.id}`}
+                    />
+                  ))}
+                  <Route element={<Navigate replace to={defaultTabPath} />} path="*" />
+                </Routes>
               ) : (
                 <section className="grid h-72 place-items-center rounded-xl border border-stone-200 bg-white text-sm text-stone-500 shadow-sm">
                   WASMと分析データを読み込んでいます…

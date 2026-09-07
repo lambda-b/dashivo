@@ -67,7 +67,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
       throw new Error(`Pythonファイル「${logic.path}」はすでに登録されています。`);
     }
     if (logic && !pythonSource?.match(/^\s*def\s+execute\s*\(/m)) {
-      throw new Error("Pythonロジックにはexecute(params)関数を定義してください。");
+      throw new Error("Pythonロジックにはexecute(data, params)関数を定義してください。");
     }
     const dashboard = dashboardSchema.parse({
       ...state.draft,

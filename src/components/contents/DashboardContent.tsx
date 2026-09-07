@@ -4,7 +4,7 @@ import { MetricCard } from "@/components/contents/MetricCard";
 import { ChartPanel } from "@/components/contents/chart/ChartPanel";
 import { DataTable } from "@/components/contents/table/DataTable";
 import type {
-  AnalysisResult,
+  AnalysisOutput,
   AnalysisResults,
   ContentDefinition,
   TabDefinition,
@@ -19,17 +19,17 @@ interface DashboardContentProps {
 
 interface ContentProps {
   content: ContentDefinition;
-  result: AnalysisResult;
+  result: AnalysisOutput;
 }
 
 const Content = ({ content, result }: ContentProps) => {
   switch (content.type) {
     case "metric":
-      return <MetricCard definition={content} value={result.metrics[content.metric] ?? 0} />;
+      return <MetricCard definition={content} value={typeof result === "number" ? result : 0} />;
     case "chart":
-      return <ChartPanel definition={content} data={result.datasets[content.dataset] ?? []} />;
+      return <ChartPanel definition={content} data={Array.isArray(result) ? result : []} />;
     case "table":
-      return <DataTable definition={content} data={result.datasets[content.dataset] ?? []} />;
+      return <DataTable definition={content} data={Array.isArray(result) ? result : []} />;
   }
 };
 

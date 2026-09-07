@@ -17,8 +17,6 @@ test("runs pandas and NumPy from a standalone file", async ({ page }) => {
     timeout: 120_000,
   });
   await expect(page.getByText("￥754,000")).toBeVisible();
-  await expect(page.getByText(/pandas 3\.0\.2/)).toBeVisible();
-  await expect(page.getByText(/NumPy 2\.4\.6/)).toBeVisible();
 
   await page.getByRole("link", { name: "グラフ" }).click();
   await expect(page).toHaveURL(/#\/charts$/);

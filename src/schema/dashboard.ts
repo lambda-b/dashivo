@@ -5,10 +5,6 @@ const identifierSchema = z
   .min(1)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "must be a lowercase kebab-case identifier");
 
-const uniqueOutputNamesSchema = z
-  .array(z.string().min(1))
-  .refine((values) => new Set(values).size === values.length, "output names must be unique");
-
 const analysisSchema = z.object({
   inputs: z.array(
     z.object({
@@ -23,10 +19,6 @@ const analysisSchema = z.object({
       type: z.literal("python"),
       path: z.string().min(1),
       input: identifierSchema,
-      outputs: z.object({
-        datasets: uniqueOutputNamesSchema,
-        metrics: uniqueOutputNamesSchema,
-      }),
     }),
   ),
 });
@@ -148,7 +140,6 @@ const metricContentSchema = z.object({
   type: z.literal("metric"),
   title: z.string().min(1),
   logic: identifierSchema,
-  metric: z.string().min(1),
   format: z.enum(["currency", "number"]),
   emphasis: z.enum(["strong", "accent"]),
 });
@@ -213,7 +204,6 @@ const chartContentSchema = z.object({
   type: z.literal("chart"),
   title: z.string().min(1),
   logic: identifierSchema,
-  dataset: z.string().min(1),
   formatting: chartFormattingSchema,
   chart: z.discriminatedUnion("type", [
     lineChartSchema,
@@ -228,7 +218,6 @@ const tableContentSchema = z.object({
   type: z.literal("table"),
   title: z.string().min(1),
   logic: identifierSchema,
-  dataset: z.string().min(1),
   columns: z
     .array(
       z.object({
@@ -330,27 +319,13 @@ export const dashboardSchema = z
         });
         continue;
       }
-
-      const output = content.type === "metric" ? content.metric : content.dataset;
-      const availableOutputs =
-        content.type === "metric" ? definition.outputs.metrics : definition.outputs.datasets;
-      if (!availableOutputs.includes(output)) {
-        context.addIssue({
-          code: "custom",
-          message: `output「${output}」is not declared by logic「${definition.id}」`,
-          path: ["tabs"],
-        });
-      }
     }
   });
 
 const dataValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
-export const analysisResultSchema = z.object({
-  runtime: z.object({ python: z.string(), pandas: z.string(), numpy: z.string() }),
-  datasets: z.record(z.string(), z.array(z.record(z.string(), dataValueSchema))),
-  metrics: z.record(z.string(), z.number()),
-});
-export const analysisResultsSchema = z.record(identifierSchema, analysisResultSchema);
+export const dataRowSchema = z.record(z.string(), dataValueSchema);
+export const analysisOutputSchema = z.union([z.number(), z.array(dataRowSchema)]);
+export const analysisResultsSchema = z.record(identifierSchema, analysisOutputSchema);
 
 export type DashboardSchema = z.infer<typeof dashboardSchema>;
 export type AnalysisDefinition = DashboardSchema["analysis"];
@@ -370,6 +345,6 @@ export type ChartContentDefinition = Extract<ContentDefinition, { type: "chart" 
 export type ChartFormattingDefinition = ChartContentDefinition["formatting"];
 export type AxisFormattingDefinition = ChartFormattingDefinition["xAxis"];
 export type TableContentDefinition = Extract<ContentDefinition, { type: "table" }>;
-export type AnalysisResult = z.infer<typeof analysisResultSchema>;
+export type AnalysisOutput = z.infer<typeof analysisOutputSchema>;
 export type AnalysisResults = z.infer<typeof analysisResultsSchema>;
-export type DataRow = AnalysisResult["datasets"][string][number];
+export type DataRow = z.infer<typeof dataRowSchema>;

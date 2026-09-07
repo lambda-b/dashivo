@@ -11,7 +11,7 @@ test("reads and writes Python only under dashboard/logic", async () => {
     await writePythonSource(
       projectRoot,
       "logic/nested/example.py",
-      "def execute(params):\n    return params\n",
+      "def execute(data, params):\n    return data\n",
     );
     await expect(readPythonSource(projectRoot, "logic/nested/example.py")).resolves.toContain(
       "def execute",

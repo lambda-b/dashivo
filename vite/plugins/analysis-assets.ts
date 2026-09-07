@@ -43,6 +43,7 @@ export const analysisAssets = (projectRoot: string): Plugin => ({
       imports.push(`import logic${index} from ${JSON.stringify(`${assetPath}?raw`)};`);
       return {
         id: definition.id,
+        inputId: definition.input,
         input: inputs.get(definition.input),
         path: definition.path,
         source: `logic${index}`,
@@ -54,7 +55,7 @@ export const analysisAssets = (projectRoot: string): Plugin => ({
       `export const analysisDefinitions = [${definitions
         .map(
           (definition) =>
-            `{ id: ${JSON.stringify(definition.id)}, path: ${JSON.stringify(definition.path)}, sourceData: ${definition.input}, analysisSource: ${definition.source} }`,
+            `{ id: ${JSON.stringify(definition.id)}, inputId: ${JSON.stringify(definition.inputId)}, path: ${JSON.stringify(definition.path)}, sourceData: ${definition.input}, analysisSource: ${definition.source} }`,
         )
         .join(",")}];`,
     ].join("\n");

@@ -26,26 +26,15 @@ interface ContentWizardProps {
   tabIndex: number;
 }
 
-const pythonTemplate = `import sys
-
-import numpy as np
-import pandas as pd
+const createPythonTemplate = (type: ContentType) => `import pandas as pd
 
 
-def execute(params):
-    # paramsには画面パラメータとCSV文字列のsource_dataが渡されます
-    return {
-        "runtime": {
-            "python": sys.version.split()[0],
-            "pandas": pd.__version__,
-            "numpy": np.__version__,
-        },
-        "datasets": {"result": []},
-        "metrics": {"value": 0},
-    }
+def execute(data: pd.DataFrame, params: dict):
+    # dataは共有DataFrameのコピーです。画面入力はparamsから取得します。
+    return ${type === "metric" ? "0" : 'data.to_dict(orient="records")'}
 `;
 
-const createLogic = (dashboard: DashboardSchema, type: ContentType): AnalysisLogicDefinition => {
+const createLogic = (dashboard: DashboardSchema): AnalysisLogicDefinition => {
   const ids = new Set(dashboard.analysis.logic.map((logic) => logic.id));
   let index = dashboard.analysis.logic.length + 1;
   while (ids.has(`logic-${index}`)) index += 1;
@@ -54,10 +43,6 @@ const createLogic = (dashboard: DashboardSchema, type: ContentType): AnalysisLog
     type: "python",
     path: `logic/analysis_${index}.py`,
     input: dashboard.analysis.inputs[0]?.id ?? "input",
-    outputs:
-      type === "metric"
-        ? { datasets: [], metrics: ["value"] }
-        : { datasets: ["result"], metrics: [] },
   };
 };
 
@@ -73,7 +58,7 @@ export const ContentWizard = ({
   const [content, setContent] = useState<ContentDefinition>();
   const [logicMode, setLogicMode] = useState<LogicMode>("existing");
   const [newLogic, setNewLogic] = useState<AnalysisLogicDefinition>();
-  const [pythonSource, setPythonSource] = useState(pythonTemplate);
+  const [pythonSource, setPythonSource] = useState("");
   const [error, setError] = useState<string>();
   const [saving, setSaving] = useState(false);
   const steps =
@@ -93,7 +78,7 @@ export const ContentWizard = ({
     setContent(undefined);
     setLogicMode("existing");
     setNewLogic(undefined);
-    setPythonSource(pythonTemplate);
+    setPythonSource("");
     setError(undefined);
     setSaving(false);
   };
@@ -105,8 +90,9 @@ export const ContentWizard = ({
 
   const chooseType = (type: ContentType) => {
     const nextContent = createContent(dashboard, type);
-    const nextLogic = createLogic(dashboard, type);
+    const nextLogic = createLogic(dashboard);
     setNewLogic(nextLogic);
+    setPythonSource(createPythonTemplate(type));
     if (dashboard.analysis.logic.length === 0) {
       setLogicMode("new");
       setContent(bindLogic(nextContent, nextLogic));
@@ -141,10 +127,7 @@ export const ContentWizard = ({
             newLogic?.id &&
             newLogic.path.startsWith("logic/") &&
             newLogic.path.endsWith(".py") &&
-            newLogic.input &&
-            (content?.type === "metric"
-              ? newLogic.outputs.metrics[0]
-              : newLogic.outputs.datasets[0]),
+            newLogic.input,
           )
         : true;
 

@@ -23,23 +23,8 @@ interface ContentLogicStepProps {
 }
 
 export const bindLogic = (content: ContentDefinition, logic: AnalysisLogicDefinition) => {
-  if (content.type === "metric") {
-    return { ...content, logic: logic.id, metric: logic.outputs.metrics[0] ?? "value" };
-  }
-  return { ...content, logic: logic.id, dataset: logic.outputs.datasets[0] ?? "result" };
+  return { ...content, logic: logic.id };
 };
-
-const setOutput = (
-  logic: AnalysisLogicDefinition,
-  content: ContentDefinition,
-  output: string,
-): AnalysisLogicDefinition => ({
-  ...logic,
-  outputs:
-    content.type === "metric"
-      ? { ...logic.outputs, metrics: [output] }
-      : { ...logic.outputs, datasets: [output] },
-});
 
 export const ContentLogicStep = ({
   content,
@@ -83,15 +68,7 @@ export const ContentLogicStep = ({
       <ContentLogicFields
         analysis={dashboard.analysis}
         logic={content.logic}
-        onChange={(logic, output) =>
-          onContentChange(
-            content.type === "metric"
-              ? { ...content, logic, metric: output }
-              : { ...content, logic, dataset: output },
-          )
-        }
-        output={content.type === "metric" ? content.metric : content.dataset}
-        outputType={content.type === "metric" ? "metrics" : "datasets"}
+        onChange={(logic) => onContentChange({ ...content, logic })}
       />
     ) : (
       <div className="grid gap-4 rounded-xl border border-stone-200 p-5">
@@ -131,27 +108,6 @@ export const ContentLogicStep = ({
                 value={newLogic.input}
               />
             </div>
-          </label>
-          <label className="text-xs font-medium text-stone-600">
-            {content.type === "metric" ? "出力Metric" : "出力Dataset"}
-            <input
-              className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-              onChange={(event) => {
-                const output = event.target.value;
-                const logic = setOutput(newLogic, content, output);
-                onNewLogicChange(logic);
-                onContentChange(
-                  content.type === "metric"
-                    ? { ...content, logic: logic.id, metric: output }
-                    : { ...content, logic: logic.id, dataset: output },
-                );
-              }}
-              value={
-                content.type === "metric"
-                  ? newLogic.outputs.metrics[0]
-                  : newLogic.outputs.datasets[0]
-              }
-            />
           </label>
         </div>
         <div>

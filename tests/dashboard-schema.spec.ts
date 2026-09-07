@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { analysisResultSchema, dashboardSchema } from "@/schema/dashboard";
+import { analysisResultsSchema, dashboardSchema } from "@/schema/dashboard";
 import { validateContentBindings } from "@/schema/validation";
 
 const chartFormatting = {
@@ -21,7 +21,12 @@ const dashboardSource = {
         type: "python",
         path: "logic/analysis.py",
         input: "sales",
-        outputs: { datasets: ["summary"], metrics: ["revenue"] },
+      },
+      {
+        id: "sales-metric",
+        type: "python",
+        path: "logic/metric.py",
+        input: "sales",
       },
     ],
   },
@@ -43,8 +48,7 @@ const dashboardSource = {
           id: "revenue",
           type: "metric",
           title: "Revenue",
-          logic: "sales-analysis",
-          metric: "revenue",
+          logic: "sales-metric",
           format: "currency",
           emphasis: "strong",
         },
@@ -59,7 +63,6 @@ const dashboardSource = {
           type: "chart",
           title: "Revenue",
           logic: "sales-analysis",
-          dataset: "summary",
           formatting: chartFormatting,
           chart: { type: "line", x: "date", y: ["revenue"] },
         },
@@ -74,7 +77,6 @@ const dashboardSource = {
           type: "table",
           title: "Summary",
           logic: "sales-analysis",
-          dataset: "summary",
           columns: [{ key: "date", label: "Date" }],
         },
       ],
@@ -158,7 +160,6 @@ test("accepts the supported parameter and chart variants", () => {
                 type: "chart",
                 title: "Revenue bar",
                 logic: "sales-analysis",
-                dataset: "summary",
                 formatting: chartFormatting,
                 chart: { type: "bar", x: "date", y: ["revenue"] },
               },
@@ -167,7 +168,6 @@ test("accepts the supported parameter and chart variants", () => {
                 type: "chart",
                 title: "Revenue pie",
                 logic: "sales-analysis",
-                dataset: "summary",
                 formatting: chartFormatting,
                 chart: { type: "pie", name: "date", value: "revenue" },
               },
@@ -176,7 +176,6 @@ test("accepts the supported parameter and chart variants", () => {
                 type: "chart",
                 title: "Revenue scatter",
                 logic: "sales-analysis",
-                dataset: "summary",
                 formatting: chartFormatting,
                 chart: { type: "scatter", x: "date", y: "revenue" },
               },
@@ -273,44 +272,40 @@ test("rejects invalid analysis logic references", () => {
   };
   expect(() => dashboardSchema.parse(missingInput)).toThrow("input「missing-input」is not defined");
 
-  const undeclaredOutput = {
+  const missingLogic = {
     ...dashboardSource,
     tabs: dashboardSource.tabs.map((tab, index) =>
       index === 0
         ? {
             ...tab,
-            contents: [{ ...tab.contents[0], metric: "undeclared-metric" }],
+            contents: [{ ...tab.contents[0], logic: "missing-logic" }],
           }
         : tab,
     ),
   };
-  expect(() => dashboardSchema.parse(undeclaredOutput)).toThrow(
-    "output「undeclared-metric」is not declared by logic「sales-analysis」",
+  expect(() => dashboardSchema.parse(missingLogic)).toThrow("logic「missing-logic」is not defined");
+});
+
+test("rejects a non-tabular chart result", () => {
+  const dashboard = dashboardSchema.parse(dashboardSource);
+  const results = analysisResultsSchema.parse({
+    "sales-analysis": 0,
+    "sales-metric": 0,
+  });
+
+  expect(() => validateContentBindings(dashboard, results)).toThrow(
+    "Pythonロジックは行データの配列を返す必要があります",
   );
 });
 
-test("rejects a missing result dataset", () => {
+test("rejects a non-numeric metric result", () => {
   const dashboard = dashboardSchema.parse(dashboardSource);
-  const result = analysisResultSchema.parse({
-    runtime: { python: "3", pandas: "3", numpy: "2" },
-    datasets: {},
-    metrics: { revenue: 0, orders: 0 },
+  const results = analysisResultsSchema.parse({
+    "sales-analysis": [{ date: "2026-01-01", revenue: 1 }],
+    "sales-metric": [],
   });
 
-  expect(() => validateContentBindings(dashboard, { "sales-analysis": result })).toThrow(
-    "dataset「summary」がありません",
-  );
-});
-
-test("rejects a missing result metric", () => {
-  const dashboard = dashboardSchema.parse(dashboardSource);
-  const result = analysisResultSchema.parse({
-    runtime: { python: "3", pandas: "3", numpy: "2" },
-    datasets: { summary: [{ date: "2026-01-01", revenue: 1 }] },
-    metrics: {},
-  });
-
-  expect(() => validateContentBindings(dashboard, { "sales-analysis": result })).toThrow(
-    "Metric「Revenue」の値「revenue」がありません",
+  expect(() => validateContentBindings(dashboard, results)).toThrow(
+    "Pythonロジックは数値を返す必要があります",
   );
 });
