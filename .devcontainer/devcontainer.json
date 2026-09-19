@@ -9,7 +9,7 @@
     }
   },
   // Codex の状態はプロジェクト内に保持し、認証情報はホスト側のものを利用する
-  "initializeCommand": "mkdir -p .codex-local \"${HOME}/.codex\" && if [ ! -f \"${HOME}/.codex/auth.json\" ]; then printf '{}\\n' > \"${HOME}/.codex/auth.json\"; fi",
+  "initializeCommand": ".devcontainer/scripts/initialize.sh",
   "mounts": [
     "source=${localWorkspaceFolder}/.codex-local,target=/home/vscode/.codex,type=bind",
     "source=${localEnv:HOME}/.codex/auth.json,target=/home/vscode/.codex/auth.json,type=bind"
