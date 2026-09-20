@@ -7,20 +7,17 @@
       {
         "id": "sales-analysis",
         "type": "python",
-        "path": "logic/analysis.py",
-        "input": "sales"
+        "path": "logic/analysis.py"
       },
       {
         "id": "sales-revenue",
         "type": "python",
-        "path": "logic/revenue.py",
-        "input": "sales"
+        "path": "logic/revenue.py"
       },
       {
         "id": "sales-orders",
         "type": "python",
-        "path": "logic/orders.py",
-        "input": "sales"
+        "path": "logic/orders.py"
       }
     ]
   },

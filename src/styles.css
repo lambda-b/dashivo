@@ -4,6 +4,18 @@
   --color-brand: #ca2420;
   --color-brand-dark: #981614;
   --color-brand-soft: #fff7f7;
+  --animate-workbench-in: workbench-in 180ms ease-out;
+
+  @keyframes workbench-in {
+    from {
+      opacity: 0.85;
+      transform: translateX(2rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
 }
 
 @layer base {

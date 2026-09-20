@@ -152,9 +152,23 @@ test("selects dashboard CSV and Python files for analysis logic", async ({ page,
   await page.goto("http://127.0.0.1:3030");
   await page.getByRole("button", { name: "Pythonロジックを管理" }).click();
 
+  await expect(page).toHaveURL(/#\/builder\/python\/sales-analysis$/);
   await expect(page.getByLabel("CSVファイル")).toHaveValue("data/raw/sales.csv");
   await expect(page.getByLabel("Pythonファイル").first()).toHaveValue("logic/analysis.py");
-  await expect(page.getByLabel("入力CSV").first()).toHaveValue("sales");
-  await page.getByText("Pythonソースを編集").first().click();
   await expect(page.getByLabel("logic/analysis.pyのPythonソース")).toBeVisible();
+  await expect(page.getByText("出力プレビュー", { exact: true })).toBeVisible();
+  await page.getByText("入力値を参照", { exact: true }).click();
+  await expect(page.getByText("CSV（先頭5件）")).toBeVisible();
+  await expect(page.getByText("利用可能なParameters")).toBeVisible();
+  await expect(page.getByLabel("プレビューするコンテンツ")).toHaveValue("monthly-revenue");
+  await expect(page.getByText("Output Schema")).toBeVisible();
+
+  await page.getByText("入力CSVを管理").click();
+  await page.getByRole("button", { name: "CSVを追加" }).click();
+  await expect(page.getByText("2 CSV · 2 Parameters")).toBeVisible();
+  await page.getByLabel("プレビューするCSV").selectOption("input-2");
+  await expect(page.getByLabel("プレビューするCSV")).toHaveValue("input-2");
+
+  await page.getByRole("button", { name: /sales-revenue/ }).click();
+  await expect(page).toHaveURL(/#\/builder\/python\/sales-revenue$/);
 });

@@ -20,13 +20,11 @@ const dashboardSource = {
         id: "sales-analysis",
         type: "python",
         path: "logic/analysis.py",
-        input: "sales",
       },
       {
         id: "sales-metric",
         type: "python",
         path: "logic/metric.py",
-        input: "sales",
       },
     ],
   },
@@ -263,15 +261,6 @@ test("rejects duplicate tab and content identifiers", () => {
 });
 
 test("rejects invalid analysis logic references", () => {
-  const missingInput = {
-    ...dashboardSource,
-    analysis: {
-      ...dashboardSource.analysis,
-      logic: [{ ...dashboardSource.analysis.logic[0], input: "missing-input" }],
-    },
-  };
-  expect(() => dashboardSchema.parse(missingInput)).toThrow("input「missing-input」is not defined");
-
   const missingLogic = {
     ...dashboardSource,
     tabs: dashboardSource.tabs.map((tab, index) =>
@@ -284,6 +273,21 @@ test("rejects invalid analysis logic references", () => {
     ),
   };
   expect(() => dashboardSchema.parse(missingLogic)).toThrow("logic「missing-logic」is not defined");
+});
+
+test("accepts multiple CSV inputs shared by every Python logic", () => {
+  const dashboard = dashboardSchema.parse({
+    ...dashboardSource,
+    analysis: {
+      inputs: [
+        ...dashboardSource.analysis.inputs,
+        { id: "targets", type: "csv", path: "data/raw/targets.csv" },
+      ],
+      logic: dashboardSource.analysis.logic,
+    },
+  });
+
+  expect(dashboard.analysis.inputs.map((input) => input.id)).toEqual(["sales", "targets"]);
 });
 
 test("rejects a non-tabular chart result", () => {

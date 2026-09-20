@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 
 
-def execute(data: pd.DataFrame, params: dict):
-    frame = data
+def execute(inputs: dict[str, pd.DataFrame], params: dict):
+    frame = inputs["sales"]
     region = params.get("region", "All")
     if region != "All":
         frame = frame[frame["region"] == region]

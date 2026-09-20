@@ -13,7 +13,7 @@ export const ContentLogicFields = ({
   onChange,
 }: ContentLogicFieldsProps) => {
   const logic = analysis.logic.find((candidate) => candidate.id === logicId);
-  const input = analysis.inputs.find((candidate) => candidate.id === logic?.input);
+  const inputs = analysis.inputs;
   return (
     <section className="grid gap-3 rounded-lg border border-stone-200 bg-stone-50 p-3">
       <div>
@@ -38,8 +38,11 @@ export const ContentLogicFields = ({
       <dl className="grid gap-1 border-t border-stone-200 pt-3 text-[0.6875rem]">
         <div className="grid grid-cols-[5rem_1fr] gap-2">
           <dt className="font-medium text-stone-500">CSV input</dt>
-          <dd className="truncate font-mono text-stone-700" title={input?.path}>
-            {input?.path ?? "未設定"}
+          <dd
+            className="truncate font-mono text-stone-700"
+            title={inputs.map((input) => input.path).join(", ")}
+          >
+            {inputs.map((input) => input.path).join(", ") || "未設定"}
           </dd>
         </div>
         <div className="grid grid-cols-[5rem_1fr] gap-2">

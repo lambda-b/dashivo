@@ -18,7 +18,6 @@ const analysisSchema = z.object({
       id: identifierSchema,
       type: z.literal("python"),
       path: z.string().min(1),
-      input: identifierSchema,
     }),
   ),
 });
@@ -272,17 +271,6 @@ export const dashboardSchema = z
       dashboard.analysis.logic.map((logic) => logic.id),
       ["analysis", "logic"],
     );
-    const inputIds = new Set(dashboard.analysis.inputs.map((input) => input.id));
-    dashboard.analysis.logic.forEach((logic, index) => {
-      if (!inputIds.has(logic.input)) {
-        context.addIssue({
-          code: "custom",
-          message: `input「${logic.input}」is not defined`,
-          path: ["analysis", "logic", index, "input"],
-        });
-      }
-    });
-
     if (
       new Set(dashboard.controls.map((control) => control.key)).size !== dashboard.controls.length
     ) {

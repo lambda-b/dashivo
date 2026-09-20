@@ -1,7 +1,6 @@
 import { FileCode2 } from "lucide-react";
 import { PythonCodeEditor } from "@/builder/components/PythonCodeEditor";
 import { ContentLogicFields } from "@/builder/components/ContentLogicFields";
-import { SelectList } from "@/components/primitives/SelectList";
 import type {
   AnalysisLogicDefinition,
   ContentDefinition,
@@ -95,19 +94,6 @@ export const ContentLogicStep = ({
               onChange={(event) => onNewLogicChange({ ...newLogic, path: event.target.value })}
               value={newLogic.path}
             />
-          </label>
-          <label className="text-xs font-medium text-stone-600">
-            入力CSV
-            <div className="mt-1">
-              <SelectList
-                onChange={(input) => onNewLogicChange({ ...newLogic, input })}
-                options={dashboard.analysis.inputs.map((input) => ({
-                  label: `${input.id} (${input.path})`,
-                  value: input.id,
-                }))}
-                value={newLogic.input}
-              />
-            </div>
           </label>
         </div>
         <div>

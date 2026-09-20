@@ -29,8 +29,9 @@ interface ContentWizardProps {
 const createPythonTemplate = (type: ContentType) => `import pandas as pd
 
 
-def execute(data: pd.DataFrame, params: dict):
-    # dataは共有DataFrameのコピーです。画面入力はparamsから取得します。
+def execute(inputs: dict[str, pd.DataFrame], params: dict):
+    # 入力CSVはDataFrameのコピーとしてinputsに格納されています。
+    data = next(iter(inputs.values()))
     return ${type === "metric" ? "0" : 'data.to_dict(orient="records")'}
 `;
 
@@ -42,7 +43,6 @@ const createLogic = (dashboard: DashboardSchema): AnalysisLogicDefinition => {
     id: `logic-${index}`,
     type: "python",
     path: `logic/analysis_${index}.py`,
-    input: dashboard.analysis.inputs[0]?.id ?? "input",
   };
 };
 
@@ -124,10 +124,7 @@ export const ContentWizard = ({
       ? content !== undefined
       : step === 1 && logicMode === "new"
         ? Boolean(
-            newLogic?.id &&
-            newLogic.path.startsWith("logic/") &&
-            newLogic.path.endsWith(".py") &&
-            newLogic.input,
+            newLogic?.id && newLogic.path.startsWith("logic/") && newLogic.path.endsWith(".py"),
           )
         : true;
 

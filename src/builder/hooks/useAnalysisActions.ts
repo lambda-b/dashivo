@@ -33,13 +33,10 @@ export const useAnalysisActions = (
           ],
         }),
       updateInput: (index: number, input: DashboardSchema["analysis"]["inputs"][number]) => {
-        const previousId = draft.analysis.inputs[index]?.id;
         editAnalysis({
+          ...draft.analysis,
           inputs: draft.analysis.inputs.map((current, inputIndex) =>
             inputIndex === index ? input : current,
-          ),
-          logic: draft.analysis.logic.map((definition) =>
-            definition.input === previousId ? { ...definition, input: input.id } : definition,
           ),
         });
       },
@@ -56,7 +53,6 @@ export const useAnalysisActions = (
           ),
           type: "python",
           path,
-          input: draft.analysis.inputs[0]?.id ?? "input",
         };
         editAnalysis({ ...draft.analysis, logic: [...draft.analysis.logic, definition] });
       },
