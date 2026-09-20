@@ -11,13 +11,13 @@ const nativeFetch = globalThis.fetch.bind(globalThis);
 const embeddedPyodideModule: CreatePyodideModule = (settings) =>
   createPyodideModule(settings) as ReturnType<CreatePyodideModule>;
 
-const createCompressedResponse = async (encoded: string, contentType: string) => {
-  const response = await nativeFetch(`data:application/gzip;base64,${encoded}`);
-
-  return new Response(response.body!.pipeThrough(new DecompressionStream("gzip")), {
-    headers: { "Content-Type": contentType },
-  });
-};
+const createCompressedResponse = (encoded: string, contentType: string) =>
+  nativeFetch(`data:application/gzip;base64,${encoded}`).then(
+    (res) =>
+      new Response(res.body!.pipeThrough(new DecompressionStream("gzip")), {
+        headers: { "Content-Type": contentType },
+      }),
+  );
 
 const embeddedResponses: Readonly<Record<string, () => Promise<Response>>> = {
   "pyodide.asm.wasm": () => createCompressedResponse(compressedPyodideWasm, "application/wasm"),
@@ -30,14 +30,8 @@ const embeddedResponses: Readonly<Record<string, () => Promise<Response>>> = {
 };
 
 const installEmbeddedAssetLoader = () => {
-  globalThis.fetch = async (input, init) => {
-    const url =
-      typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-    if (!url.startsWith(embeddedAssetUrl)) return nativeFetch(input, init);
-
-    const name = decodeURIComponent(url.slice(embeddedAssetUrl.length));
-    return embeddedResponses[name]();
-  };
+  globalThis.fetch = (input) =>
+    embeddedResponses[decodeURIComponent(new Request(input).url.slice(embeddedAssetUrl.length))]();
 };
 
 export const initializePyodide = (): Promise<PyodideAPI> => {
