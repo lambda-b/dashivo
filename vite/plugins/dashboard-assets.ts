@@ -40,6 +40,16 @@ export const writePythonSource = async (
   await fs.writeFile(destination, source, "utf8");
 };
 
+export const createPythonSource = async (
+  projectRoot: string,
+  sourcePath: string,
+  source: string,
+) => {
+  const destination = resolvePythonPath(projectRoot, sourcePath);
+  await fs.mkdir(path.dirname(destination), { recursive: true });
+  await fs.writeFile(destination, source, { encoding: "utf8", flag: "wx" });
+};
+
 export const dashboardAssets = (projectRoot: string): Plugin => ({
   name: "dashlet-dashboard-assets",
   apply: "serve",
@@ -63,8 +73,14 @@ export const dashboardAssets = (projectRoot: string): Plugin => ({
           response.end(JSON.stringify({ path: sourcePath }));
           return;
         }
+        if (request.method === "POST") {
+          await createPythonSource(projectRoot, sourcePath, await text(request));
+          response.statusCode = 201;
+          response.end(JSON.stringify({ path: sourcePath }));
+          return;
+        }
         response.statusCode = 405;
-        response.setHeader("Allow", "GET, PUT");
+        response.setHeader("Allow", "GET, PUT, POST");
         response.end(JSON.stringify({ error: "Method not allowed" }));
       } catch (error) {
         response.statusCode = 400;

@@ -1,55 +1,5 @@
 import { useMemo } from "react";
-import type { ContentDefinition, DashboardSchema } from "@/schema/dashboard";
-
-export type ContentType = ContentDefinition["type"];
-
-const createContentId = (dashboard: DashboardSchema, type: ContentType) => {
-  const ids = new Set(dashboard.tabs.flatMap((tab) => tab.contents.map((content) => content.id)));
-  let index = 1;
-  while (ids.has(`${type}-${index}`)) index += 1;
-  return `${type}-${index}`;
-};
-
-export const createContent = (dashboard: DashboardSchema, type: ContentType): ContentDefinition => {
-  const id = createContentId(dashboard, type);
-  const logic = dashboard.analysis.logic[0];
-  const logicId = logic?.id ?? "logic";
-
-  switch (type) {
-    case "metric":
-      return {
-        id,
-        type,
-        title: "新しい指標",
-        logic: logicId,
-        format: "number",
-        emphasis: "accent",
-      };
-    case "chart":
-      return {
-        id,
-        type,
-        title: "新しいグラフ",
-        logic: logicId,
-        formatting: {
-          colors: ["#ca2420", "#e85d3f", "#f59e0b", "#78716c"],
-          legend: { visible: false, position: "bottom" },
-          gridLines: true,
-          xAxis: { title: "", format: "auto", minimum: null, maximum: null },
-          yAxis: { title: "", format: "number", minimum: null, maximum: null },
-        },
-        chart: { type: "line", x: "x", y: ["y"] },
-      };
-    case "table":
-      return {
-        id,
-        type,
-        title: "新しいテーブル",
-        logic: logicId,
-        columns: [{ key: "column", label: "列" }],
-      };
-  }
-};
+import type { ContentPlacementDefinition, DashboardSchema } from "@/schema/dashboard";
 
 const moveItem = <Item>(items: Item[], index: number, direction: -1 | 1) => {
   const destination = index + direction;
@@ -59,6 +9,16 @@ const moveItem = <Item>(items: Item[], index: number, direction: -1 | 1) => {
   return nextItems;
 };
 
+export const createContentPlacement = (
+  dashboard: DashboardSchema,
+  logic: string,
+): ContentPlacementDefinition => {
+  const ids = new Set(dashboard.tabs.flatMap((tab) => tab.contents.map((content) => content.id)));
+  let index = 1;
+  while (ids.has(`content-${index}`)) index += 1;
+  return { id: `content-${index}`, logic };
+};
+
 export const useContentActions = (
   draft: DashboardSchema,
   editDashboard: (dashboard: DashboardSchema) => void,
@@ -66,7 +26,7 @@ export const useContentActions = (
   useMemo(() => {
     const editContents = (
       tabIndex: number,
-      update: (contents: ContentDefinition[]) => ContentDefinition[],
+      update: (contents: ContentPlacementDefinition[]) => ContentPlacementDefinition[],
     ) =>
       editDashboard({
         ...draft,
@@ -76,7 +36,7 @@ export const useContentActions = (
       });
 
     return {
-      update: (tabIndex: number, contentIndex: number, content: ContentDefinition) =>
+      update: (tabIndex: number, contentIndex: number, content: ContentPlacementDefinition) =>
         editContents(tabIndex, (contents) =>
           contents.map((current, index) => (index === contentIndex ? content : current)),
         ),

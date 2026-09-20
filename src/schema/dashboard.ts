@@ -5,23 +5,6 @@ const identifierSchema = z
   .min(1)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "must be a lowercase kebab-case identifier");
 
-const analysisSchema = z.object({
-  inputs: z.array(
-    z.object({
-      id: identifierSchema,
-      type: z.literal("csv"),
-      path: z.string().min(1),
-    }),
-  ),
-  logic: z.array(
-    z.object({
-      id: identifierSchema,
-      type: z.literal("python"),
-      path: z.string().min(1),
-    }),
-  ),
-});
-
 const optionSchema = z.object({ label: z.string().min(1), value: z.string().min(1) });
 const selectControlSchema = z
   .object({
@@ -135,10 +118,8 @@ const radioControlSchema = z
   });
 
 const metricContentSchema = z.object({
-  id: identifierSchema,
   type: z.literal("metric"),
   title: z.string().min(1),
-  logic: identifierSchema,
   format: z.enum(["currency", "number"]),
   emphasis: z.enum(["strong", "accent"]),
 });
@@ -199,10 +180,8 @@ const chartFormattingSchema = z
   });
 
 const chartContentSchema = z.object({
-  id: identifierSchema,
   type: z.literal("chart"),
   title: z.string().min(1),
-  logic: identifierSchema,
   formatting: chartFormattingSchema,
   chart: z.discriminatedUnion("type", [
     lineChartSchema,
@@ -213,10 +192,8 @@ const chartContentSchema = z.object({
 });
 
 const tableContentSchema = z.object({
-  id: identifierSchema,
   type: z.literal("table"),
   title: z.string().min(1),
-  logic: identifierSchema,
   columns: z
     .array(
       z.object({
@@ -234,10 +211,33 @@ const contentSchema = z.discriminatedUnion("type", [
   tableContentSchema,
 ]);
 
+const analysisSchema = z.object({
+  inputs: z.array(
+    z.object({
+      id: identifierSchema,
+      type: z.literal("csv"),
+      path: z.string().min(1),
+    }),
+  ),
+  logic: z.array(
+    z.object({
+      id: identifierSchema,
+      type: z.literal("python"),
+      path: z.string().min(1),
+      content: contentSchema,
+    }),
+  ),
+});
+
+const contentPlacementSchema = z.object({
+  id: identifierSchema,
+  logic: identifierSchema,
+});
+
 const tabSchema = z.object({
   id: identifierSchema,
   label: z.string().min(1),
-  contents: z.array(contentSchema),
+  contents: z.array(contentPlacementSchema),
 });
 
 export const dashboardSchema = z
@@ -285,8 +285,8 @@ export const dashboardSchema = z
       context.addIssue({ code: "custom", message: "tab ids must be unique", path: ["tabs"] });
     }
 
-    const contents = dashboard.tabs.flatMap((tab) => tab.contents);
-    if (new Set(contents.map((content) => content.id)).size !== contents.length) {
+    const placements = dashboard.tabs.flatMap((tab) => tab.contents);
+    if (new Set(placements.map((content) => content.id)).size !== placements.length) {
       context.addIssue({
         code: "custom",
         message: "content ids must be unique",
@@ -297,12 +297,12 @@ export const dashboardSchema = z
     const logic = new Map(
       dashboard.analysis.logic.map((definition) => [definition.id, definition]),
     );
-    for (const content of contents) {
-      const definition = logic.get(content.logic);
+    for (const placement of placements) {
+      const definition = logic.get(placement.logic);
       if (!definition) {
         context.addIssue({
           code: "custom",
-          message: `logic「${content.logic}」is not defined`,
+          message: `logic「${placement.logic}」is not defined`,
           path: ["tabs"],
         });
         continue;
@@ -327,7 +327,8 @@ export type CheckboxControlDefinition = Extract<ControlDefinition, { type: "chec
 export type DateRangeControlDefinition = Extract<ControlDefinition, { type: "date-range" }>;
 export type SliderControlDefinition = Extract<ControlDefinition, { type: "slider" }>;
 export type TabDefinition = DashboardSchema["tabs"][number];
-export type ContentDefinition = TabDefinition["contents"][number];
+export type ContentPlacementDefinition = TabDefinition["contents"][number];
+export type ContentDefinition = AnalysisLogicDefinition["content"];
 export type MetricContentDefinition = Extract<ContentDefinition, { type: "metric" }>;
 export type ChartContentDefinition = Extract<ContentDefinition, { type: "chart" }>;
 export type ChartFormattingDefinition = ChartContentDefinition["formatting"];

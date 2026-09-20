@@ -207,6 +207,7 @@ const Dashboard = ({
                     <Route
                       element={
                         <DashboardContent
+                          analysis={dashboard.analysis}
                           onAddContent={onAddContent && (() => onAddContent(tabIndex))}
                           onEditContent={
                             onEditContent &&

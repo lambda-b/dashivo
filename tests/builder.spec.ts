@@ -48,22 +48,16 @@ test("edits, validates, and saves the dashboard configuration in development", a
   await page.getByRole("link", { name: "詳細" }).click();
   await page.getByRole("button", { name: "詳細にコンテンツを追加" }).click();
   const contentWizard = page.getByRole("dialog", { name: "コンテンツを追加" });
-  await page.getByRole("button", { name: /^指標/ }).click();
-  await page.getByRole("button", { name: "次へ" }).click();
-  await expect(contentWizard.getByText("data/raw/sales.csv")).toBeVisible();
-  await expect(contentWizard.getByText("logic/analysis.py", { exact: true })).toBeVisible();
-  await contentWizard.getByLabel("Pythonロジック").selectOption("sales-orders");
-  await page.getByRole("button", { name: "次へ" }).click();
-  await page.getByLabel("タイトル").fill("詳細注文件数");
-  await page.getByRole("button", { name: "コンテンツを作成" }).click();
+  await contentWizard.getByText("注文件数", { exact: true }).click();
+  await contentWizard.getByRole("button", { name: "コンテンツを追加" }).click();
 
   await expect(page.getByRole("heading", { level: 1, name: "Builder preview" })).toBeVisible();
   await expect(page).toHaveURL(/#\/details$/);
-  await expect(page.getByText("詳細注文件数")).toBeVisible();
+  await expect(page.getByRole("article").getByText("注文件数")).toBeVisible();
   await expect(page.getByText("255")).toBeVisible();
 
-  await page.getByRole("button", { name: "詳細注文件数を編集" }).click();
-  await expect(page.getByLabel("Pythonロジック")).toHaveValue("sales-orders");
+  await page.getByRole("button", { name: "注文件数を編集" }).click();
+  await expect(page.getByLabel("Python出力")).toHaveValue("sales-orders");
 
   await page.getByRole("button", { name: "dashboard.jsonを保存" }).click();
   await expect(page.getByText("保存しました")).toBeVisible();
@@ -97,8 +91,7 @@ test("edits, validates, and saves the dashboard configuration in development", a
 
 test("selects a chart type from the visual catalog", async ({ page }) => {
   await page.goto("http://127.0.0.1:3030");
-  await page.getByRole("link", { name: "グラフ" }).click();
-  await page.getByRole("button", { name: "月次売上を編集" }).click();
+  await page.getByRole("button", { name: "Pythonロジックを管理" }).click();
   await page.getByRole("button", { name: "変更" }).click();
 
   const dialog = page.getByRole("dialog", { name: "チャートタイプを選択" });
@@ -119,26 +112,19 @@ test("selects a chart type from the visual catalog", async ({ page }) => {
   await page.getByRole("button", { name: "プレビューへ反映" }).click();
 
   await expect(page.getByText("売上額", { exact: true })).toBeVisible();
-  await expect(page.getByText("revenue", { exact: true })).toBeVisible();
+  await expect(page.getByRole("listitem").getByText("revenue", { exact: true })).toBeVisible();
 });
 
-test("guides chart creation through the content wizard", async ({ page }) => {
+test("adds a configured Python output as content", async ({ page }) => {
   await page.goto("http://127.0.0.1:3030");
   await page.getByRole("link", { name: "グラフ" }).click();
   await page.getByRole("button", { name: "グラフにコンテンツを追加" }).click();
 
   const wizard = page.getByRole("dialog", { name: "コンテンツを追加" });
-  await wizard.getByRole("button", { name: /^グラフ/ }).click();
-  await wizard.getByRole("button", { name: "次へ" }).click();
-  await expect(wizard.getByRole("heading", { name: "Pythonロジックを紐付け" })).toBeVisible();
-  await wizard.getByRole("button", { name: "次へ" }).click();
-  await expect(wizard.getByRole("heading", { name: "グラフを設定" })).toBeVisible();
-  await wizard.getByRole("button", { name: "次へ" }).click();
-  await expect(wizard.getByRole("heading", { name: "軸の書式を設定" })).toBeVisible();
-  await wizard.getByLabel("縦軸の軸タイトル").fill("金額");
-  await wizard.getByRole("button", { name: "コンテンツを作成" }).click();
+  await wizard.getByRole("radio", { name: /月次売上/ }).check();
+  await wizard.getByRole("button", { name: "コンテンツを追加" }).click();
 
-  await expect(page.getByText("新しいグラフ")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "月次売上" })).toHaveCount(2);
 });
 
 test("selects dashboard CSV and Python files for analysis logic", async ({ page, request }) => {
@@ -160,7 +146,7 @@ test("selects dashboard CSV and Python files for analysis logic", async ({ page,
   await page.getByText("入力値を参照", { exact: true }).click();
   await expect(page.getByText("CSV（先頭5件）")).toBeVisible();
   await expect(page.getByText("利用可能なParameters")).toBeVisible();
-  await expect(page.getByLabel("プレビューするコンテンツ")).toHaveValue("monthly-revenue");
+  await expect(page.getByText("出力表示 · グラフ")).toBeVisible();
   await expect(page.getByText("Output Schema")).toBeVisible();
 
   await page.getByText("入力CSVを管理").click();
@@ -171,4 +157,13 @@ test("selects dashboard CSV and Python files for analysis logic", async ({ page,
 
   await page.getByRole("button", { name: /sales-revenue/ }).click();
   await expect(page).toHaveURL(/#\/builder\/python\/sales-revenue$/);
+
+  await page.getByRole("button", { name: "出力定義を追加" }).click();
+  const outputDialog = page.getByRole("dialog", { name: "出力定義を追加" });
+  await expect(outputDialog.getByLabel("Pythonファイル名")).toHaveValue("analysis_5.py");
+  await outputDialog.getByRole("button", { name: /現在の出力を複製/ }).click();
+  await outputDialog.getByRole("button", { name: "出力定義を作成" }).click();
+  await expect(page).toHaveURL(/#\/builder\/python\/logic-5$/);
+  await expect(page.getByLabel("タイトル")).toHaveValue("売上のコピー");
+  await expect(page.getByText(/必要なcolumnがありません/)).toHaveCount(0);
 });

@@ -1,5 +1,9 @@
 import { useMemo } from "react";
-import type { AnalysisLogicDefinition, DashboardSchema } from "@/schema/dashboard";
+import type {
+  AnalysisLogicDefinition,
+  ContentDefinition,
+  DashboardSchema,
+} from "@/schema/dashboard";
 
 const createId = (prefix: string, ids: string[]) => {
   const existing = new Set(ids);
@@ -45,16 +49,19 @@ export const useAnalysisActions = (
           ...draft.analysis,
           inputs: draft.analysis.inputs.filter((_, inputIndex) => inputIndex !== index),
         }),
-      addLogic: (path: string) => {
+      addLogic: (path: string, content: ContentDefinition) => {
+        const id = createId(
+          "logic",
+          draft.analysis.logic.map((logic) => logic.id),
+        );
         const definition: AnalysisLogicDefinition = {
-          id: createId(
-            "logic",
-            draft.analysis.logic.map((logic) => logic.id),
-          ),
+          id,
           type: "python",
           path,
+          content,
         };
         editAnalysis({ ...draft.analysis, logic: [...draft.analysis.logic, definition] });
+        return id;
       },
       updateLogic: (index: number, logic: AnalysisLogicDefinition) => {
         const previousId = draft.analysis.logic[index]?.id;

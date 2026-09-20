@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Braces,
   CircleAlert,
@@ -11,8 +11,13 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { loadPythonSource, savePythonSource } from "@/builder/api/pythonSource";
+import { createPythonSource, loadPythonSource, savePythonSource } from "@/builder/api/pythonSource";
+import {
+  OutputDefinitionDialog,
+  type OutputDefinitionRequest,
+} from "@/builder/components/OutputDefinitionDialog";
 import { PythonCodeEditor } from "@/builder/components/PythonCodeEditor";
+import { ContentEditor } from "@/builder/editors/contents/ContentEditor";
 import { DashboardContent } from "@/components/contents/DashboardContent";
 import { IconButton } from "@/components/primitives/IconButton";
 import { SelectList } from "@/components/primitives/SelectList";
@@ -20,6 +25,7 @@ import { analysisPort } from "@/ports/analysis";
 import type {
   AnalysisLogicDefinition,
   AnalysisOutput,
+  ContentDefinition,
   DashboardSchema,
   ParameterValue,
   TabDefinition,
@@ -35,7 +41,7 @@ type InputDefinition = DashboardSchema["analysis"]["inputs"][number];
 
 interface AnalysisActions {
   addInput: (path: string) => void;
-  addLogic: (path: string) => void;
+  addLogic: (path: string, content: ContentDefinition) => string;
   removeInput: (index: number) => void;
   removeLogic: (index: number) => void;
   updateInput: (index: number, input: InputDefinition) => void;
@@ -102,16 +108,10 @@ const LogicWorkbench = ({
       Object.fromEntries(dashboard.controls.map((control) => [control.key, control.defaultValue])),
     [dashboard.controls],
   );
-  const referencedContents = dashboard.tabs.flatMap((tab) =>
-    tab.contents.filter((content) => content.logic === logic.id),
-  );
-  const [selectedContentId, setSelectedContentId] = useState(referencedContents[0]?.id);
-  const selectedContent =
-    referencedContents.find((content) => content.id === selectedContentId) ?? referencedContents[0];
   const previewTab: TabDefinition = {
     id: "python-preview",
     label: "出力プレビュー",
-    contents: selectedContent ? [selectedContent] : [],
+    contents: [{ id: "python-preview", logic: logic.id }],
   };
   const sourceQuery = useQuery({
     queryKey: ["python-source", logic.path],
@@ -137,10 +137,6 @@ const LogicWorkbench = ({
           })),
         ),
       });
-      validateContentBindings(
-        { ...dashboard, tabs: [{ ...previewTab, contents: referencedContents }] },
-        { [logic.id]: result.output },
-      );
       return result;
     },
     retry: false,
@@ -151,6 +147,28 @@ const LogicWorkbench = ({
     setSource(sourceQuery.data);
     setExecutedSource(sourceQuery.data);
   }, [sourceQuery.data]);
+
+  const bindingError = useMemo(() => {
+    if (preview.data === undefined) return undefined;
+    try {
+      validateContentBindings(
+        {
+          ...dashboard,
+          tabs: [
+            {
+              id: "python-preview",
+              label: "出力プレビュー",
+              contents: [{ id: "python-preview", logic: logic.id }],
+            },
+          ],
+        },
+        { [logic.id]: preview.data.output },
+      );
+      return undefined;
+    } catch (error) {
+      return error instanceof Error ? error : new Error("出力定義を検証できませんでした。");
+    }
+  }, [dashboard, logic.id, preview.data]);
 
   const run = () => {
     if (source === executedSource) {
@@ -365,45 +383,28 @@ const LogicWorkbench = ({
                   Pythonを実行しています…
                 </span>
               </div>
-            ) : preview.isError ? (
+            ) : preview.isError || bindingError ? (
               <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-900">
                 <p className="flex items-center gap-2 text-sm font-bold">
                   <CircleAlert aria-hidden="true" className="size-4" />
                   実行に失敗しました
                 </p>
                 <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap text-xs">
-                  {preview.error.message}
+                  {(preview.error ?? bindingError)?.message}
                 </pre>
               </div>
             ) : preview.data !== undefined ? (
               <div className="grid gap-5">
-                {selectedContent ? (
-                  <div className="grid gap-3">
-                    <label className="text-xs font-medium text-stone-600">
-                      プレビューするコンテンツ
-                      <div className="mt-1">
-                        <SelectList
-                          onChange={setSelectedContentId}
-                          options={referencedContents.map((content) => ({
-                            label: `${content.title} (${content.type})`,
-                            value: content.id,
-                          }))}
-                          value={selectedContent.id}
-                        />
-                      </div>
-                    </label>
-                    <DashboardContent
-                      results={{ [logic.id]: preview.data.output }}
-                      tab={previewTab}
-                    />
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-center text-xs leading-5 text-stone-500">
-                    このロジックを参照するコンテンツはまだありません。
-                    <br />
-                    Raw DataとSchemaは確認できます。
-                  </div>
-                )}
+                <DashboardContent
+                  analysis={dashboard.analysis}
+                  results={{ [logic.id]: preview.data.output }}
+                  tab={previewTab}
+                />
+
+                <ContentEditor
+                  content={logic.content}
+                  onChange={(content) => actions.updateLogic(logicIndex, { ...logic, content })}
+                />
 
                 <details className="rounded-xl border border-stone-200 bg-white p-4" open>
                   <summary className="flex cursor-pointer items-center gap-2 text-xs font-bold text-stone-700">
@@ -446,12 +447,22 @@ export const AnalysisEditor = ({
   onSelectLogic,
   selectedLogicId,
 }: AnalysisEditorProps) => {
+  const queryClient = useQueryClient();
   const catalog = useQuery({ queryKey: ["dashboard-assets"], queryFn: loadAssetCatalog });
+  const [outputDialogOpen, setOutputDialogOpen] = useState(false);
   const selectedLogicIndex = Math.max(
     0,
     dashboard.analysis.logic.findIndex((definition) => definition.id === selectedLogicId),
   );
   const logic = dashboard.analysis.logic[selectedLogicIndex];
+
+  const createOutputDefinition = async ({ content, path, source }: OutputDefinitionRequest) => {
+    if (source !== undefined) {
+      await createPythonSource(path, source);
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-assets"] });
+    }
+    onSelectLogic(actions.addLogic(path, content));
+  };
 
   return (
     <section className="grid h-full min-h-0 grid-cols-[15rem_minmax(0,1fr)]">
@@ -462,10 +473,10 @@ export const AnalysisEditor = ({
             <p className="mt-0.5 text-[0.625rem] text-stone-400">Pythonと出力をまとめて編集</p>
           </div>
           <IconButton
-            disabled={!catalog.data?.python[0] || dashboard.analysis.inputs.length === 0}
+            disabled={dashboard.analysis.inputs.length === 0}
             icon={Plus}
-            label="Pythonロジックを追加"
-            onClick={() => catalog.data?.python[0] && actions.addLogic(catalog.data.python[0])}
+            label="出力定義を追加"
+            onClick={() => setOutputDialogOpen(true)}
           />
         </div>
 
@@ -584,6 +595,15 @@ export const AnalysisEditor = ({
           </div>
         )}
       </div>
+
+      <OutputDefinitionDialog
+        currentLogic={logic}
+        dashboard={dashboard}
+        onClose={() => setOutputDialogOpen(false)}
+        onCreate={createOutputDefinition}
+        open={outputDialogOpen}
+        pythonFiles={catalog.data?.python ?? []}
+      />
     </section>
   );
 };

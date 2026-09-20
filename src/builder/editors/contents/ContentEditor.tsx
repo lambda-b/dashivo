@@ -1,31 +1,22 @@
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
-import { ContentLogicFields } from "@/builder/components/ContentLogicFields";
+import { Trash2 } from "lucide-react";
+import { ChartContentEditor } from "@/builder/editors/contents/ChartContentEditor";
 import { IconButton } from "@/components/primitives/IconButton";
 import { SelectList } from "@/components/primitives/SelectList";
-import { ChartContentEditor } from "@/builder/editors/contents/ChartContentEditor";
 import type {
-  AnalysisDefinition,
   ContentDefinition,
   MetricContentDefinition,
   TableContentDefinition,
 } from "@/schema/dashboard";
 
 interface ContentEditorProps {
-  analysis: AnalysisDefinition;
   content: ContentDefinition;
-  index: number;
-  isFirst: boolean;
-  isLast: boolean;
   onChange: (content: ContentDefinition) => void;
-  onMoveDown: () => void;
-  onMoveUp: () => void;
-  onRemove: () => void;
 }
 
 const contentTypeLabels: Record<ContentDefinition["type"], string> = {
-  metric: "METRIC",
-  chart: "CHART",
-  table: "TABLE",
+  metric: "数値カード",
+  chart: "グラフ",
+  table: "テーブル",
 };
 
 const numberFormatOptions = [
@@ -46,75 +37,23 @@ const parseOptionalNumberFormat = (
 ): TableContentDefinition["columns"][number]["format"] =>
   value === "" ? undefined : parseNumberFormat(value);
 
-export const ContentEditor = ({
-  analysis,
-  content,
-  index,
-  isFirst,
-  isLast,
-  onChange,
-  onMoveDown,
-  onMoveUp,
-  onRemove,
-}: ContentEditorProps) => (
-  <fieldset
-    aria-label={`コンテンツ${index + 1}`}
-    className="rounded-lg border border-stone-200 p-4"
-  >
-    <div className="mb-4 flex items-center justify-between gap-4">
-      <legend className="text-xs font-bold tracking-wide text-stone-500">
-        {contentTypeLabels[content.type]}
-      </legend>
-      <div className="flex items-center gap-1">
-        <IconButton
-          disabled={isFirst}
-          icon={ArrowUp}
-          label={`${content.title}を上へ移動`}
-          onClick={onMoveUp}
-        />
-        <IconButton
-          disabled={isLast}
-          icon={ArrowDown}
-          label={`${content.title}を下へ移動`}
-          onClick={onMoveDown}
-        />
-        <IconButton
-          icon={Trash2}
-          label={`${content.title}を削除`}
-          onClick={onRemove}
-          variant="danger"
-        />
-      </div>
-    </div>
+export const ContentEditor = ({ content, onChange }: ContentEditorProps) => (
+  <fieldset className="rounded-xl border border-stone-200 bg-white p-4">
+    <legend className="px-2 text-xs font-bold text-stone-500">
+      出力表示 · {contentTypeLabels[content.type]}
+    </legend>
 
-    <div className="grid grid-cols-2 gap-3">
-      <label className="text-xs font-medium text-stone-600">
-        Content ID
-        <input
-          className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-          onChange={(event) => onChange({ ...content, id: event.target.value })}
-          value={content.id}
-        />
-      </label>
-      <label className="text-xs font-medium text-stone-600">
-        タイトル
-        <input
-          className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-          onChange={(event) => onChange({ ...content, title: event.target.value })}
-          value={content.title}
-        />
-      </label>
-    </div>
+    <label className="block text-xs font-medium text-stone-600">
+      タイトル
+      <input
+        className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
+        onChange={(event) => onChange({ ...content, title: event.target.value })}
+        value={content.title}
+      />
+    </label>
 
     {content.type === "metric" ? (
-      <div className="mt-4 grid grid-cols-3 gap-3">
-        <div className="col-span-3">
-          <ContentLogicFields
-            analysis={analysis}
-            logic={content.logic}
-            onChange={(logic) => onChange({ ...content, logic })}
-          />
-        </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
         <label className="text-xs font-medium text-stone-600">
           表示形式
           <div className="mt-1">
@@ -125,15 +64,12 @@ export const ContentEditor = ({
             />
           </div>
         </label>
-        <label className="col-span-2 text-xs font-medium text-stone-600">
+        <label className="text-xs font-medium text-stone-600">
           強調
           <div className="mt-1">
             <SelectList
               onChange={(value) =>
-                onChange({
-                  ...content,
-                  emphasis: value === "strong" ? "strong" : "accent",
-                })
+                onChange({ ...content, emphasis: value === "strong" ? "strong" : "accent" })
               }
               options={emphasisOptions}
               value={content.emphasis}
@@ -142,21 +78,11 @@ export const ContentEditor = ({
         </label>
       </div>
     ) : content.type === "chart" ? (
-      <div className="mt-4 grid gap-3">
-        <ContentLogicFields
-          analysis={analysis}
-          logic={content.logic}
-          onChange={(logic) => onChange({ ...content, logic })}
-        />
+      <div className="mt-4">
         <ChartContentEditor content={content} onChange={onChange} />
       </div>
     ) : (
       <div className="mt-4 grid gap-3">
-        <ContentLogicFields
-          analysis={analysis}
-          logic={content.logic}
-          onChange={(logic) => onChange({ ...content, logic })}
-        />
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs font-medium text-stone-600">表示列</span>
           <button

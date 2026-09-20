@@ -20,11 +20,33 @@ const dashboardSource = {
         id: "sales-analysis",
         type: "python",
         path: "logic/analysis.py",
+        content: {
+          type: "chart",
+          title: "Revenue",
+          formatting: chartFormatting,
+          chart: { type: "line", x: "date", y: ["revenue"] },
+        },
       },
       {
         id: "sales-metric",
         type: "python",
         path: "logic/metric.py",
+        content: {
+          type: "metric",
+          title: "Revenue",
+          format: "currency",
+          emphasis: "strong",
+        },
+      },
+      {
+        id: "sales-table",
+        type: "python",
+        path: "logic/analysis.py",
+        content: {
+          type: "table",
+          title: "Summary",
+          columns: [{ key: "date", label: "Date" }],
+        },
       },
     ],
   },
@@ -44,11 +66,7 @@ const dashboardSource = {
       contents: [
         {
           id: "revenue",
-          type: "metric",
-          title: "Revenue",
           logic: "sales-metric",
-          format: "currency",
-          emphasis: "strong",
         },
       ],
     },
@@ -58,11 +76,7 @@ const dashboardSource = {
       contents: [
         {
           id: "revenue-chart",
-          type: "chart",
-          title: "Revenue",
           logic: "sales-analysis",
-          formatting: chartFormatting,
-          chart: { type: "line", x: "date", y: ["revenue"] },
         },
       ],
     },
@@ -72,10 +86,7 @@ const dashboardSource = {
       contents: [
         {
           id: "summary-table",
-          type: "table",
-          title: "Summary",
-          logic: "sales-analysis",
-          columns: [{ key: "date", label: "Date" }],
+          logic: "sales-table",
         },
       ],
     },
@@ -114,6 +125,30 @@ test("rejects duplicate control option values", () => {
 test("accepts the supported parameter and chart variants", () => {
   const dashboard = dashboardSchema.parse({
     ...dashboardSource,
+    analysis: {
+      ...dashboardSource.analysis,
+      logic: [
+        ...dashboardSource.analysis.logic,
+        ...[
+          { id: "revenue-bar", type: "bar", chart: { type: "bar", x: "date", y: ["revenue"] } },
+          {
+            id: "revenue-pie",
+            type: "pie",
+            chart: { type: "pie", name: "date", value: "revenue" },
+          },
+          {
+            id: "revenue-scatter",
+            type: "scatter",
+            chart: { type: "scatter", x: "date", y: "revenue" },
+          },
+        ].map(({ id, type, chart }) => ({
+          id,
+          type: "python" as const,
+          path: "logic/analysis.py",
+          content: { type: "chart" as const, title: type, formatting: chartFormatting, chart },
+        })),
+      ],
+    },
     controls: [
       ...dashboardSource.controls,
       {
@@ -153,30 +188,9 @@ test("accepts the supported parameter and chart variants", () => {
             ...tab,
             contents: [
               ...tab.contents,
-              {
-                id: "revenue-bar",
-                type: "chart",
-                title: "Revenue bar",
-                logic: "sales-analysis",
-                formatting: chartFormatting,
-                chart: { type: "bar", x: "date", y: ["revenue"] },
-              },
-              {
-                id: "revenue-pie",
-                type: "chart",
-                title: "Revenue pie",
-                logic: "sales-analysis",
-                formatting: chartFormatting,
-                chart: { type: "pie", name: "date", value: "revenue" },
-              },
-              {
-                id: "revenue-scatter",
-                type: "chart",
-                title: "Revenue scatter",
-                logic: "sales-analysis",
-                formatting: chartFormatting,
-                chart: { type: "scatter", x: "date", y: "revenue" },
-              },
+              { id: "revenue-bar-placement", logic: "revenue-bar" },
+              { id: "revenue-pie-placement", logic: "revenue-pie" },
+              { id: "revenue-scatter-placement", logic: "revenue-scatter" },
             ],
           }
         : tab,
@@ -190,8 +204,10 @@ test("accepts the supported parameter and chart variants", () => {
     "date-range",
     "slider",
   ]);
-  expect(dashboard.tabs[1].contents.map((content) => content.type)).toEqual([
+  expect(dashboard.analysis.logic.map((logic) => logic.content.type)).toEqual([
     "chart",
+    "metric",
+    "table",
     "chart",
     "chart",
     "chart",
@@ -223,20 +239,23 @@ test("rejects slider values outside its configured range", () => {
 test("rejects an invalid fixed chart axis range", () => {
   const invalidDashboard = {
     ...dashboardSource,
-    tabs: dashboardSource.tabs.map((tab) =>
-      tab.id === "charts"
-        ? {
-            ...tab,
-            contents: tab.contents.map((content) => ({
-              ...content,
-              formatting: {
-                ...content.formatting,
-                yAxis: { ...content.formatting.yAxis, minimum: 100, maximum: 10 },
+    analysis: {
+      ...dashboardSource.analysis,
+      logic: dashboardSource.analysis.logic.map((logic) =>
+        logic.id === "sales-analysis"
+          ? {
+              ...logic,
+              content: {
+                ...logic.content,
+                formatting: {
+                  ...logic.content.formatting,
+                  yAxis: { ...logic.content.formatting.yAxis, minimum: 100, maximum: 10 },
+                },
               },
-            })),
-          }
-        : tab,
-    ),
+            }
+          : logic,
+      ),
+    },
   };
 
   expect(() => dashboardSchema.parse(invalidDashboard)).toThrow(
@@ -295,6 +314,7 @@ test("rejects a non-tabular chart result", () => {
   const results = analysisResultsSchema.parse({
     "sales-analysis": 0,
     "sales-metric": 0,
+    "sales-table": [{ date: "2026-01-01" }],
   });
 
   expect(() => validateContentBindings(dashboard, results)).toThrow(
@@ -307,6 +327,7 @@ test("rejects a non-numeric metric result", () => {
   const results = analysisResultsSchema.parse({
     "sales-analysis": [{ date: "2026-01-01", revenue: 1 }],
     "sales-metric": [],
+    "sales-table": [{ date: "2026-01-01" }],
   });
 
   expect(() => validateContentBindings(dashboard, results)).toThrow(

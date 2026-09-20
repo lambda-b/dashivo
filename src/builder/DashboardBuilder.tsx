@@ -1,7 +1,5 @@
 import { useState, type ReactNode } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router-dom";
-import { saveDashboardFile } from "@/builder/api/dashboardFile";
-import { savePythonSource } from "@/builder/api/pythonSource";
 import { useContentActions } from "@/builder/hooks/useContentActions";
 import { useAnalysisActions } from "@/builder/hooks/useAnalysisActions";
 import { useDashboardDraft } from "@/builder/hooks/useDashboardDraft";
@@ -12,7 +10,10 @@ import { AnalysisEditor } from "@/builder/editors/AnalysisEditor";
 import { ControlEditor } from "@/builder/editors/ControlEditor";
 import { HeaderEditor } from "@/builder/editors/HeaderEditor";
 import { TabEditor } from "@/builder/editors/TabEditor";
-import { ContentWizard, type ContentWizardResult } from "@/builder/wizards/ContentWizard";
+import {
+  ContentPickerDialog,
+  type ContentPickerResult,
+} from "@/builder/components/ContentPickerDialog";
 import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
 
 interface DashboardBuilderProps {
@@ -76,29 +77,14 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
     setSection("contents");
   };
 
-  const completeContent = async ({ content, logic, pythonSource }: ContentWizardResult) => {
+  const completeContent = async ({ content }: ContentPickerResult) => {
     if (contentWizardTab === undefined) return;
-    if (logic && state.draft.analysis.logic.some((definition) => definition.path === logic.path)) {
-      throw new Error(`Pythonファイル「${logic.path}」はすでに登録されています。`);
-    }
-    if (logic && !pythonSource?.match(/^\s*def\s+execute\s*\(/m)) {
-      throw new Error("Pythonロジックにはexecute(inputs, params)関数を定義してください。");
-    }
     const dashboard = dashboardSchema.parse({
       ...state.draft,
-      analysis: logic
-        ? { ...state.draft.analysis, logic: [...state.draft.analysis.logic, logic] }
-        : state.draft.analysis,
       tabs: state.draft.tabs.map((tab, index) =>
         index === contentWizardTab ? { ...tab, contents: [...tab.contents, content] } : tab,
       ),
     });
-    if (logic && pythonSource !== undefined) {
-      await savePythonSource(logic.path, pythonSource);
-      await saveDashboardFile(dashboard);
-      window.location.reload();
-      return;
-    }
     applyDashboard(dashboard);
   };
 
@@ -298,7 +284,7 @@ export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilde
         </aside>
       ) : null}
 
-      <ContentWizard
+      <ContentPickerDialog
         dashboard={state.draft}
         onClose={() => setContentWizardTab(undefined)}
         onComplete={completeContent}

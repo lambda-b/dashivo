@@ -12,10 +12,15 @@ export const validateContentBindings = (
 ): AnalysisResults => {
   const errors: string[] = [];
 
-  for (const content of dashboard.tabs.flatMap((tab) => tab.contents)) {
-    const result = results[content.logic];
+  for (const placement of dashboard.tabs.flatMap((tab) => tab.contents)) {
+    const logic = dashboard.analysis.logic.find((definition) => definition.id === placement.logic);
+    if (!logic) continue;
+    const content = logic.content;
+    const result = results[placement.logic];
     if (result === undefined) {
-      errors.push(`Content「${content.title}」のlogic「${content.logic}」の実行結果がありません。`);
+      errors.push(
+        `Content「${content.title}」のlogic「${placement.logic}」の実行結果がありません。`,
+      );
       continue;
     }
 
