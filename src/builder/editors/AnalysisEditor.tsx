@@ -457,10 +457,8 @@ export const AnalysisEditor = ({
   const logic = dashboard.analysis.logic[selectedLogicIndex];
 
   const createOutputDefinition = async ({ content, path, source }: OutputDefinitionRequest) => {
-    if (source !== undefined) {
-      await createPythonSource(path, source);
-      await queryClient.invalidateQueries({ queryKey: ["dashboard-assets"] });
-    }
+    await createPythonSource(path, source);
+    await queryClient.invalidateQueries({ queryKey: ["dashboard-assets"] });
     onSelectLogic(actions.addLogic(path, content));
   };
 
@@ -473,7 +471,7 @@ export const AnalysisEditor = ({
             <p className="mt-0.5 text-[0.625rem] text-stone-400">Pythonと出力をまとめて編集</p>
           </div>
           <IconButton
-            disabled={dashboard.analysis.inputs.length === 0}
+            disabled={!catalog.data || dashboard.analysis.inputs.length === 0}
             icon={Plus}
             label="出力定義を追加"
             onClick={() => setOutputDialogOpen(true)}
@@ -596,14 +594,14 @@ export const AnalysisEditor = ({
         )}
       </div>
 
-      <OutputDefinitionDialog
-        currentLogic={logic}
-        dashboard={dashboard}
-        onClose={() => setOutputDialogOpen(false)}
-        onCreate={createOutputDefinition}
-        open={outputDialogOpen}
-        pythonFiles={catalog.data?.python ?? []}
-      />
+      {outputDialogOpen && (
+        <OutputDefinitionDialog
+          dashboard={dashboard}
+          onClose={() => setOutputDialogOpen(false)}
+          onCreate={createOutputDefinition}
+          pythonFiles={catalog.data?.python ?? []}
+        />
+      )}
     </section>
   );
 };

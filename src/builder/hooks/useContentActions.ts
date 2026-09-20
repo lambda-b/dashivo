@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { ContentPlacementDefinition, DashboardSchema } from "@/schema/dashboard";
+import { createUniqueIndexedName } from "@/utils/createUniqueIndexedName";
 
 const moveItem = <Item>(items: Item[], index: number, direction: -1 | 1) => {
   const destination = index + direction;
@@ -13,10 +14,11 @@ export const createContentPlacement = (
   dashboard: DashboardSchema,
   logic: string,
 ): ContentPlacementDefinition => {
-  const ids = new Set(dashboard.tabs.flatMap((tab) => tab.contents.map((content) => content.id)));
-  let index = 1;
-  while (ids.has(`content-${index}`)) index += 1;
-  return { id: `content-${index}`, logic };
+  const id = createUniqueIndexedName(
+    dashboard.tabs.flatMap((tab) => tab.contents.map((content) => content.id)),
+    "content-",
+  );
+  return { id, logic };
 };
 
 export const useContentActions = (

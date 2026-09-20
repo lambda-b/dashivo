@@ -152,18 +152,34 @@ test("selects dashboard CSV and Python files for analysis logic", async ({ page,
   await page.getByText("入力CSVを管理").click();
   await page.getByRole("button", { name: "CSVを追加" }).click();
   await expect(page.getByText("2 CSV · 2 Parameters")).toBeVisible();
-  await page.getByLabel("プレビューするCSV").selectOption("input-2");
-  await expect(page.getByLabel("プレビューするCSV")).toHaveValue("input-2");
+  await page.getByLabel("プレビューするCSV").selectOption("input-1");
+  await expect(page.getByLabel("プレビューするCSV")).toHaveValue("input-1");
 
   await page.getByRole("button", { name: /sales-revenue/ }).click();
   await expect(page).toHaveURL(/#\/builder\/python\/sales-revenue$/);
 
+  let createdSource = "";
+  await page.route("**/__dashlet/python-source?*", async (route) => {
+    const path = new URL(route.request().url()).searchParams.get("path");
+    if (path !== "logic/analysis_1.py") {
+      await route.fallback();
+      return;
+    }
+    if (route.request().method() === "POST") {
+      createdSource = route.request().postData() ?? "";
+      await route.fulfill({ json: { path }, status: 201 });
+      return;
+    }
+    await route.fulfill({ json: { source: createdSource } });
+  });
   await page.getByRole("button", { name: "出力定義を追加" }).click();
   const outputDialog = page.getByRole("dialog", { name: "出力定義を追加" });
-  await expect(outputDialog.getByLabel("Pythonファイル名")).toHaveValue("analysis_5.py");
-  await outputDialog.getByRole("button", { name: /現在の出力を複製/ }).click();
+  await expect(outputDialog.getByLabel("Pythonファイル")).toHaveValue("logic/analysis_1.py");
   await outputDialog.getByRole("button", { name: "出力定義を作成" }).click();
-  await expect(page).toHaveURL(/#\/builder\/python\/logic-5$/);
-  await expect(page.getByLabel("タイトル")).toHaveValue("売上のコピー");
+  await expect(page).toHaveURL(/#\/builder\/python\/logic-1$/);
+  await expect(page.getByRole("textbox", { name: "タイトル", exact: true })).toHaveValue(
+    "新しいグラフ",
+  );
+  expect(createdSource).toContain("def execute");
   await expect(page.getByText(/必要なcolumnがありません/)).toHaveCount(0);
 });

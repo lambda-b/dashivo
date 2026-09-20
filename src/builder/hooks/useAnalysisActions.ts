@@ -4,13 +4,7 @@ import type {
   ContentDefinition,
   DashboardSchema,
 } from "@/schema/dashboard";
-
-const createId = (prefix: string, ids: string[]) => {
-  const existing = new Set(ids);
-  let index = ids.length + 1;
-  while (existing.has(`${prefix}-${index}`)) index += 1;
-  return `${prefix}-${index}`;
-};
+import { createUniqueIndexedName } from "@/utils/createUniqueIndexedName";
 
 export const useAnalysisActions = (
   draft: DashboardSchema,
@@ -27,9 +21,9 @@ export const useAnalysisActions = (
           inputs: [
             ...draft.analysis.inputs,
             {
-              id: createId(
-                "input",
+              id: createUniqueIndexedName(
                 draft.analysis.inputs.map((input) => input.id),
+                "input-",
               ),
               type: "csv",
               path,
@@ -50,9 +44,9 @@ export const useAnalysisActions = (
           inputs: draft.analysis.inputs.filter((_, inputIndex) => inputIndex !== index),
         }),
       addLogic: (path: string, content: ContentDefinition) => {
-        const id = createId(
-          "logic",
+        const id = createUniqueIndexedName(
           draft.analysis.logic.map((logic) => logic.id),
+          "logic-",
         );
         const definition: AnalysisLogicDefinition = {
           id,
