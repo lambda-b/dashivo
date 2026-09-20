@@ -31,10 +31,10 @@ const numberFormats = [
 ] as const;
 
 const parseLegendPosition = (value: string): ChartFormattingDefinition["legend"]["position"] =>
-  legendPositions.find((option) => option.value === value)?.value ?? "bottom";
+  value as ChartFormattingDefinition["legend"]["position"];
 
 const parseNumberFormat = (value: string): AxisFormattingDefinition["format"] =>
-  numberFormats.find((option) => option.value === value)?.value ?? "auto";
+  value as AxisFormattingDefinition["format"];
 
 interface AxisFormattingEditorProps {
   axis: AxisFormattingDefinition;

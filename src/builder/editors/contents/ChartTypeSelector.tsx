@@ -144,7 +144,7 @@ const ChartTypeDialog = ({ onChange, onClose, open, value }: ChartTypeDialogProp
 
 export const ChartTypeSelector = ({ onChange, value }: ChartTypeSelectorProps) => {
   const [open, setOpen] = useState(false);
-  const selected = chartTypes.find((option) => option.type === value) ?? chartTypes[0];
+  const selected = chartTypes.find((option) => option.type === value)!;
 
   return (
     <div className="grid gap-2 rounded-lg border border-stone-200 p-3">

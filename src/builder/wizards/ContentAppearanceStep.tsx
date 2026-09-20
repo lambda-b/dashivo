@@ -79,7 +79,7 @@ export const ContentAppearanceStep = ({ content, onChange }: ContentAppearanceSt
                 columns: [{ ...content.columns[0], key: event.target.value }],
               })
             }
-            value={content.columns[0]?.key ?? ""}
+            value={content.columns[0].key}
           />
           <input
             aria-label="最初の列の表示名"
@@ -90,7 +90,7 @@ export const ContentAppearanceStep = ({ content, onChange }: ContentAppearanceSt
                 columns: [{ ...content.columns[0], label: event.target.value }],
               })
             }
-            value={content.columns[0]?.label ?? ""}
+            value={content.columns[0].label}
           />
         </div>
       </div>

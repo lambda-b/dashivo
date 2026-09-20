@@ -21,7 +21,7 @@ const createOptionValue = (control: ChoiceControlDefinition) => {
 
 export const ChoiceControlEditor = ({ control, onChange, onRemove }: ChoiceControlEditorProps) => {
   const updateOption = (index: number, field: "label" | "value", value: string) => {
-    const previousValue = control.options[index]?.value;
+    const previousValue = control.options[index].value;
     const options = control.options.map((option, optionIndex) =>
       optionIndex === index ? { ...option, [field]: value } : option,
     );
@@ -40,7 +40,7 @@ export const ChoiceControlEditor = ({ control, onChange, onRemove }: ChoiceContr
       options,
       defaultValue: options.some((option) => option.value === control.defaultValue)
         ? control.defaultValue
-        : (options[0]?.value ?? ""),
+        : options[0].value,
     });
   };
 

@@ -14,7 +14,7 @@ interface ControlPanelProps {
 export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) => (
   <section aria-label="パラメータ" className="flex flex-col gap-5">
     {controls.map((control) => {
-      const value = params[control.key] ?? control.defaultValue;
+      const value = params[control.key];
 
       switch (control.type) {
         case "radio":
@@ -23,7 +23,7 @@ export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) 
               control={control}
               key={control.key}
               onChange={(nextValue) => onChange(control.key, nextValue)}
-              value={typeof value === "string" ? value : control.defaultValue}
+              value={value as typeof control.defaultValue}
             />
           );
         case "select":
@@ -32,7 +32,7 @@ export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) 
               control={control}
               key={control.key}
               onChange={(nextValue) => onChange(control.key, nextValue)}
-              value={typeof value === "string" ? value : control.defaultValue}
+              value={value as typeof control.defaultValue}
             />
           );
         case "checkbox":
@@ -41,11 +41,7 @@ export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) 
               control={control}
               key={control.key}
               onChange={(nextValue) => onChange(control.key, nextValue)}
-              value={
-                Array.isArray(value) && value.every((item) => typeof item === "string")
-                  ? value
-                  : control.defaultValue
-              }
+              value={value as typeof control.defaultValue}
             />
           );
         case "date-range":
@@ -54,9 +50,7 @@ export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) 
               control={control}
               key={control.key}
               onChange={(nextValue) => onChange(control.key, nextValue)}
-              value={
-                typeof value === "object" && !Array.isArray(value) ? value : control.defaultValue
-              }
+              value={value as typeof control.defaultValue}
             />
           );
         case "slider":
@@ -65,11 +59,7 @@ export const ControlPanel = ({ controls, params, onChange }: ControlPanelProps) 
               control={control}
               key={control.key}
               onChange={(nextValue) => onChange(control.key, nextValue)}
-              value={
-                Array.isArray(value) && value.every((item) => typeof item === "number")
-                  ? value
-                  : control.defaultValue
-              }
+              value={value as typeof control.defaultValue}
             />
           );
       }

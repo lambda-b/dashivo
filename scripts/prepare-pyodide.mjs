@@ -1,12 +1,15 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { gzipSync } from "node:zlib";
 import { loadPyodide, version as pyodideVersion } from "pyodide";
 
 const root = process.cwd();
 const pyodideRoot = path.join(root, "node_modules", "pyodide");
 const cacheRoot = path.join(root, ".pyodide-cache");
 const dashboardRoot = path.join(root, "dashboard");
+const pyodideWasmFile = "pyodide.asm.wasm";
+const pythonStandardLibraryFile = "python_stdlib.zip";
 const dashboard = JSON.parse(await fs.readFile(path.join(dashboardRoot, "dashboard.json"), "utf8"));
 const analysisSources = await Promise.all(
   dashboard.analysis.logic.map(async (logic) => {
@@ -21,7 +24,7 @@ const analysisSources = await Promise.all(
 
 await fs.mkdir(cacheRoot, { recursive: true });
 
-for (const file of ["pyodide.asm.wasm", "python_stdlib.zip"]) {
+for (const file of [pyodideWasmFile, pythonStandardLibraryFile]) {
   await fs.copyFile(path.join(pyodideRoot, file), path.join(cacheRoot, file));
 }
 
@@ -31,23 +34,25 @@ const loadedPackages = await pyodide.loadPackagesFromImports(analysisSources.joi
 });
 const packageFiles = loadedPackages.map((loadedPackage) => loadedPackage.fileName);
 
-const files = ["pyodide.asm.wasm", "python_stdlib.zip", ...packageFiles];
+const pythonAssetFiles = [pythonStandardLibraryFile, ...packageFiles];
+const files = [pyodideWasmFile, ...pythonAssetFiles];
 
 await fs.writeFile(
   path.join(cacheRoot, "manifest.json"),
   `${JSON.stringify({ pyodideVersion, files }, null, 2)}\n`,
 );
 
-const embeddedAssets = Object.fromEntries(
-  await Promise.all(
-    files.map(async (file) => [
-      file,
-      (await fs.readFile(path.join(cacheRoot, file))).toString("base64"),
-    ]),
-  ),
+const compressAsset = async (file) =>
+  gzipSync(await fs.readFile(path.join(cacheRoot, file)), { level: 9 }).toString("base64");
+const compressedPyodideWasm = await compressAsset(pyodideWasmFile);
+const compressedPythonAssets = Object.fromEntries(
+  await Promise.all(pythonAssetFiles.map(async (file) => [file, await compressAsset(file)])),
 );
 await fs.writeFile(
   path.join(cacheRoot, "assets.ts"),
-  `export const embeddedAssets: Readonly<Record<string, string>> = ${JSON.stringify(embeddedAssets)};\n`,
+  [
+    `export const compressedPyodideWasm = ${JSON.stringify(compressedPyodideWasm)};`,
+    `export const compressedPythonAssets: Readonly<Record<string, string>> = ${JSON.stringify(compressedPythonAssets)};`,
+    "",
+  ].join("\n"),
 );
-await fs.rm(path.join(cacheRoot, "assets.json"), { force: true });

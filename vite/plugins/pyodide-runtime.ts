@@ -22,5 +22,11 @@ export const pyodideRuntime = (projectRoot: string, command: ConfigEnv["command"
       id === resolvedModuleId
         ? `export { initializePyodide } from ${JSON.stringify(implementationPath)};`
         : undefined,
+    transform(code, id) {
+      if (command !== "build" || !id.endsWith("/pyodide/pyodide.asm.mjs")) return undefined;
+
+      const bundledWasmReference = 'new URL("pyodide.asm.wasm",import.meta.url).href';
+      return code.replace(bundledWasmReference, 'locateFile("pyodide.asm.wasm")');
+    },
   };
 };

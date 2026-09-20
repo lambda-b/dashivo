@@ -39,7 +39,7 @@ const emphasisOptions = [
 const optionalNumberFormatOptions = [{ label: "標準", value: "" }, ...numberFormatOptions] as const;
 
 const parseNumberFormat = (value: string): MetricContentDefinition["format"] =>
-  numberFormatOptions.find((option) => option.value === value)?.value ?? "number";
+  value as MetricContentDefinition["format"];
 
 const parseOptionalNumberFormat = (
   value: string,

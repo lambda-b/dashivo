@@ -1,7 +1,7 @@
 import createPyodideModule from "pyodide/pyodide.asm.mjs";
 import { loadPyodide, type PyodideAPI } from "pyodide";
 import lockFileContents from "pyodide/pyodide-lock.json";
-import { embeddedAssets } from "#generated/assets";
+import { compressedPyodideWasm, compressedPythonAssets } from "#generated/assets";
 
 type LoadPyodideOptions = NonNullable<Parameters<typeof loadPyodide>[0]>;
 type CreatePyodideModule = NonNullable<LoadPyodideOptions["createPyodideModule"]>;
@@ -11,8 +11,23 @@ const nativeFetch = globalThis.fetch.bind(globalThis);
 const embeddedPyodideModule: CreatePyodideModule = (settings) =>
   createPyodideModule(settings) as ReturnType<CreatePyodideModule>;
 
-const toDataUrl = (name: string, encoded: string) =>
-  `data:${name.endsWith(".wasm") ? "application/wasm" : "application/octet-stream"};base64,${encoded}`;
+const createCompressedResponse = async (encoded: string, contentType: string) => {
+  const response = await nativeFetch(`data:application/gzip;base64,${encoded}`);
+
+  return new Response(response.body!.pipeThrough(new DecompressionStream("gzip")), {
+    headers: { "Content-Type": contentType },
+  });
+};
+
+const embeddedResponses: Readonly<Record<string, () => Promise<Response>>> = {
+  "pyodide.asm.wasm": () => createCompressedResponse(compressedPyodideWasm, "application/wasm"),
+  ...Object.fromEntries(
+    Object.entries(compressedPythonAssets).map(([name, encoded]) => [
+      name,
+      () => createCompressedResponse(encoded, "application/octet-stream"),
+    ]),
+  ),
+};
 
 const installEmbeddedAssetLoader = () => {
   globalThis.fetch = async (input, init) => {
@@ -21,10 +36,7 @@ const installEmbeddedAssetLoader = () => {
     if (!url.startsWith(embeddedAssetUrl)) return nativeFetch(input, init);
 
     const name = decodeURIComponent(url.slice(embeddedAssetUrl.length));
-    const encoded = embeddedAssets[name];
-    if (!encoded) return new Response("Embedded asset not found", { status: 404 });
-
-    return nativeFetch(toDataUrl(name, encoded));
+    return embeddedResponses[name]();
   };
 };
 

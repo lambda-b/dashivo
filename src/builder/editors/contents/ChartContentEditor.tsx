@@ -24,13 +24,13 @@ const createChartDefinition = (type: ChartType, current: ChartDefinition): Chart
           : { type, x: current.x, y: [current.y] };
     case "pie":
       return current.type === "line" || current.type === "bar"
-        ? { type, name: current.x, value: current.y[0] ?? "" }
+        ? { type, name: current.x, value: current.y[0] }
         : current.type === "scatter"
           ? { type, name: current.x, value: current.y }
           : current;
     case "scatter":
       return current.type === "line" || current.type === "bar"
-        ? { type, x: current.x, y: current.y[0] ?? "" }
+        ? { type, x: current.x, y: current.y[0] }
         : current.type === "pie"
           ? { type, x: current.name, y: current.value }
           : current;

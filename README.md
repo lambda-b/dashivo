@@ -34,7 +34,7 @@ Pythonによるデータ分析とReactのUIを、ネットワーク接続なし�
 pnpm build
 ```
 
-初回ビルド時は、Pyodide公式配布物からNumPy・pandasとその依存wheelを取得し、SHA-256を検証して `.pyodide-cache/` に保存します。成果物は `dist/dashboard.html` の1ファイルです。このファイルはChrome / Edgeで直接開け、実行時のWebサーバー、ネットワーク、Node.js、Pythonを必要としません。
+初回ビルド時は、Pyodide公式配布物からNumPy・pandasとその依存wheelを取得し、SHA-256を検証して `.pyodide-cache/` に保存します。PyodideとPythonのアセットはgzip圧縮して一度ずつHTMLへ埋め込み、ブラウザで起動時に展開します。成果物は `dist/dashboard.html` の1ファイルです。このファイルはChrome / Edgeで直接開け、実行時のWebサーバー、ネットワーク、Node.js、Pythonを必要としません。
 
 ```bash
 open dist/dashboard.html

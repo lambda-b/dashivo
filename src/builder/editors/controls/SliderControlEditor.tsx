@@ -27,7 +27,7 @@ export const SliderControlEditor = ({ control, onChange, onRemove }: SliderContr
     });
 
   const addDefaultValue = () => {
-    const previous = control.defaultValue.at(-1) ?? control.min;
+    const previous = control.defaultValue[control.defaultValue.length - 1];
     const value = Math.min(control.max, Math.max(control.min, previous + control.step));
     onChange({ ...control, defaultValue: [...control.defaultValue, value] });
   };

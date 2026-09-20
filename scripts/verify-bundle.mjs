@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { gzipSync } from "node:zlib";
 
 const outputDirectory = path.resolve("dist");
 const files = fs.readdirSync(outputDirectory);
@@ -15,9 +16,17 @@ for (const pattern of externalReferences) {
   }
 }
 
-for (const marker of ["numpy-2.4.6", "pandas-3.0.2", "python_stdlib.zip", "pyodide.asm.wasm"]) {
-  if (!html.includes(marker)) {
-    throw new Error(`Embedded asset marker missing: ${marker}`);
+const manifest = JSON.parse(fs.readFileSync(path.resolve(".pyodide-cache", "manifest.json")));
+for (const file of manifest.files) {
+  const contents = fs.readFileSync(path.resolve(".pyodide-cache", file));
+  if (html.includes(contents.toString("base64"))) {
+    throw new Error(`Uncompressed Pyodide asset remains in the standalone HTML: ${file}`);
+  }
+
+  const compressed = gzipSync(contents, { level: 9 }).toString("base64");
+  const copies = html.split(compressed).length - 1;
+  if (copies !== 1) {
+    throw new Error(`Expected one compressed copy of ${file}, found ${copies}.`);
   }
 }
 
@@ -32,4 +41,4 @@ for (const marker of [
   }
 }
 
-process.stdout.write(`Verified standalone ${files[0]} (${html.length} bytes).\n`);
+process.stdout.write(`Verified standalone ${files[0]} (${Buffer.byteLength(html)} bytes).\n`);

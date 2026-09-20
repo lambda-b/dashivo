@@ -7,6 +7,6 @@ export const dashboardOutput = (projectRoot: string): Plugin => ({
   closeBundle: () => {
     const indexPath = path.join(projectRoot, "dist", "index.html");
     const dashboardPath = path.join(projectRoot, "dist", "dashboard.html");
-    if (fs.existsSync(indexPath)) fs.renameSync(indexPath, dashboardPath);
+    fs.renameSync(indexPath, dashboardPath);
   },
 });

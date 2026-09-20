@@ -7,6 +7,7 @@ import type {
   AnalysisOutput,
   AnalysisResults,
   ContentDefinition,
+  DataRow,
   TabDefinition,
 } from "@/schema/dashboard";
 
@@ -25,11 +26,11 @@ interface ContentProps {
 const Content = ({ content, result }: ContentProps) => {
   switch (content.type) {
     case "metric":
-      return <MetricCard definition={content} value={typeof result === "number" ? result : 0} />;
+      return <MetricCard definition={content} value={result as number} />;
     case "chart":
-      return <ChartPanel definition={content} data={Array.isArray(result) ? result : []} />;
+      return <ChartPanel definition={content} data={result as DataRow[]} />;
     case "table":
-      return <DataTable definition={content} data={Array.isArray(result) ? result : []} />;
+      return <DataTable definition={content} data={result as DataRow[]} />;
   }
 };
 
