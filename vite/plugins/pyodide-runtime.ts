@@ -10,8 +10,7 @@ export const pyodideRuntime = (projectRoot: string, command: ConfigEnv["command"
     "vite",
     "virtual",
     "dashlet",
-    "pyodide-runtime",
-    command === "serve" ? "development.ts" : "embedded.ts",
+    command === "serve" ? "pyodide-runtime.ts" : "pyodide-runtime.build.ts",
   );
 
   return {
