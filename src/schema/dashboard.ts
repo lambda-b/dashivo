@@ -6,6 +6,7 @@ const identifierSchema = z
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "must be a lowercase kebab-case identifier");
 
 const optionSchema = z.object({ label: z.string().min(1), value: z.string().min(1) });
+
 const selectControlSchema = z
   .object({
     type: z.literal("select"),
@@ -314,7 +315,9 @@ export const dashboardSchema = z
   });
 
 const dataValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+
 export const dataRowSchema = z.record(z.string(), dataValueSchema);
+
 export const analysisOutputSchema = z
   .object({
     data: z.union([z.number().finite(), z.array(dataRowSchema)]),
@@ -322,15 +325,19 @@ export const analysisOutputSchema = z
   })
   .superRefine(({ data, view }, context) => {
     const fail = (message: string) => context.addIssue({ code: "custom", message });
+
     if (view.type === "metric") {
       if (typeof data !== "number") fail("Metricは有限の数値を返す必要があります。");
       return;
     }
+
     if (!Array.isArray(data)) {
       fail("Chart/Tableは行データの配列を返す必要があります。");
       return;
     }
+
     const chart = view.type === "chart" ? view.chart : undefined;
+
     const numeric = chart
       ? chart.type === "pie"
         ? [chart.value]
@@ -340,6 +347,7 @@ export const analysisOutputSchema = z
       : view.type === "table"
         ? view.columns.filter((c) => c.format).map((c) => c.key)
         : [];
+
     const columns = chart
       ? chart.type === "pie"
         ? [chart.name, chart.value]
@@ -347,6 +355,7 @@ export const analysisOutputSchema = z
       : view.type === "table"
         ? view.columns.map((c) => c.key)
         : [];
+
     data.forEach((row, index) => {
       for (const key of new Set(columns)) {
         if (!(key in row)) fail(`行${index + 1}: 列「${key}」がありません。`);
@@ -355,6 +364,7 @@ export const analysisOutputSchema = z
       }
     });
   });
+
 export const analysisResultsSchema = z.record(identifierSchema, analysisOutputSchema);
 
 export type DashboardSchema = z.infer<typeof dashboardSchema>;

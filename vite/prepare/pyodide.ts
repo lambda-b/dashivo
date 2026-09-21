@@ -12,9 +12,11 @@ const cacheRoot = path.join(root, ".pyodide-cache");
 const dashboardRoot = path.join(root, "dashboard");
 const pyodideWasmFile = "pyodide.asm.wasm";
 const pythonStandardLibraryFile = "python_stdlib.zip";
+
 const dashboard: DashboardSchema = JSON.parse(
   await fs.readFile(path.join(dashboardRoot, "dashboard.json"), "utf8"),
 );
+
 const analysisSources = await Promise.all(
   dashboard.analysis.logic.map(async (logic) => {
     const logicPath = path.resolve(dashboardRoot, logic.path);
@@ -39,6 +41,7 @@ const loadedPackages = await pyodide.loadPackagesFromImports(
     messageCallback: () => {},
   },
 );
+
 const packageFiles = loadedPackages.map((loadedPackage) => loadedPackage.fileName);
 
 const pythonAssetFiles = [pythonStandardLibraryFile, ...packageFiles];
@@ -51,10 +54,12 @@ await fs.writeFile(
 
 const compressAsset = async (file: string) =>
   gzipSync(await fs.readFile(path.join(cacheRoot, file)), { level: 9 }).toString("base64");
+
 const compressedPyodideWasm = await compressAsset(pyodideWasmFile);
 const compressedPythonAssets = Object.fromEntries(
   await Promise.all(pythonAssetFiles.map(async (file) => [file, await compressAsset(file)])),
 );
+
 await fs.writeFile(
   path.join(cacheRoot, "assets.ts"),
   [

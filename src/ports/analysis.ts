@@ -14,6 +14,7 @@ export interface AnalysisPreviewInput {
   params: Record<string, unknown>;
   sources: { id: string; sourceData: string }[];
 }
+
 const api = wrap<PythonAnalysisWorkerApi>(new PythonAnalysisWorker());
 
 const readAsset = async (path: string) => {
