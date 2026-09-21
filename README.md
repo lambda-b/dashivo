@@ -26,7 +26,7 @@ Pythonによるデータ分析とReactのUIを、ネットワーク接続なし�
 
    Viteは `0.0.0.0:3030` で待ち受けます。Dev Container外からは `http://localhost:3030` を開いてください。
 
-   開発画面右下の「Builderを開く」からDashboardの基本情報とRadio Controlを編集できます。Zodによる検証に成功したSchemaだけがプレビューへ反映され、編集結果は `dashboard/dashboard.json` へ直接保存できます。Builderと保存APIは開発時専用で、本番成果物には含まれません。
+   各エリアの編集ボタンから右側の設定パネルを開きます。設定のプレビューと保存は独立しており、保存先は `dashboard/dashboard.json` です。「Pythonロジックを管理」ではロジック定義・コード・確認の3領域を持つWorkbenchへ切り替わります。ロジックとCSV定義は自動保存、Pythonコードは明示的に保存します。Builderと保存APIは開発時専用で、本番成果物には含まれません。
 
 ## ビルド
 
@@ -57,15 +57,26 @@ pnpm test:e2e
 │  ├─ data/raw/       # ビルドへ埋め込むソースデータ
 │  ├─ logic/          # Python集計ロジック
 │  └─ dashboard.json  # UIとデータBindingのSchema
-├─ scripts/           # Pyodide asset収集
 ├─ src/               # React UIとPython Worker
 ├─ vite/
 │  ├─ plugins/        # Dashlet固有のVite plugin
+│  ├─ prepare/        # Pyodide asset収集
 │  └─ virtual/        # serve/buildで差し替えるvirtual module実装
+├─ tests/             # unit・integration・e2e（resultsは実行結果）
 ├─ work/              # プロジェクト計画（Git管理外）
 └─ vite.config.ts     # 単一HTML packaging
 ```
 
-Pythonの分析処理は `dashboard/logic/analysis.py` の `execute(params)` に記述します。`dashboard/data/raw/` のCSVとPython sourceはいずれもビルド時にHTMLへ埋め込まれます。
+Pythonの分析処理は `dashboard/logic/` の各ファイルに `execute(inputs, params)` として記述します。`inputs` はInput IDをキーにしたDataFrameの辞書、`params` はグローバルパラメータです。DataFrameは呼び出しごとにコピーされます。CSV、Python source、組み込みの `dashlet` ライブラリはいずれもビルド時にHTMLへ埋め込まれます。
+
+```python
+from dashlet import plot
+
+def execute(inputs, params):
+    monthly = inputs["sales"].groupby("month", as_index=False)["revenue"].sum()
+    return plot.line(monthly, x="month", y="revenue").title("月次売上").y_axis(format="currency", minimum=0)
+```
+
+戻り値は `plot.line`・`bar`・`pie`・`scatter`・`table`・`metric` で作るFigureです。種類、列の対応、タイトル、書式はPython側に集約し、JSONにはロジック参照と配置だけを保持します。Workbenchでは「実行」でのみ出力を更新し、検証用パラメータは閲覧画面へ影響しません。入力CSVはコードの実行に関係なく先頭5行を確認できます。詳細は確認エリアの「ヘルプ」、入力補助はコード内の `#chart` などのスニペットを参照してください。
 
 `src/` 内のimportは `@/` を起点にします。Pyodideはdevでは配布ファイルを動的に読み込み、buildでは `virtual:dashlet/pyodide-runtime` を埋め込み実装へ差し替えます。

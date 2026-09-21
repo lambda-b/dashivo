@@ -1,3 +1,4 @@
+from dashlet import plot
 import pandas as pd
 
 
@@ -7,4 +8,4 @@ def execute(inputs: dict[str, pd.DataFrame], params: dict):
     if region != "All":
         data = data[data["region"] == region]
 
-    return int(data["orders"].sum())
+    return plot.metric(int(data["orders"].sum()), format="number", emphasis="accent").title("注文件数")

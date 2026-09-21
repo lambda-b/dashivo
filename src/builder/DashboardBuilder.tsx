@@ -1,296 +1,163 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router-dom";
-import { useContentActions } from "@/builder/hooks/useContentActions";
-import { useAnalysisActions } from "@/builder/hooks/useAnalysisActions";
-import { useDashboardDraft } from "@/builder/hooks/useDashboardDraft";
-import { useParameterActions } from "@/builder/hooks/useParameterActions";
-import { useTabActions } from "@/builder/hooks/useTabActions";
-import { ContentsEditor } from "@/builder/editors/ContentsEditor";
-import { AnalysisEditor } from "@/builder/editors/AnalysisEditor";
-import { ControlEditor } from "@/builder/editors/ControlEditor";
-import { HeaderEditor } from "@/builder/editors/HeaderEditor";
-import { TabEditor } from "@/builder/editors/TabEditor";
-import {
-  ContentPickerDialog,
-  type ContentPickerResult,
-} from "@/builder/components/ContentPickerDialog";
-import { dashboardSchema, type DashboardSchema } from "@/schema/dashboard";
+import { useMutation } from "@tanstack/react-query";
+import { DashboardPreviewContext, useSavedDashboard } from "@/app/context/useDashboard";
+import { loadDashboard, saveDashboard, type DashboardSettings } from "@/builder/api/dashboard";
+import { useSettingsDraft, settingsOf } from "@/builder/settings/hooks/useSettingsDraft";
+import { useContentActions } from "@/builder/settings/hooks/useContentActions";
+import { useParameterActions } from "@/builder/settings/hooks/useParameterActions";
+import { HeaderSetting } from "@/builder/settings/HeaderSetting";
+import { ControlSetting } from "@/builder/settings/ControlSetting";
+import { ContentSetting } from "@/builder/settings/ContentSetting";
+import { TabSetting } from "@/builder/settings/TabSetting";
+import { ContentPickerDialog } from "@/builder/settings/components/ContentPickerDialog";
+import { PythonWorkbench } from "@/builder/workbench/PythonWorkbench";
+import { dashboardSchema } from "@/schema/dashboard";
 
-interface DashboardBuilderProps {
-  initialDashboard: DashboardSchema;
-  children: (
-    dashboard: DashboardSchema,
-    revision: number,
-    actions: {
-      addContent: (tabIndex: number) => void;
-      editContent: (tabIndex: number, contentIndex: number) => void;
-      openAnalysis: () => void;
-      openHeader: () => void;
-      openParameters: () => void;
-      openTabs: () => void;
-    },
-  ) => ReactNode;
+export interface BuilderActions {
+  addContent: (tabIndex: number) => void;
+  editContent: (tabIndex: number, contentIndex: number) => void;
+  openAnalysis: () => void;
+  openHeader: () => void;
+  openParameters: () => void;
+  openTabs: () => void;
 }
-
-type BuilderSection = "contents" | "header" | "parameters" | "tabs";
-
-interface ContentTarget {
-  contentIndex?: number;
-  tabIndex: number;
-}
-
-const sectionTitles: Record<BuilderSection, string> = {
-  contents: "コンテンツ設定",
+type Section = "header" | "parameters" | "contents" | "tabs";
+const titles = {
   header: "ヘッダー設定",
   parameters: "パラメータ設定",
+  contents: "コンテンツ設定",
   tabs: "タブ設定",
 };
-
-export const DashboardBuilder = ({ initialDashboard, children }: DashboardBuilderProps) => {
-  const location = useLocation();
+export const DashboardBuilder = ({
+  children,
+}: {
+  children: (actions: BuilderActions) => ReactNode;
+}) => {
+  const saved = useSavedDashboard();
+  const { draft, update, reset } = useSettingsDraft();
+  const [preview, setPreview] = useState<DashboardSettings>();
+  const [section, setSection] = useState<Section>();
+  const [target, setTarget] = useState<{ tabIndex: number; contentIndex?: number }>({
+    tabIndex: 0,
+  });
+  const [addingTab, setAddingTab] = useState<number>();
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { state, editDashboard, applyDashboard, applyDraft, saveDraft, resetDraft } =
-    useDashboardDraft(initialDashboard);
-  const contentActions = useContentActions(state.draft, editDashboard);
-  const analysisActions = useAnalysisActions(state.draft, editDashboard);
-  const parameterActions = useParameterActions(state.draft, editDashboard);
-  const tabActions = useTabActions(state.draft, editDashboard);
-  const [section, setSection] = useState<BuilderSection>();
-  const [contentWizardTab, setContentWizardTab] = useState<number>();
-  const [contentTarget, setContentTarget] = useState<ContentTarget>({ tabIndex: 0 });
-  const pythonRoute = matchPath("/builder/python/:logicId", location.pathname);
-  const pythonLogicId = pythonRoute?.params.logicId;
-
-  const openAnalysis = () => {
-    const logic = state.draft.analysis.logic[0];
-    if (!logic) return;
-    navigate(`/builder/python/${logic.id}`, { state: { returnTo: location.pathname } });
+  const location = useLocation();
+  const route = matchPath("/builder/python/:logicId?", location.pathname);
+  const contentActions = useContentActions(draft, update);
+  const parameterActions = useParameterActions(draft, update);
+  const save = useMutation({
+    mutationFn: () => saveDashboard({ settings: settingsOf(dashboardSchema.parse(draft)) }),
+  });
+  useEffect(() => {
+    loadDashboard().catch((cause) => setError(String(cause)));
+  }, []);
+  const apply = () => {
+    try {
+      setPreview(settingsOf(dashboardSchema.parse(draft)));
+      setError("");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
   };
-
-  const closeAnalysis = () => {
-    const routeState = location.state as { returnTo?: string } | null;
-    navigate(routeState?.returnTo ?? `/${state.draft.tabs[0].id}`);
-  };
-
-  const openContentEditor = (target: ContentTarget) => {
-    setContentTarget(target);
-    setSection("contents");
-  };
-
-  const completeContent = async ({ content }: ContentPickerResult) => {
-    if (contentWizardTab === undefined) return;
-    const dashboard = dashboardSchema.parse({
-      ...state.draft,
-      tabs: state.draft.tabs.map((tab, index) =>
-        index === contentWizardTab ? { ...tab, contents: [...tab.contents, content] } : tab,
-      ),
-    });
-    applyDashboard(dashboard);
-  };
-
   return (
-    <>
-      {!pythonRoute &&
-        children(state.dashboard, state.revision, {
-          addContent: (tabIndex) => setContentWizardTab(tabIndex),
-          editContent: (tabIndex, contentIndex) => openContentEditor({ tabIndex, contentIndex }),
-          openAnalysis,
-          openHeader: () => setSection("header"),
-          openParameters: () => setSection("parameters"),
-          openTabs: () => setSection("tabs"),
-        })}
-
-      {pythonRoute ? (
-        <aside
-          aria-label="Python出力を編集"
-          className="animate-workbench-in fixed inset-0 z-50 flex flex-col overflow-hidden bg-white shadow-2xl motion-reduce:animate-none"
+    <div>
+      {route ? (
+        <PythonWorkbench logicId={route.params.logicId} />
+      ) : (
+        <DashboardPreviewContext.Provider
+          value={preview ? { ...preview, analysis: saved.analysis } : saved}
         >
-          <header className="flex items-start justify-between gap-6 border-b border-stone-200 p-5">
-            <div>
-              <p className="text-brand text-[0.6875rem] font-bold tracking-[0.16em]">
-                DEVELOPMENT ONLY
-              </p>
-              <h2 className="mt-1 text-xl font-bold">Python出力を編集</h2>
-              <p className="mt-1 text-xs leading-5 text-stone-500">
-                Pythonコードと最終的な出力イメージを同じ画面で確認します。
-              </p>
-            </div>
-            <button
-              className="cursor-pointer rounded-md border border-stone-200 px-3 py-2 text-sm text-stone-600 hover:bg-stone-50"
-              onClick={closeAnalysis}
-              type="button"
-            >
-              Dashboardへ戻る
-            </button>
-          </header>
-
-          <div className="min-h-0 flex-1 overflow-hidden">
-            <AnalysisEditor
-              actions={analysisActions}
-              dashboard={state.draft}
-              onSelectLogic={(logicId) =>
-                navigate(`/builder/python/${logicId}`, { replace: true, state: location.state })
-              }
-              selectedLogicId={pythonLogicId}
-            />
-          </div>
-
-          <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 p-5">
-            <div className="flex gap-2">
-              <button
-                className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
-                onClick={resetDraft}
-                type="button"
-              >
-                元に戻す
-              </button>
-              <button
-                className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:cursor-wait disabled:opacity-60"
-                disabled={state.saveStatus === "saving"}
-                onClick={saveDraft}
-                type="button"
-              >
-                {state.saveStatus === "saving" ? "保存中…" : "dashboard.jsonを保存"}
-              </button>
-            </div>
-            {state.saveStatus === "saved" && (
-              <span className="text-xs font-medium text-emerald-700">保存しました</span>
-            )}
-            <button
-              className="bg-brand hover:bg-brand-dark cursor-pointer rounded-md px-4 py-2 text-sm font-semibold text-white"
-              onClick={applyDraft}
-              type="button"
-            >
-              プレビューへ反映
-            </button>
-          </footer>
-        </aside>
-      ) : null}
-
-      {section ? (
+          {children({
+            addContent: setAddingTab,
+            editContent: (tabIndex, contentIndex) => {
+              setTarget({ tabIndex, contentIndex });
+              setSection("contents");
+            },
+            openAnalysis: () =>
+              navigate("/builder/python/" + (saved.analysis.logic[0]?.id ?? ""), {
+                state: { returnTo: location.pathname },
+              }),
+            openHeader: () => setSection("header"),
+            openParameters: () => setSection("parameters"),
+            openTabs: () => setSection("tabs"),
+          })}
+        </DashboardPreviewContext.Provider>
+      )}
+      {!route && section && (
         <aside
           aria-label="Dashboard Builder"
-          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col border-l border-stone-300 bg-white shadow-2xl"
+          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col border-l bg-white shadow-2xl"
         >
-          <header className="flex items-start justify-between gap-6 border-b border-stone-200 p-5">
-            <div>
-              <p className="text-brand text-[0.6875rem] font-bold tracking-[0.16em]">
-                DEVELOPMENT ONLY
-              </p>
-              <h2 className="mt-1 text-xl font-bold">{sectionTitles[section]}</h2>
-              <p className="mt-1 text-xs leading-5 text-stone-500">
-                設定を検証してプレビューへ反映します。
-              </p>
-            </div>
-            <button
-              aria-label="Builderを閉じる"
-              className="cursor-pointer rounded-md border border-stone-200 px-3 py-2 text-sm text-stone-600 hover:bg-stone-50"
-              onClick={() => setSection(undefined)}
-              type="button"
-            >
+          <header className="flex justify-between border-b p-5">
+            <h2 className="font-bold">{titles[section]}</h2>
+            <button aria-label="Builderを閉じる" onClick={() => setSection(undefined)}>
               閉じる
             </button>
           </header>
-
-          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
+          <div className="min-h-0 flex-1 overflow-auto p-5">
             {section === "header" ? (
-              <HeaderEditor dashboard={state.draft} onChange={editDashboard} />
+              <HeaderSetting dashboard={draft} onChange={update} />
             ) : section === "parameters" ? (
-              <ControlEditor actions={parameterActions} dashboard={state.draft} />
+              <ControlSetting actions={parameterActions} dashboard={draft} />
             ) : section === "contents" ? (
-              <ContentsEditor
+              <ContentSetting
                 actions={contentActions}
-                contentIndex={contentTarget.contentIndex}
-                dashboard={state.draft}
-                onSelect={(contentIndex) => setContentTarget({ ...contentTarget, contentIndex })}
-                tabIndex={contentTarget.tabIndex}
+                dashboard={draft}
+                tabIndex={target.tabIndex}
+                contentIndex={target.contentIndex}
+                onSelect={(contentIndex) => setTarget({ ...target, contentIndex })}
               />
             ) : (
-              <section>
-                <div className="mb-3 flex items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-sm font-bold">Tabs</h3>
-                    <p className="mt-1 text-xs text-stone-500">
-                      コンテンツを切り替えるNavigationです。
-                    </p>
-                  </div>
-                  <button
-                    className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
-                    onClick={tabActions.add}
-                    type="button"
-                  >
-                    タブを追加
-                  </button>
-                </div>
-
-                <div className="grid gap-3">
-                  {state.draft.tabs.map((tab, index) => (
-                    <TabEditor
-                      canRemove={state.draft.tabs.length > 1}
-                      index={index}
-                      isFirst={index === 0}
-                      isLast={index === state.draft.tabs.length - 1}
-                      key={index}
-                      onChange={(nextTab) => tabActions.update(index, nextTab)}
-                      onMoveDown={() => tabActions.move(index, 1)}
-                      onMoveUp={() => tabActions.move(index, -1)}
-                      onRemove={() => tabActions.remove(index)}
-                      tab={tab}
-                    />
-                  ))}
-                </div>
-              </section>
+              <TabSetting dashboard={draft} onChange={update} />
             )}
-
-            {state.error && (
-              <pre
-                className="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-red-50 p-3 text-xs text-red-800"
-                role="alert"
-              >
-                {state.error}
+            {(error || save.error) && (
+              <pre role="alert" className="whitespace-pre-wrap text-xs text-red-700">
+                {error || save.error?.message}
               </pre>
             )}
           </div>
-
-          <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 p-5">
-            <div className="flex gap-2">
-              <button
-                className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
-                onClick={resetDraft}
-                type="button"
-              >
-                元に戻す
-              </button>
-              <button
-                className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:cursor-wait disabled:opacity-60"
-                disabled={state.saveStatus === "saving"}
-                onClick={saveDraft}
-                type="button"
-              >
-                {state.saveStatus === "saving" ? "保存中…" : "dashboard.jsonを保存"}
-              </button>
-            </div>
-            {state.saveStatus === "saved" && (
-              <span className="text-xs font-medium text-emerald-700">保存しました</span>
-            )}
+          <footer className="flex flex-wrap justify-between gap-3 border-t p-5">
             <button
-              className="bg-brand hover:bg-brand-dark cursor-pointer rounded-md px-4 py-2 text-sm font-semibold text-white"
-              onClick={applyDraft}
-              type="button"
+              onClick={() => {
+                reset();
+                setPreview(undefined);
+                setError("");
+                save.reset();
+              }}
             >
+              元に戻す
+            </button>
+            <button disabled={save.isPending} onClick={() => save.mutate()}>
+              dashboard.jsonを保存
+            </button>
+            {save.isSuccess && <span>保存しました</span>}
+            <button className="rounded bg-red-700 p-2 text-white" onClick={apply}>
               プレビューへ反映
             </button>
           </footer>
         </aside>
-      ) : null}
-
-      <ContentPickerDialog
-        dashboard={state.draft}
-        onClose={() => setContentWizardTab(undefined)}
-        onComplete={completeContent}
-        open={contentWizardTab !== undefined}
-        tabIndex={contentWizardTab ?? 0}
-      />
-    </>
+      )}
+      {addingTab !== undefined && !route && (
+        <ContentPickerDialog
+          dashboard={draft}
+          open
+          tabIndex={addingTab}
+          onClose={() => setAddingTab(undefined)}
+          onComplete={async ({ content }) => {
+            const next = dashboardSchema.parse({
+              ...draft,
+              tabs: draft.tabs.map((tab, index) =>
+                index === addingTab ? { ...tab, contents: [...tab.contents, content] } : tab,
+              ),
+            });
+            update(next);
+            setPreview(settingsOf(next));
+          }}
+        />
+      )}
+    </div>
   );
 };

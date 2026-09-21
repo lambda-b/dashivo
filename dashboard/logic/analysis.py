@@ -1,3 +1,4 @@
+from dashlet import plot
 import numpy as np
 import pandas as pd
 
@@ -17,4 +18,4 @@ def execute(inputs: dict[str, pd.DataFrame], params: dict):
         summary["revenue"], summary["orders"]
     ).round(2)
 
-    return summary.to_dict(orient="records")
+    return plot.line(summary, x="date", y="revenue").title("月次売上").legend(visible=False).y_axis(format="number")

@@ -126,4 +126,4 @@ plot = _Plot()
 def serialize(figure):
     if not isinstance(figure, Figure):
         raise TypeError("execute(inputs, params) must return a dashlet Figure")
-    return json.loads(json.dumps(figure.to_dict(), allow_nan=False))
+    return json.dumps(figure.to_dict(), allow_nan=False)

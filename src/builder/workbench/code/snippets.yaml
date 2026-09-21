@@ -1,0 +1,31 @@
+- label: "#chart"
+  detail: "折れ線グラフ"
+  template: |
+    fig = plot.line(${1:data}, x="${2:date}", y="${3:revenue}")
+    fig.title("${4:タイトル}")
+- label: "#bar"
+  detail: "棒グラフ"
+  template: |
+    fig = plot.bar(${1:data}, x="${2:category}", y="${3:value}")
+- label: "#table"
+  detail: "テーブル"
+  template: |
+    fig = plot.table(${1:data})
+    fig.column("${2:value}", label="${3:値}", format="number")
+- label: "#metric"
+  detail: "数値カード"
+  template: |
+    fig = plot.metric(${1:0}, format="${2:number}")
+    fig.title("${3:タイトル}")
+- label: "#axis"
+  detail: "縦軸書式"
+  template: |
+    fig.y_axis(format="${1:currency}", minimum=${2:0})
+- label: "#pie"
+  detail: "円グラフ"
+  template: |
+    fig = plot.pie(${1:data}, name="${2:category}", value="${3:value}")
+- label: "#scatter"
+  detail: "散布図"
+  template: |
+    fig = plot.scatter(${1:data}, x="${2:x}", y="${3:y}")

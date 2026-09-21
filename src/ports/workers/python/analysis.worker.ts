@@ -2,120 +2,81 @@ import { expose } from "comlink";
 import type { PyProxy } from "pyodide/ffi";
 import { analysisDefinitions } from "virtual:dashlet/analysis-assets";
 import { initializePyodide } from "virtual:dashlet/pyodide-runtime";
+import dashletSource from "@/ports/workers/python/dashlet.py?raw";
 
-export interface PythonAnalysisWorkerApi {
-  execute(params: Record<string, unknown>): Promise<unknown>;
-  preview(input: PythonPreviewInput): Promise<unknown>;
+interface Source {
+  id: string;
+  sourceData: string;
 }
-
-interface PythonPreviewInput {
+interface PreviewInput {
   analysisSource: string;
   params: Record<string, unknown>;
-  sources: { id: string; sourceData: string }[];
+  sources: readonly Source[];
 }
-
-const convertPythonResult = (result: unknown) => {
-  if (typeof result !== "object" || result === null || !("toJs" in result)) return result;
-  using proxy = result as PyProxy;
-  return proxy.toJs({
-    dict_converter: Object.fromEntries,
-    create_pyproxies: false,
-  });
-};
-
-const analysisPromise = initializePyodide().then(async (pyodide) => {
-  await pyodide.loadPackage("pandas");
-  using parseCsv = pyodide.runPython(`
-import io
-import pandas as pd
-
-def _dashlet_parse_csv(source):
-    return pd.read_csv(io.StringIO(source))
-
-def _dashlet_preview_rows(data):
-    return data.head(5).to_dict(orient="records")
-
-_dashlet_parse_csv
-`);
-  const dataFrames = new Map<string, PyProxy>();
-  const getDataFrame = (inputId: string, sourceData: string) => {
-    const existing = dataFrames.get(inputId);
-    if (existing) return existing;
-    const data: PyProxy = parseCsv(sourceData);
-    dataFrames.set(inputId, data);
-    return data;
-  };
-  const analyses = [];
-  for (const [index, definition] of analysisDefinitions.entries()) {
-    await pyodide.loadPackagesFromImports(definition.analysisSource);
-    const moduleName = `dashlet_analysis_${index}`;
-    pyodide.FS.writeFile(`/home/pyodide/${moduleName}.py`, definition.analysisSource);
-    pyodide.runPython("import importlib; importlib.invalidate_caches()");
-    const module = pyodide.pyimport(moduleName);
-    const execute = module.execute;
-    if (typeof execute !== "function") {
-      throw new Error(
-        `Python logic「${definition.id}」(${definition.path})にexecute関数がありません。`,
-      );
-    }
-    const inputs = definition.inputs.map((input) => ({
-      data: getDataFrame(input.id, input.sourceData),
-      id: input.id,
-    }));
-    analyses.push({
-      id: definition.id,
-      inputs,
-      execute,
-    });
-  }
-  return { pyodide, analyses };
+export interface PythonAnalysisWorkerApi {
+  execute(params: Record<string, unknown>): Promise<unknown>;
+  preview(input: PreviewInput): Promise<unknown>;
+  inspect(sources: Source[]): Promise<unknown>;
+}
+const runtime = initializePyodide().then(async (python) => {
+  await python.loadPackage("pandas");
+  python.FS.writeFile("/home/pyodide/dashlet.py", dashletSource);
+  python.runPython("import dashlet, pandas as pd, io, json");
+  return python;
 });
-
-let previewModuleIndex = 0;
-
+const frames = new Map<string, { source: string; data: PyProxy }>();
+const getFrame = async (source: Source) => {
+  const python = await runtime;
+  const cached = frames.get(source.id);
+  if (cached?.source === source.sourceData) return cached.data;
+  cached?.data.destroy();
+  using parse = python.runPython("lambda source: pd.read_csv(io.StringIO(source))");
+  const data = parse(source.sourceData);
+  frames.set(source.id, { source: source.sourceData, data });
+  return data as PyProxy;
+};
+const run = async ({ analysisSource, params, sources }: PreviewInput) => {
+  const python = await runtime;
+  await python.loadPackagesFromImports(analysisSource);
+  using inputs = python.toPy({});
+  using copyFrame = python.runPython("lambda frame: frame.copy(deep=True)");
+  for (const source of sources) {
+    using copy = copyFrame(await getFrame(source));
+    inputs.set(source.id, copy);
+  }
+  using namespace = python.toPy({ __name__: "dashlet_logic" });
+  python.runPython(analysisSource, { globals: namespace });
+  using execute = namespace.get("execute");
+  if (typeof execute !== "function")
+    throw new Error("execute(inputs, params)関数を定義してください。");
+  using pythonParams = python.toPy(params);
+  using figure = execute(inputs, pythonParams);
+  using serialize = python.runPython("dashlet.serialize");
+  return JSON.parse(serialize(figure));
+};
 const api: PythonAnalysisWorkerApi = {
-  execute: async (params) => {
-    const { pyodide, analyses } = await analysisPromise;
+  async execute(params) {
     const results: Record<string, unknown> = {};
-
-    for (const { id, inputs, execute } of analyses) {
-      using pythonInputs = pyodide.runPython("{}");
-      for (const { data, id: inputId } of inputs) {
-        using dataCopy = data.copy();
-        pythonInputs.set(inputId, dataCopy);
-      }
-      using pythonParams = pyodide.toPy(params);
-      results[id] = convertPythonResult(execute(pythonInputs, pythonParams));
+    for (const definition of analysisDefinitions) {
+      results[definition.id] = await run({
+        analysisSource: definition.analysisSource,
+        params,
+        sources: definition.inputs,
+      });
     }
-
     return results;
   },
-  preview: async ({ analysisSource, params, sources }) => {
-    const { pyodide } = await analysisPromise;
-    await pyodide.loadPackagesFromImports(analysisSource);
-    const moduleName = `dashlet_preview_${previewModuleIndex++}`;
-    pyodide.FS.writeFile(`/home/pyodide/${moduleName}.py`, analysisSource);
-    pyodide.runPython("import importlib; importlib.invalidate_caches()");
-    using module = pyodide.pyimport(moduleName);
-    using execute = module.execute;
-    if (typeof execute !== "function") {
-      throw new Error("Pythonロジックにexecute(inputs, params)関数がありません。");
-    }
-    using parseCsv = pyodide.runPython("_dashlet_parse_csv");
-    using pythonInputs = pyodide.runPython("{}");
-    const inputRows: Record<string, unknown> = {};
-    for (const source of sources) {
-      using data = parseCsv(source.sourceData);
-      pythonInputs.set(source.id, data);
-      using previewRows = pyodide.runPython("_dashlet_preview_rows")(data);
-      inputRows[source.id] = convertPythonResult(previewRows);
-    }
-    using pythonParams = pyodide.toPy(params);
-    return {
-      inputRows,
-      output: convertPythonResult(execute(pythonInputs, pythonParams)),
-    };
+  async preview(input) {
+    return { output: await run(input) };
+  },
+  async inspect(sources) {
+    const python = await runtime;
+    using head = python.runPython(
+      "lambda frame: json.dumps(dashlet._rows(frame.head(5)), allow_nan=False)",
+    );
+    const rows: Record<string, unknown> = {};
+    for (const source of sources) rows[source.id] = JSON.parse(head(await getFrame(source)));
+    return rows;
   },
 };
-
 expose(api);

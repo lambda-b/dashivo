@@ -22,10 +22,10 @@ interface DashboardContentProps {
 
 interface ContentProps {
   content: ContentDefinition;
-  result: AnalysisOutput;
+  result: AnalysisOutput["data"];
 }
 
-const Content = ({ content, result }: ContentProps) => {
+export const Content = ({ content, result }: ContentProps) => {
   switch (content.type) {
     case "metric":
       return <MetricCard definition={content} value={result as number} />;
@@ -48,10 +48,12 @@ export const DashboardContent = ({
       tab.contents.map((placement, contentIndex) => {
         const logic = analysis.logic.find((definition) => definition.id === placement.logic);
         if (!logic) return null;
-        const content = logic.content;
+        const output = results[placement.logic];
+        if (!output) return null;
+        const content = output.view;
         return (
           <div className="relative min-w-0" key={placement.id}>
-            <Content content={content} result={results[placement.logic]} />
+            <Content content={content} result={output.data} />
             {onEditContent && (
               <div className="absolute top-3 right-3 z-10 drop-shadow-sm">
                 <EditButton

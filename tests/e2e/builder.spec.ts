@@ -1,0 +1,195 @@
+import { expect, test } from "@playwright/test";
+import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
+test("edits, validates, and saves the dashboard configuration in development", async ({ page }) => {
+  let savedDashboard: { title?: string; tabs?: { id: string; label: string }[] } | undefined;
+  await page.route("**/__dashlet/dashboard", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({ json: { dashboard: dashboardSource } });
+      return;
+    }
+    savedDashboard = { ...dashboardSource, ...route.request().postDataJSON().settings };
+    await route.fulfill({ json: { dashboard: savedDashboard } });
+  });
+  await page.goto("http://127.0.0.1:3030");
+
+  await page.getByRole("button", { name: "ヘッダーを編集" }).click();
+  await page.getByLabel("タイトル").fill("Builder preview");
+  await page.getByRole("button", { name: "Builderを閉じる" }).click();
+
+  await page.getByRole("complementary").getByRole("button", { name: "パラメータを編集" }).click();
+  await page.getByRole("button", { name: "項目を追加" }).click();
+  await page.getByRole("button", { name: "単一選択（ボタン）を追加" }).click();
+  await page.getByRole("button", { name: "項目を追加" }).click();
+  await page.getByRole("button", { name: "単一選択（リスト）を追加" }).click();
+  await page.getByRole("button", { name: "項目を追加" }).click();
+  await page.getByRole("button", { name: "複数選択を追加" }).click();
+  const checkboxEditor = page.locator("fieldset").filter({ hasText: "CHECKBOX PARAMETER" });
+  await checkboxEditor.getByRole("button", { name: "選択肢を追加" }).click();
+  await checkboxEditor.getByLabel("選択肢1をデフォルトでチェック").check();
+  await checkboxEditor.getByRole("radio", { name: "縦並び" }).check();
+
+  const addedRadioEditor = page.locator("fieldset").filter({ hasText: "RADIO PARAMETER" }).last();
+  await addedRadioEditor.getByRole("radio", { name: "縦並び" }).check();
+
+  await page.getByRole("button", { name: "項目を追加" }).click();
+  await page.getByRole("button", { name: "日付範囲を追加" }).click();
+  await page.getByRole("button", { name: "項目を追加" }).click();
+  await page.getByRole("button", { name: "数値スライダーを追加" }).click();
+  const sliderEditor = page.locator("fieldset").filter({ hasText: "SLIDER PARAMETER" });
+  await sliderEditor.getByRole("button", { name: "値を追加" }).click();
+  await sliderEditor.getByRole("spinbutton", { name: "デフォルト値1" }).fill("25");
+  await sliderEditor.getByRole("spinbutton", { name: "デフォルト値2" }).fill("75");
+  await page.getByRole("button", { name: "Builderを閉じる" }).click();
+
+  await page.getByRole("button", { name: "タブを編集" }).click();
+  await page.getByRole("button", { name: "タブを追加" }).click();
+  await page.getByLabel("Route ID").last().fill("details");
+  await page.getByLabel("表示名").last().fill("詳細");
+  await page.getByRole("button", { name: "詳細を上へ移動" }).click();
+  await page.getByRole("button", { name: "プレビューへ反映" }).click();
+  await page.getByRole("button", { name: "Builderを閉じる" }).click();
+
+  await page.getByRole("link", { name: "詳細" }).click();
+  await page.getByRole("button", { name: "詳細にコンテンツを追加" }).click();
+  const contentWizard = page.getByRole("dialog", { name: "コンテンツを追加" });
+  await contentWizard.getByText("sales-orders", { exact: true }).first().click();
+  await contentWizard.getByRole("button", { name: "コンテンツを追加" }).click();
+
+  await expect(page.getByRole("heading", { level: 1, name: "Builder preview" })).toBeVisible();
+  await expect(page).toHaveURL(/#\/details$/);
+  await expect(page.getByRole("article").getByText("注文件数")).toBeVisible();
+  await expect(page.getByText("255")).toBeVisible();
+
+  await page.getByRole("button", { name: "注文件数を編集" }).click();
+  await expect(page.getByLabel("Python出力")).toHaveValue("sales-orders");
+
+  await page.getByRole("button", { name: "dashboard.jsonを保存" }).click();
+  await expect(page.getByText("保存しました")).toBeVisible();
+  expect(savedDashboard?.title).toBe("Builder preview");
+  expect(savedDashboard?.tabs?.map((tab) => tab.id)).toEqual([
+    "summary",
+    "charts",
+    "details",
+    "tables",
+  ]);
+
+  await page.getByRole("button", { name: "Builderを閉じる" }).click();
+  await page.getByRole("button", { name: "ヘッダーを編集" }).click();
+  await page.getByLabel("タイトル").fill("");
+  await page.getByRole("button", { name: "プレビューへ反映" }).click();
+  await expect(page.getByRole("alert")).toBeVisible();
+
+  await page.getByRole("button", { name: "Builderを閉じる" }).click();
+  await expect(
+    page.getByRole("region", { name: "パラメータ" }).getByText("新しい条件").first(),
+  ).toBeVisible();
+  await expect(page.getByRole("radio", { name: "選択肢1" })).toBeChecked();
+  const checkboxes = page.getByRole("region", { name: "パラメータ" }).getByRole("checkbox");
+  await expect(checkboxes).toHaveCount(2);
+  await expect(checkboxes.first()).toBeChecked();
+  await checkboxes.last().check();
+  await expect(checkboxes.last()).toBeChecked();
+  await expect(page.getByLabel("開始日").last()).toBeVisible();
+  await expect(page.getByRole("region", { name: "パラメータ" }).getByRole("slider")).toHaveCount(2);
+});
+
+test("Workbench runs Figure code with explicit parameters and independent CSV preview", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:3030");
+  await page.getByRole("radio", { name: "East", exact: true }).check();
+  await page.getByRole("button", { name: "Pythonロジックを管理" }).click();
+  await expect(page.getByText("ロジック定義", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "実行", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "月次売上", exact: true })).toBeVisible();
+  await page.getByText("検証用パラメータ", { exact: true }).click();
+  await page.getByRole("radio", { name: "West", exact: true }).check();
+  await expect(page.getByRole("button", { name: "実行", exact: true })).toBeEnabled();
+  await page.getByRole("button", { name: "実行", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "月次売上", exact: true })).toBeVisible();
+  await page.locator(".cm-content").fill("invalid python !");
+  await page.getByRole("button", { name: "実行", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("SyntaxError");
+  await page.getByRole("tab", { name: "入力値参照" }).click();
+  await expect(page.getByLabel("プレビューするCSV")).toHaveValue("sales");
+  await expect(page.getByRole("cell", { name: "East", exact: true }).first()).toBeVisible();
+  await expect(page.getByText("利用可能なParameters")).toBeVisible();
+  const dismiss = page.waitForEvent("dialog").then((dialog) => dialog.dismiss());
+  await page.getByRole("button", { name: "Dashboardへ戻る" }).click();
+  await dismiss;
+  await expect(page).toHaveURL(/builder\/python/);
+  const accept = page.waitForEvent("dialog").then((dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Dashboardへ戻る" }).click();
+  await accept;
+  await expect(page.getByRole("heading", { level: 1, name: "Sales pulse" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "East", exact: true })).toBeChecked();
+});
+
+test("logic creation saves a file and registration in one request", async ({ page }) => {
+  let dashboard = structuredClone(dashboardSource);
+  let createdSource = "";
+  await page.route("**/__dashlet/dashboard", async (route) => {
+    if (route.request().method() === "POST") {
+      const { logic } = route.request().postDataJSON();
+      createdSource = logic.source;
+      dashboard.analysis.logic.push({ id: logic.id, type: "python", path: logic.path });
+    }
+    await route.fulfill({ json: { dashboard } });
+  });
+  await page.route("**/__dashlet/python-source?path=logic%2Flogic-1.py", (route) =>
+    route.fulfill({ json: { source: createdSource } }),
+  );
+  await page.goto("http://127.0.0.1:3030");
+  await page.getByRole("button", { name: "Pythonロジックを管理" }).click();
+  await page.getByRole("button", { name: "ロジックを追加" }).click();
+  const dialog = page.getByRole("dialog", { name: "ロジックを追加" });
+  await expect(dialog.getByLabel("Logic ID")).toHaveValue("logic-1");
+  await dialog.getByRole("button", { name: "作成", exact: true }).click();
+  await expect(page).toHaveURL(/logic-1$/);
+  await page.getByRole("button", { name: "実行", exact: true }).click();
+  await expect(page.getByRole("article").getByText("新しい数値")).toBeVisible();
+  expect(createdSource).toContain("return plot.metric");
+  await expect(page.getByRole("button", { name: "dashboard.jsonを保存" })).toHaveCount(0);
+});
+
+test("Python snippets keep completion and Tab field navigation", async ({ page }) => {
+  await page.goto("http://127.0.0.1:3030/#/builder/python/sales-analysis");
+  const editor = page.locator(".cm-content");
+  await editor.fill("");
+  await editor.pressSequentially("#chart");
+  await expect(page.getByRole("option").filter({ hasText: "#chart" })).toBeVisible();
+  await editor.press("Tab");
+  await expect(editor).toContainText("plot.line");
+  await editor.pressSequentially("monthly");
+  await editor.press("Tab");
+  await editor.pressSequentially("month");
+  await expect(editor).toContainText('plot.line(monthly, x="month"');
+});
+
+test("Python receives isolated CSV copies and preserves missing values across the worker", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:3030/#/builder/python/sales-analysis");
+  const editor = page.locator(".cm-content");
+  await editor.fill(`from dashlet import plot
+import pandas as pd
+
+def execute(inputs, params):
+    inputs["sales"].loc[:, "revenue"] = -1
+    return plot.table(pd.DataFrame({"date": [pd.Timestamp("2026-01-01"), pd.NaT], "value": [1.0, float("nan")]})).title("Missing values")
+`);
+  await page.getByRole("button", { name: "実行", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Missing values" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "2026-01-01T00:00:00" })).toBeVisible();
+  await page.getByRole("tab", { name: "入力値参照" }).click();
+  await expect(page.getByRole("cell", { name: "125000", exact: true })).toBeVisible();
+  await editor.fill(`from dashlet import plot
+
+def execute(inputs, params):
+    return plot.metric(inputs["sales"]["revenue"].sum()).title("Unchanged inputs")
+`);
+  await page.getByRole("tab", { name: "出力プレビュー" }).click();
+  await page.getByRole("button", { name: "実行", exact: true }).click();
+  await expect(page.getByRole("article").getByText("754,000", { exact: true })).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});

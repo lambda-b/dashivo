@@ -205,13 +205,13 @@ const tableContentSchema = z.object({
     .min(1),
 });
 
-const contentSchema = z.discriminatedUnion("type", [
+export const contentSchema = z.discriminatedUnion("type", [
   metricContentSchema,
   chartContentSchema,
   tableContentSchema,
 ]);
 
-const analysisSchema = z.object({
+export const analysisSchema = z.object({
   inputs: z.array(
     z.object({
       id: identifierSchema,
@@ -224,7 +224,6 @@ const analysisSchema = z.object({
       id: identifierSchema,
       type: z.literal("python"),
       path: z.string().min(1),
-      content: contentSchema,
     }),
   ),
 });
@@ -271,6 +270,10 @@ export const dashboardSchema = z
       dashboard.analysis.logic.map((logic) => logic.id),
       ["analysis", "logic"],
     );
+    addDuplicateIdIssue(
+      dashboard.analysis.logic.map((logic) => logic.path),
+      ["analysis", "logic"],
+    );
     if (
       new Set(dashboard.controls.map((control) => control.key)).size !== dashboard.controls.length
     ) {
@@ -312,7 +315,46 @@ export const dashboardSchema = z
 
 const dataValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 export const dataRowSchema = z.record(z.string(), dataValueSchema);
-export const analysisOutputSchema = z.union([z.number(), z.array(dataRowSchema)]);
+export const analysisOutputSchema = z
+  .object({
+    data: z.union([z.number().finite(), z.array(dataRowSchema)]),
+    view: contentSchema,
+  })
+  .superRefine(({ data, view }, context) => {
+    const fail = (message: string) => context.addIssue({ code: "custom", message });
+    if (view.type === "metric") {
+      if (typeof data !== "number") fail("Metricは有限の数値を返す必要があります。");
+      return;
+    }
+    if (!Array.isArray(data)) {
+      fail("Chart/Tableは行データの配列を返す必要があります。");
+      return;
+    }
+    const chart = view.type === "chart" ? view.chart : undefined;
+    const numeric = chart
+      ? chart.type === "pie"
+        ? [chart.value]
+        : chart.type === "scatter"
+          ? [chart.x, chart.y]
+          : chart.y
+      : view.type === "table"
+        ? view.columns.filter((c) => c.format).map((c) => c.key)
+        : [];
+    const columns = chart
+      ? chart.type === "pie"
+        ? [chart.name, chart.value]
+        : [chart.x, ...numeric]
+      : view.type === "table"
+        ? view.columns.map((c) => c.key)
+        : [];
+    data.forEach((row, index) => {
+      for (const key of new Set(columns)) {
+        if (!(key in row)) fail(`行${index + 1}: 列「${key}」がありません。`);
+        else if (numeric.includes(key) && row[key] !== null && typeof row[key] !== "number")
+          fail(`行${index + 1}: 列「${key}」は数値またはnullが必要です。`);
+      }
+    });
+  });
 export const analysisResultsSchema = z.record(identifierSchema, analysisOutputSchema);
 
 export type DashboardSchema = z.infer<typeof dashboardSchema>;
@@ -328,7 +370,7 @@ export type DateRangeControlDefinition = Extract<ControlDefinition, { type: "dat
 export type SliderControlDefinition = Extract<ControlDefinition, { type: "slider" }>;
 export type TabDefinition = DashboardSchema["tabs"][number];
 export type ContentPlacementDefinition = TabDefinition["contents"][number];
-export type ContentDefinition = AnalysisLogicDefinition["content"];
+export type ContentDefinition = z.infer<typeof contentSchema>;
 export type MetricContentDefinition = Extract<ContentDefinition, { type: "metric" }>;
 export type ChartContentDefinition = Extract<ContentDefinition, { type: "chart" }>;
 export type ChartFormattingDefinition = ChartContentDefinition["formatting"];
