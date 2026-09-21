@@ -1,5 +1,58 @@
 import { expect, test } from "@playwright/test";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
+
+for (const failFirstSave of [false, true]) {
+  test(`serializes saves across editors and updates the cache only on success (failure=${failFirstSave})`, async ({
+    page,
+  }) => {
+    let dashboard = structuredClone(dashboardSource);
+    let requests = 0;
+    let releaseFirst!: () => void;
+    const firstSave = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+
+    await page.route("**/__dashlet/dashboard", async (route) => {
+      if (route.request().method() === "POST") {
+        requests++;
+        if (requests === 1) {
+          await firstSave;
+          if (failFirstSave) {
+            await route.fulfill({ status: 500, json: { error: "Save failed" } });
+            return;
+          }
+        }
+        const change = route.request().postDataJSON();
+        dashboard = { ...dashboard, ...(change.settings ?? change) };
+      }
+      await route.fulfill({ json: { dashboard } });
+    });
+
+    await page.goto("http://127.0.0.1:3030");
+    await page.getByRole("button", { name: "ヘッダーを編集" }).click();
+    await page.getByLabel("タイトル").fill("Serialized save");
+    await page.getByRole("button", { name: "dashboard.jsonを保存" }).click();
+    await expect.poll(() => requests).toBe(1);
+    await page.getByRole("button", { name: "Builderを閉じる" }).click();
+
+    await page.getByRole("button", { name: "Pythonロジックを管理" }).click();
+    await page.getByRole("button", { name: "CSVを追加" }).click();
+    await expect(page.getByRole("button", { name: "CSVを追加" })).toBeDisabled();
+    expect(requests).toBe(1);
+
+    releaseFirst();
+    await expect(page.getByLabel("Input ID")).toHaveCount(2);
+    expect(requests).toBe(2);
+
+    await page.getByRole("button", { name: "Dashboardへ戻る" }).click();
+    const savedTitle = failFirstSave ? dashboardSource.title : "Serialized save";
+    await expect(page.getByRole("heading", { level: 1, name: savedTitle })).toBeVisible();
+    await page.getByRole("button", { name: "ヘッダーを編集" }).click();
+    await page.getByRole("button", { name: "元に戻す" }).click();
+    await expect(page.getByLabel("タイトル")).toHaveValue(savedTitle);
+  });
+}
+
 test("edits, validates, and saves the dashboard configuration in development", async ({ page }) => {
   let savedDashboard: { title?: string; tabs?: { id: string; label: string }[] } | undefined;
   await page.route("**/__dashlet/dashboard", async (route) => {

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { FileCode2, Plus, Trash2 } from "lucide-react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useSavedDashboard, getDashboard } from "@/app/context/useDashboard";
-import { saveDashboard } from "@/builder/api/dashboard";
+import { useQuery } from "@tanstack/react-query";
+import { useSavedDashboard } from "@/app/context/useDashboard";
+import { useSaveDashboard } from "@/builder/hooks/useSaveDashboard";
 import { loadAssetCatalog } from "@/builder/api/python";
 import { LogicDialog } from "@/builder/workbench/definitions/LogicDialog";
 import { SelectList } from "@/components/primitives/SelectList";
@@ -20,7 +20,7 @@ export const Definitions = ({
   const [adding, setAdding] = useState(false);
 
   const catalog = useQuery({ queryKey: ["dashboard-assets"], queryFn: loadAssetCatalog });
-  const save = useMutation({ mutationFn: saveDashboard });
+  const save = useSaveDashboard();
 
   const usedTabs = dashboard.tabs.filter((tab) =>
     tab.contents.some((content) => content.logic === selected),
@@ -32,7 +32,7 @@ export const Definitions = ({
       : "";
 
   const updateInput = (index: number, change: { id?: string; path?: string }) => {
-    const analysis = getDashboard().analysis;
+    const analysis = dashboard.analysis;
 
     save.mutate({
       analysis: {

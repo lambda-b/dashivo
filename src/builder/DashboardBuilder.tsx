@@ -1,8 +1,13 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { DashboardPreviewContext, useSavedDashboard } from "@/app/context/useDashboard";
-import { loadDashboard, saveDashboard, type DashboardSettings } from "@/builder/api/dashboard";
+import { useQuery } from "@tanstack/react-query";
+import {
+  dashboardQueryKey,
+  DashboardPreviewContext,
+  useSavedDashboard,
+} from "@/app/context/useDashboard";
+import { loadDashboard, type DashboardSettings } from "@/builder/api/dashboard";
+import { useSaveDashboard } from "@/builder/hooks/useSaveDashboard";
 import { useSettingsDraft, settingsOf } from "@/builder/settings/hooks/useSettingsDraft";
 import { useContentActions } from "@/builder/settings/hooks/useContentActions";
 import { useParameterActions } from "@/builder/settings/hooks/useParameterActions";
@@ -23,12 +28,14 @@ export interface BuilderActions {
   openTabs: () => void;
 }
 type Section = "header" | "parameters" | "contents" | "tabs";
+
 const titles = {
   header: "ヘッダー設定",
   parameters: "パラメータ設定",
   contents: "コンテンツ設定",
   tabs: "タブ設定",
 };
+
 export const DashboardBuilder = ({
   children,
 }: {
@@ -48,12 +55,15 @@ export const DashboardBuilder = ({
   const route = matchPath("/builder/python/:logicId?", location.pathname);
   const contentActions = useContentActions(draft, update);
   const parameterActions = useParameterActions(draft, update);
-  const save = useMutation({
-    mutationFn: () => saveDashboard({ settings: settingsOf(dashboardSchema.parse(draft)) }),
+
+  const save = useSaveDashboard();
+  const loaded = useQuery({
+    queryKey: dashboardQueryKey,
+    queryFn: loadDashboard,
+    staleTime: Infinity,
+    refetchOnMount: "always",
   });
-  useEffect(() => {
-    loadDashboard().catch((cause) => setError(String(cause)));
-  }, []);
+
   const apply = () => {
     try {
       setPreview(settingsOf(dashboardSchema.parse(draft)));
@@ -62,6 +72,7 @@ export const DashboardBuilder = ({
       setError(cause instanceof Error ? cause.message : String(cause));
     }
   };
+
   return (
     <div>
       {route ? (
@@ -113,9 +124,9 @@ export const DashboardBuilder = ({
             ) : (
               <TabSetting dashboard={draft} onChange={update} />
             )}
-            {(error || save.error) && (
+            {(error || save.error || loaded.error) && (
               <pre role="alert" className="whitespace-pre-wrap text-xs text-red-700">
-                {error || save.error?.message}
+                {error || save.error?.message || loaded.error?.message}
               </pre>
             )}
           </div>
@@ -130,7 +141,10 @@ export const DashboardBuilder = ({
             >
               元に戻す
             </button>
-            <button disabled={save.isPending} onClick={() => save.mutate()}>
+            <button
+              disabled={save.isPending}
+              onClick={() => save.mutate({ settings: settingsOf(draft) })}
+            >
               dashboard.jsonを保存
             </button>
             {save.isSuccess && <span>保存しました</span>}

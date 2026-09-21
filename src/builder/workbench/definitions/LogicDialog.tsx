@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSavedDashboard } from "@/app/context/useDashboard";
-import { saveDashboard } from "@/builder/api/dashboard";
+import { useSaveDashboard } from "@/builder/hooks/useSaveDashboard";
 import { createUniqueIndexedName } from "@/utils/createUniqueIndexedName";
 
 export const LogicDialog = ({
@@ -24,7 +24,8 @@ export const LogicDialog = ({
     ),
   );
   const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
+  const save = useSaveDashboard();
+  const saving = save.isPending;
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -37,9 +38,9 @@ export const LogicDialog = ({
       return;
     }
 
-    setSaving(true);
+    setError("");
     try {
-      await saveDashboard({
+      await save.mutateAsync({
         logic: {
           id,
           path: `logic/${id}.py`,
@@ -57,7 +58,6 @@ def execute(inputs, params):
       onClose();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "作成できませんでした。");
-      setSaving(false);
     }
   };
 

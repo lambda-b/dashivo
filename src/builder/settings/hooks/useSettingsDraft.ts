@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSavedDashboard, getDashboard } from "@/app/context/useDashboard";
+import { useSavedDashboard } from "@/app/context/useDashboard";
 import type { DashboardSchema } from "@/schema/dashboard";
 
 export const settingsOf = ({ analysis: _analysis, ...settings }: DashboardSchema) => settings;
@@ -11,6 +11,6 @@ export const useSettingsDraft = () => {
   return {
     draft: { ...settings, analysis: saved.analysis },
     update: (dashboard: DashboardSchema) => setSettings(settingsOf(dashboard)),
-    reset: () => setSettings(settingsOf(getDashboard())),
+    reset: () => setSettings(settingsOf(saved)),
   };
 };
