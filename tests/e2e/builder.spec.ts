@@ -1,6 +1,28 @@
 import { expect, test } from "@playwright/test";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
 
+test("confirms closing and reloading when Python has unsaved changes", async ({ page }) => {
+  await page.goto("http://127.0.0.1:3030/#/builder/python/sales-analysis");
+  const editor = page.locator(".cm-content");
+  await editor.click();
+  await editor.fill("# unsaved code");
+  await expect(page.getByText("未保存", { exact: true })).toBeVisible();
+
+  const dismissed = page.waitForEvent("dialog").then(async (dialog) => {
+    expect(dialog.type()).toBe("beforeunload");
+    await dialog.dismiss();
+  });
+  await page.close({ runBeforeUnload: true });
+  await dismissed;
+  expect(page.isClosed()).toBe(false);
+  await expect(editor).toContainText("# unsaved code");
+
+  const accepted = page.waitForEvent("dialog").then((dialog) => dialog.accept());
+  await Promise.all([accepted, page.reload()]);
+  await expect(editor).toContainText("def execute");
+  await expect(editor).not.toContainText("# unsaved code");
+});
+
 for (const failFirstSave of [false, true]) {
   test(`serializes saves across editors and updates the cache only on success (failure=${failFirstSave})`, async ({
     page,

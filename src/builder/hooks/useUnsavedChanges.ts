@@ -7,7 +7,6 @@ export const useUnsavedChanges = (dirty: boolean) => {
   useBeforeUnload((event) => {
     if (dirty) {
       event.preventDefault();
-      event.returnValue = "";
     }
   });
 

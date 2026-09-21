@@ -27,6 +27,7 @@ export interface BuilderActions {
   openParameters: () => void;
   openTabs: () => void;
 }
+
 type Section = "header" | "parameters" | "contents" | "tabs";
 
 const titles = {
@@ -43,6 +44,7 @@ export const DashboardBuilder = ({
 }) => {
   const saved = useSavedDashboard();
   const { draft, update, reset } = useSettingsDraft();
+
   const [preview, setPreview] = useState<DashboardSettings>();
   const [section, setSection] = useState<Section>();
   const [target, setTarget] = useState<{ tabIndex: number; contentIndex?: number }>({
@@ -50,9 +52,11 @@ export const DashboardBuilder = ({
   });
   const [addingTab, setAddingTab] = useState<number>();
   const [error, setError] = useState("");
+
   const navigate = useNavigate();
   const location = useLocation();
   const route = matchPath("/builder/python/:logicId?", location.pathname);
+
   const contentActions = useContentActions(draft, update);
   const parameterActions = useParameterActions(draft, update);
 

@@ -3,6 +3,7 @@ import { useDashboard } from "@/app/context/useDashboard";
 import { EditButton } from "@/components/primitives/EditButton";
 import { ControlPanel } from "@/components/controls/ControlPanel";
 import type { ParameterValue } from "@/schema/dashboard";
+
 export const ParameterArea = ({
   params,
   onChange,
@@ -13,6 +14,7 @@ export const ParameterArea = ({
   onEditParameters?: () => void;
 }) => {
   const dashboard = useDashboard();
+
   return (
     <aside className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
       <div className="flex h-12 items-center justify-between border-b border-stone-100 px-4 text-xs font-semibold text-stone-600">

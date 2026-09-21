@@ -3,6 +3,7 @@ import { useDashboard } from "@/app/context/useDashboard";
 import { DashboardContent } from "@/components/contents/DashboardContent";
 import { DashboardTabs } from "@/components/contents/DashboardTabs";
 import type { AnalysisResults } from "@/schema/dashboard";
+
 export const ContentArea = ({
   analysis,
   onEditTabs,
@@ -16,6 +17,7 @@ export const ContentArea = ({
 }) => {
   const dashboard = useDashboard();
   const defaultTabPath = "/" + dashboard.tabs[0].id;
+
   return (
     <div className="min-w-0 flex-1">
       <DashboardTabs onEditTabs={onEditTabs} tabs={dashboard.tabs} />

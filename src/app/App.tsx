@@ -23,12 +23,14 @@ const Dashboard = ({
   const values = Object.fromEntries(
     dashboard.controls.map((control) => [control.key, params[control.key] ?? control.defaultValue]),
   );
+
   const analysis = useQuery({
     queryKey: ["analysis", dashboard.analysis, values],
     queryFn: () => analysisPort.execute(values, dashboard.analysis),
     select: (result) => validateContentBindings(dashboard, result),
     retry: false,
   });
+
   return (
     <main className="min-h-screen bg-stone-100">
       <DashboardHeader analysis={analysis} onEditHeader={actions?.openHeader} />
@@ -53,10 +55,13 @@ const Dashboard = ({
     </main>
   );
 };
+
 const App = () => {
   const [params, setParams] = useState<Record<string, ParameterValue>>({});
+
   const onParameterChange = (key: string, value: ParameterValue) =>
     setParams((current) => ({ ...current, [key]: value }));
+
   return import.meta.env.DEV ? (
     <DashboardBuilder>
       {(actions) => (
@@ -67,4 +72,5 @@ const App = () => {
     <Dashboard params={params} onParameterChange={onParameterChange} />
   );
 };
+
 export default App;

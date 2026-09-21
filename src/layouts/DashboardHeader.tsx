@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { useDashboard } from "@/app/context/useDashboard";
 import { EditButton } from "@/components/primitives/EditButton";
+
 export const DashboardHeader = ({
   onEditHeader,
   analysis,
@@ -9,6 +10,7 @@ export const DashboardHeader = ({
   analysis: { isPending: boolean; isError: boolean };
 }) => {
   const dashboard = useDashboard();
+
   return (
     <header className="border-b border-stone-200 bg-white/85 px-5 py-6 backdrop-blur-sm sm:px-8 lg:px-10">
       <div className="mx-auto flex max-w-7xl items-start justify-between gap-6 max-sm:flex-col">

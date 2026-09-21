@@ -1,6 +1,7 @@
 import type { DashboardSchema } from "@/schema/dashboard";
 import { useTabActions } from "@/builder/settings/hooks/useTabActions";
 import { TabItemSetting } from "@/builder/settings/tabs/TabItemSetting";
+
 export const TabSetting = ({
   dashboard,
   onChange,
@@ -9,6 +10,7 @@ export const TabSetting = ({
   onChange: (dashboard: DashboardSchema) => void;
 }) => {
   const actions = useTabActions(dashboard, onChange);
+
   return (
     <section>
       <div className="mb-3 flex justify-between">
