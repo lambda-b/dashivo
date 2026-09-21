@@ -18,4 +18,8 @@ def execute(inputs: dict[str, pd.DataFrame], params: dict):
         summary["revenue"], summary["orders"]
     ).round(2)
 
-    return plot.line(summary, x="date", y="revenue").title("月次売上").legend(visible=False).y_axis(format="number")
+    fig = plot.line(summary, x="date", y="revenue")
+    fig.title("月次売上")
+    fig.legend(visible=False)
+    fig.y_axis(format="number")
+    return fig

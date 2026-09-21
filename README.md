@@ -74,7 +74,10 @@ from dashlet import plot
 
 def execute(inputs, params):
     monthly = inputs["sales"].groupby("month", as_index=False)["revenue"].sum()
-    return plot.line(monthly, x="month", y="revenue").title("月次売上").y_axis(format="currency", minimum=0)
+    fig = plot.line(monthly, x="month", y="revenue")
+    fig.title("月次売上")
+    fig.y_axis(format="currency", minimum=0)
+    return fig
 ```
 
 戻り値は `plot.line`・`bar`・`pie`・`scatter`・`table`・`metric` で作るFigureです。種類、列の対応、タイトル、書式はPython側に集約し、JSONにはロジック参照と配置だけを保持します。Workbenchでは「実行」でのみ出力を更新し、検証用パラメータは閲覧画面へ影響しません。入力CSVはコードの実行に関係なく先頭5行を確認できます。詳細は確認エリアの「ヘルプ」、入力補助はコード内の `#chart` などのスニペットを参照してください。

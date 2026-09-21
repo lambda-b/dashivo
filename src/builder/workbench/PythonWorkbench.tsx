@@ -4,24 +4,41 @@ import { useSavedDashboard } from "@/app/context/useDashboard";
 import { loadPythonSource } from "@/builder/api/python";
 import { Definitions } from "@/builder/workbench/definitions/Definitions";
 import { CodeWorkspace } from "@/builder/workbench/code/CodeWorkspace";
+
 export const PythonWorkbench = ({ logicId }: { logicId?: string }) => {
   const dashboard = useSavedDashboard();
   const navigate = useNavigate();
   const location = useLocation();
+
   const logic = dashboard.analysis.logic.find((logic) => logic.id === logicId);
   const source = useQuery({
     queryKey: ["python-source", logic?.path],
     enabled: !!logic,
     queryFn: () => loadPythonSource(logic!.path),
   });
+
   const back =
     (location.state as { returnTo?: string } | null)?.returnTo ?? "/" + dashboard.tabs[0].id;
+
   return (
-    <div className="animate-workbench-in fixed inset-0 z-50 flex flex-col bg-white motion-reduce:animate-none">
-      <div className="flex items-center justify-between border-b px-4 py-2">
-        <h1 className="font-bold">Python Workbench</h1>
-        <button onClick={() => navigate(back)}>Dashboardへ戻る</button>
-      </div>
+    <div className="animate-workbench-in fixed inset-0 z-50 flex flex-col overflow-hidden bg-white text-stone-800 shadow-2xl motion-reduce:animate-none">
+      <header className="flex items-start justify-between gap-6 border-b border-stone-200 p-5">
+        <div>
+          <p className="text-brand text-[0.6875rem] font-bold tracking-[0.16em]">
+            DEVELOPMENT ONLY
+          </p>
+          <h1 className="mt-1 text-xl font-bold">Python Workbench</h1>
+          <p className="mt-1 text-xs leading-5 text-stone-500">
+            Pythonコードと最終的な出力イメージを同じ画面で確認します。
+          </p>
+        </div>
+        <button
+          className="cursor-pointer rounded-md border border-stone-200 px-3 py-2 text-sm text-stone-600 hover:bg-stone-50"
+          onClick={() => navigate(back)}
+        >
+          Dashboardへ戻る
+        </button>
+      </header>
       <div className="grid min-h-0 flex-1 grid-cols-[15rem_minmax(0,1fr)_minmax(0,1fr)]">
         <Definitions
           selected={logic?.id}
@@ -30,7 +47,7 @@ export const PythonWorkbench = ({ logicId }: { logicId?: string }) => {
         {logic && source.data !== undefined ? (
           <CodeWorkspace key={logic.id} path={logic.path} savedSource={source.data} />
         ) : (
-          <p className="p-4">
+          <p className="grid h-full place-items-center p-5 text-sm text-stone-500">
             {source.error?.message ??
               (source.isFetching ? "読み込み中…" : "ロジックを選択または追加してください。")}
           </p>

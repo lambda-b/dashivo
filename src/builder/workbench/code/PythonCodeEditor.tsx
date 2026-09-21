@@ -25,6 +25,7 @@ const extensions = [
     ]),
   ),
 ];
+
 export const PythonCodeEditor = ({
   source,
   onChange,

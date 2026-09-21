@@ -100,6 +100,10 @@ test("Workbench runs Figure code with explicit parameters and independent CSV pr
   await page.getByRole("radio", { name: "East", exact: true }).check();
   await page.getByRole("button", { name: "Pythonロジックを管理" }).click();
   await expect(page.getByText("ロジック定義", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "選択中の定義を削除" })).toBeDisabled();
+  await expect(
+    page.getByText("「グラフ」のコンテンツで使用中です。", { exact: false }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "実行", exact: true }).click();
   await expect(page.getByRole("heading", { name: "月次売上", exact: true })).toBeVisible();
   await page.getByText("検証用パラメータ", { exact: true }).click();
@@ -146,9 +150,11 @@ test("logic creation saves a file and registration in one request", async ({ pag
   await expect(dialog.getByLabel("Logic ID")).toHaveValue("logic-1");
   await dialog.getByRole("button", { name: "作成", exact: true }).click();
   await expect(page).toHaveURL(/logic-1$/);
+  await expect(page.getByRole("button", { name: "選択中の定義を削除" })).toBeEnabled();
   await page.getByRole("button", { name: "実行", exact: true }).click();
   await expect(page.getByRole("article").getByText("新しい数値")).toBeVisible();
-  expect(createdSource).toContain("return plot.metric");
+  expect(createdSource).toContain("fig = plot.metric(0)");
+  expect(createdSource).toContain("return fig");
   await expect(page.getByRole("button", { name: "dashboard.jsonを保存" })).toHaveCount(0);
 });
 

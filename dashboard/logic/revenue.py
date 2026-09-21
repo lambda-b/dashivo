@@ -8,4 +8,6 @@ def execute(inputs: dict[str, pd.DataFrame], params: dict):
     if region != "All":
         data = data[data["region"] == region]
 
-    return plot.metric(int(data["revenue"].sum()), format="currency", emphasis="strong").title("売上")
+    fig = plot.metric(int(data["revenue"].sum()), format="currency", emphasis="strong")
+    fig.title("売上")
+    return fig

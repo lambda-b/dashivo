@@ -1,8 +1,9 @@
 import { snippets } from "@/builder/workbench/code/snippets";
+
 export const Help = () => (
-  <div className="space-y-4 p-4 text-sm">
-    <h3 className="font-bold">Python API</h3>
-    <pre className="overflow-auto rounded bg-stone-100 p-3">{`from dashlet import plot
+  <div className="m-5 space-y-4 rounded-xl border border-stone-200 bg-white p-4 text-xs leading-5 text-stone-600">
+    <h3 className="text-sm font-bold text-stone-700">Python API</h3>
+    <pre className="overflow-auto rounded-md bg-stone-50 p-3 font-mono text-[0.6875rem]">{`from dashlet import plot
 
 def execute(inputs, params):
     data = inputs["sales"]
@@ -29,7 +30,7 @@ def execute(inputs, params):
       #chart等を入力すると候補が表示されます。Tabで確定し、入力箇所を移動できます。Shift+Tabで戻ります。
     </p>
     {snippets.map((snippet) => (
-      <div key={snippet.label}>
+      <div className="rounded-md border border-stone-200 p-3" key={snippet.label}>
         <strong>
           {snippet.label} — {snippet.detail}
         </strong>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSavedDashboard } from "@/app/context/useDashboard";
 import { saveDashboard } from "@/builder/api/dashboard";
 import { createUniqueIndexedName } from "@/utils/createUniqueIndexedName";
+
 export const LogicDialog = ({
   onClose,
   onCreated,
@@ -12,6 +13,7 @@ export const LogicDialog = ({
   files: string[];
 }) => {
   const dashboard = useSavedDashboard();
+
   const [id, setId] = useState(() =>
     createUniqueIndexedName(
       [
@@ -24,14 +26,17 @@ export const LogicDialog = ({
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
+
   useEffect(() => {
     dialog.current?.showModal();
   }, []);
+
   const create = async () => {
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) {
       setError("IDは英小文字・数字・ハイフンで指定してください。");
       return;
     }
+
     setSaving(true);
     try {
       await saveDashboard({
@@ -42,7 +47,9 @@ export const LogicDialog = ({
 
 
 def execute(inputs, params):
-    return plot.metric(0).title("新しい数値")
+    fig = plot.metric(0)
+    fig.title("新しい数値")
+    return fig
 `,
         },
       });
@@ -53,6 +60,7 @@ def execute(inputs, params):
       setSaving(false);
     }
   };
+
   return (
     <dialog
       ref={dialog}
@@ -61,30 +69,34 @@ def execute(inputs, params):
         if (saving) event.preventDefault();
       }}
       aria-label="ロジックを追加"
-      className="m-auto w-96 rounded-xl p-6 backdrop:bg-black/40"
+      className="m-auto w-[min(28rem,calc(100%-2rem))] rounded-2xl border border-stone-200 bg-white p-6 text-stone-800 shadow-2xl backdrop:bg-stone-950/45"
     >
-      <h2 className="mb-4 font-bold">ロジックを追加</h2>
-      <label>
+      <h2 className="mb-5 text-xl font-bold">ロジックを追加</h2>
+      <label className="text-xs font-medium text-stone-600">
         Logic ID
         <input
-          className="my-2 w-full rounded border p-2"
+          className="focus:border-brand my-2 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
           value={id}
           onChange={(event) => setId(event.target.value)}
         />
       </label>
-      <p className="text-xs">Pythonファイル: logic/{id}.py</p>
+      <p className="break-all font-mono text-xs text-stone-500">Pythonファイル: logic/{id}.py</p>
       {error && (
         <p role="alert" className="text-red-700">
           {error}
         </p>
       )}
-      <div className="mt-4 flex justify-end gap-3">
-        <button disabled={saving} onClick={onClose}>
+      <div className="mt-5 flex justify-end gap-3 border-t border-stone-100 pt-4">
+        <button
+          className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+          disabled={saving}
+          onClick={onClose}
+        >
           キャンセル
         </button>
         <button
           disabled={saving}
-          className="rounded bg-red-700 px-4 py-2 text-white"
+          className="bg-brand hover:bg-brand-dark cursor-pointer rounded-md px-4 py-2 text-xs font-semibold text-white disabled:cursor-wait disabled:opacity-50"
           onClick={create}
         >
           {saving ? "保存中…" : "作成"}

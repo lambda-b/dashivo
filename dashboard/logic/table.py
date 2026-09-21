@@ -18,8 +18,10 @@ def execute(inputs: dict[str, pd.DataFrame], params: dict):
         summary["revenue"], summary["orders"]
     ).round(2)
 
-    return (plot.table(summary).title("月次サマリー")
-            .column("date", label="月")
-            .column("revenue", label="売上", format="currency")
-            .column("orders", label="注文件数", format="number")
-            .column("average_order_value", label="平均注文額", format="currency"))
+    fig = plot.table(summary)
+    fig.title("月次サマリー")
+    fig.column("date", label="月")
+    fig.column("revenue", label="売上", format="currency")
+    fig.column("orders", label="注文件数", format="number")
+    fig.column("average_order_value", label="平均注文額", format="currency")
+    return fig
