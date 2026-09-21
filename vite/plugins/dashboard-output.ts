@@ -2,11 +2,17 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Plugin } from "vite";
 
-export const dashboardOutput = (projectRoot: string): Plugin => ({
-  name: "dashlet-dashboard-output",
-  closeBundle: () => {
-    const indexPath = path.join(projectRoot, "dist", "index.html");
-    const dashboardPath = path.join(projectRoot, "dist", "dashboard.html");
-    fs.renameSync(indexPath, dashboardPath);
-  },
-});
+export const dashboardOutput = (): Plugin => {
+  let outDir = "";
+
+  return {
+    name: "dashlet-dashboard-output",
+    apply: "build",
+    configResolved: (config) => {
+      outDir = config.build.outDir;
+    },
+    closeBundle: () => {
+      fs.renameSync(path.join(outDir, "index.html"), path.join(outDir, "dashboard.html"));
+    },
+  };
+};

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { text } from "node:stream/consumers";
 import type { Plugin } from "vite";
+import { withDashboardOperation } from "../server/dashboard-operation.ts";
 
 export const dashboardAssetsEndpoint = "/__dashlet/assets";
 export const pythonSourceEndpoint = "/__dashlet/python-source";
@@ -69,12 +70,14 @@ export const dashboardAssets = (projectRoot: string): Plugin => ({
           return;
         }
         if (request.method === "PUT") {
-          await writePythonSource(projectRoot, sourcePath, await text(request));
+          const source = await text(request);
+          await withDashboardOperation(() => writePythonSource(projectRoot, sourcePath, source));
           response.end(JSON.stringify({ path: sourcePath }));
           return;
         }
         if (request.method === "POST") {
-          await createPythonSource(projectRoot, sourcePath, await text(request));
+          const source = await text(request);
+          await withDashboardOperation(() => createPythonSource(projectRoot, sourcePath, source));
           response.statusCode = 201;
           response.end(JSON.stringify({ path: sourcePath }));
           return;

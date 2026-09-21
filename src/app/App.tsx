@@ -9,6 +9,7 @@ import { ContentArea } from "@/layouts/ContentArea";
 import { analysisPort } from "@/ports/analysis";
 import type { ParameterValue } from "@/schema/dashboard";
 import { validateContentBindings } from "@/schema/validation";
+import { appTarget } from "virtual:dashlet/app-target";
 
 const Dashboard = ({
   actions,
@@ -33,7 +34,13 @@ const Dashboard = ({
 
   return (
     <main className="min-h-screen bg-stone-100">
-      <DashboardHeader analysis={analysis} onEditHeader={actions?.openHeader} />
+      <DashboardHeader
+        analysis={analysis}
+        download={actions?.download}
+        downloadError={actions?.downloadError}
+        downloadPending={actions?.downloadPending}
+        onEditHeader={actions?.openHeader}
+      />
       <div className="mx-auto max-w-7xl p-5 sm:p-8 lg:p-10">
         <div className="grid items-start gap-5 lg:grid-cols-[20rem_minmax(0,1fr)]">
           <div className="grid gap-4 lg:sticky lg:top-5">
@@ -62,7 +69,7 @@ const App = () => {
   const onParameterChange = (key: string, value: ParameterValue) =>
     setParams((current) => ({ ...current, [key]: value }));
 
-  return import.meta.env.DEV ? (
+  return appTarget === "editor" ? (
     <DashboardBuilder>
       {(actions) => (
         <Dashboard actions={actions} params={params} onParameterChange={onParameterChange} />

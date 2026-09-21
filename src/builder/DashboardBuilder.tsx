@@ -8,6 +8,7 @@ import {
 } from "@/app/context/useDashboard";
 import { loadDashboard, type DashboardSettings } from "@/builder/api/dashboard";
 import { useSaveDashboard } from "@/builder/hooks/useSaveDashboard";
+import { useDownloadDashboard } from "@/builder/hooks/useDownloadDashboard";
 import { useSettingsDraft, settingsOf } from "@/builder/settings/hooks/useSettingsDraft";
 import { useContentActions } from "@/builder/settings/hooks/useContentActions";
 import { useParameterActions } from "@/builder/settings/hooks/useParameterActions";
@@ -21,6 +22,9 @@ import { dashboardSchema } from "@/schema/dashboard";
 
 export interface BuilderActions {
   addContent: (tabIndex: number) => void;
+  download: () => void;
+  downloadError?: string;
+  downloadPending: boolean;
   editContent: (tabIndex: number, contentIndex: number) => void;
   openAnalysis: () => void;
   openHeader: () => void;
@@ -61,6 +65,7 @@ export const DashboardBuilder = ({
   const parameterActions = useParameterActions(draft, update);
 
   const save = useSaveDashboard();
+  const download = useDownloadDashboard();
   const loaded = useQuery({
     queryKey: dashboardQueryKey,
     queryFn: loadDashboard,
@@ -87,6 +92,9 @@ export const DashboardBuilder = ({
         >
           {children({
             addContent: setAddingTab,
+            download: () => download.mutate(),
+            downloadError: download.error?.message,
+            downloadPending: download.isPending,
             editContent: (tabIndex, contentIndex) => {
               setTarget({ tabIndex, contentIndex });
               setSection("contents");

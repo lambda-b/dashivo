@@ -5,11 +5,10 @@ import type { Plugin } from "vite";
 import { z } from "zod";
 import { format } from "oxfmt";
 import { createPythonSource } from "./dashboard-assets.ts";
+import { withDashboardOperation } from "../server/dashboard-operation.ts";
 import { dashboardSchema, type DashboardSchema } from "../../src/schema/dashboard.ts";
 
 export const dashboardEditorEndpoint = "/__dashlet/dashboard";
-
-let pending: Promise<unknown> = Promise.resolve();
 
 const changeSchema = z.union([
   z
@@ -29,7 +28,7 @@ const changeSchema = z.union([
 export const updateDashboardFile = (projectRoot: string, source: unknown) => {
   const change = changeSchema.parse(source);
 
-  const task = pending.then(async () => {
+  return withDashboardOperation(async () => {
     const destination = path.join(projectRoot, "dashboard", "dashboard.json");
     const current = dashboardSchema.parse(JSON.parse(await fs.readFile(destination, "utf8")));
     if ("settings" in change)
@@ -55,10 +54,6 @@ export const updateDashboardFile = (projectRoot: string, source: unknown) => {
     }
     throw new Error("settings, analysis or logic is required");
   });
-
-  pending = task.catch(() => {});
-
-  return task;
 };
 
 export const writeDashboardFile = async (

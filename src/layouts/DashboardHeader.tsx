@@ -1,13 +1,21 @@
 import clsx from "clsx";
+import { Download } from "lucide-react";
 import { useDashboard } from "@/app/context/useDashboard";
 import { EditButton } from "@/components/primitives/EditButton";
+import { appTarget } from "virtual:dashlet/app-target";
 
 export const DashboardHeader = ({
   onEditHeader,
   analysis,
+  download,
+  downloadError,
+  downloadPending,
 }: {
   onEditHeader?: () => void;
   analysis: { isPending: boolean; isError: boolean };
+  download?: () => void;
+  downloadError?: string;
+  downloadPending?: boolean;
 }) => {
   const dashboard = useDashboard();
 
@@ -20,13 +28,32 @@ export const DashboardHeader = ({
               D
             </span>
             <p className="text-brand text-[0.6875rem] font-bold tracking-[0.16em]">
-              DASHLET{import.meta.env.DEV && " · BUILDER PREVIEW"}
+              DASHLET{appTarget === "editor" && " · BUILDER PREVIEW"}
             </p>
           </div>
           <h1 className="text-3xl font-bold tracking-[-0.035em] sm:text-4xl">{dashboard.title}</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-500">{dashboard.description}</p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 max-sm:justify-start">
+          {download && (
+            <div className="text-right">
+              <button
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:cursor-wait disabled:opacity-50"
+                disabled={downloadPending}
+                onClick={download}
+                title="保存済みの設定とPythonから生成します"
+                type="button"
+              >
+                <Download aria-hidden="true" className="size-3.5" />
+                {downloadPending ? "HTMLを生成中…" : "HTMLをダウンロード"}
+              </button>
+              {downloadError && (
+                <p className="mt-1 max-w-64 text-xs text-red-700" role="alert">
+                  {downloadError}
+                </p>
+              )}
+            </div>
+          )}
           {onEditHeader && <EditButton onClick={onEditHeader}>ヘッダーを編集</EditButton>}
           <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-medium text-stone-600">
             <i

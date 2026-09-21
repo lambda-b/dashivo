@@ -1,5 +1,23 @@
 import { expect, test } from "@playwright/test";
+import { text } from "node:stream/consumers";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
+
+test("downloads the saved dashboard as a standalone viewer", async ({ page }) => {
+  await page.goto("http://127.0.0.1:3030");
+
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "HTMLをダウンロード" }).click();
+  const file = await download;
+  const stream = await file.createReadStream();
+
+  expect(file.suggestedFilename()).toBe("dashboard.html");
+  expect(stream).not.toBeNull();
+
+  const html = await text(stream!);
+  expect(html).toContain("<!doctype html>");
+  expect(html).not.toContain("Dashboard Builder");
+  expect(html).not.toContain("/__dashlet/dashboard");
+});
 
 test("confirms closing and reloading when Python has unsaved changes", async ({ page }) => {
   await page.goto("http://127.0.0.1:3030/#/builder/python/sales-analysis");
