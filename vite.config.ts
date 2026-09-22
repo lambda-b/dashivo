@@ -13,8 +13,12 @@ import { dashboardDownload } from "./vite/plugins/dashboard-download.ts";
 import { dashboardOutput } from "./vite/plugins/dashboard-output.ts";
 import { pyodideAssets } from "./vite/plugins/pyodide-assets.ts";
 import { pyodideRuntime } from "./vite/plugins/pyodide-runtime.ts";
+import { createFilesystemDashboardBuildService } from "./vite/server/dashboard-build-service.ts";
+import { createFilesystemDashboardRepository } from "./vite/server/filesystem-dashboard-repository.ts";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
+const dashboardBuildService = createFilesystemDashboardBuildService(projectRoot);
+const dashboardRepository = createFilesystemDashboardRepository(projectRoot);
 
 export default defineConfig(({ command, mode }) => {
   const target = command === "serve" || mode === "editor" ? "editor" : "viewer";
@@ -28,10 +32,10 @@ export default defineConfig(({ command, mode }) => {
       tailwindcss(),
       appTargetPlugin(target),
       analysisAssets(projectRoot),
-      target === "editor" && command === "serve" && dashboardAssets(projectRoot),
+      target === "editor" && command === "serve" && dashboardAssets(dashboardRepository),
       pyodideRuntime(projectRoot, command),
-      target === "editor" && command === "serve" && dashboardEditor(projectRoot),
-      target === "editor" && command === "serve" && dashboardDownload(projectRoot),
+      target === "editor" && command === "serve" && dashboardEditor(dashboardRepository),
+      target === "editor" && command === "serve" && dashboardDownload(dashboardBuildService),
       command === "serve" && pyodideAssets(projectRoot),
       target === "viewer" && viteSingleFile(),
       target === "viewer" && dashboardOutput(),

@@ -1,13 +1,6 @@
-import { dashboardSchema, type AnalysisDefinition, type DashboardSchema } from "@/schema/dashboard";
+import { dashboardSchema, type DashboardChange } from "@/schema/dashboard";
 
-export type DashboardSettings = Omit<DashboardSchema, "analysis">;
-
-export const saveDashboard = async (
-  change:
-    | { settings: DashboardSettings }
-    | { analysis: AnalysisDefinition }
-    | { logic: { id: string; path: string; source: string } },
-) => {
+export const saveDashboard = async (change: DashboardChange) => {
   const response = await fetch("/__dashlet/dashboard", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

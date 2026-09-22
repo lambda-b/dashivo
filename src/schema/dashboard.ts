@@ -314,6 +314,23 @@ export const dashboardSchema = z
     }
   });
 
+export const dashboardSettingsSchema = z.object({
+  title: dashboardSchema.shape.title,
+  description: dashboardSchema.shape.description,
+  controls: dashboardSchema.shape.controls,
+  tabs: dashboardSchema.shape.tabs,
+});
+
+export const dashboardChangeSchema = z.union([
+  z.object({ settings: dashboardSettingsSchema }).strict(),
+  z.object({ analysis: analysisSchema }).strict(),
+  z
+    .object({
+      logic: z.object({ id: identifierSchema, path: z.string().min(1), source: z.string() }),
+    })
+    .strict(),
+]);
+
 const dataValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
 export const dataRowSchema = z.record(z.string(), dataValueSchema);
@@ -368,6 +385,8 @@ export const analysisOutputSchema = z
 export const analysisResultsSchema = z.record(identifierSchema, analysisOutputSchema);
 
 export type DashboardSchema = z.infer<typeof dashboardSchema>;
+export type DashboardSettings = z.infer<typeof dashboardSettingsSchema>;
+export type DashboardChange = z.infer<typeof dashboardChangeSchema>;
 export type AnalysisDefinition = DashboardSchema["analysis"];
 export type AnalysisLogicDefinition = AnalysisDefinition["logic"][number];
 export type ControlDefinition = DashboardSchema["controls"][number];

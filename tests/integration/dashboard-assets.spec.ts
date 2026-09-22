@@ -6,7 +6,7 @@ import {
   createPythonSource,
   readPythonSource,
   writePythonSource,
-} from "@vite/plugins/dashboard-assets";
+} from "@vite/server/filesystem-dashboard-repository";
 
 test("reads and writes Python only under dashboard/logic", async () => {
   const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashlet-assets-"));

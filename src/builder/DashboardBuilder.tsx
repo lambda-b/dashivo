@@ -6,7 +6,7 @@ import {
   DashboardPreviewContext,
   useSavedDashboard,
 } from "@/app/context/useDashboard";
-import { loadDashboard, type DashboardSettings } from "@/builder/api/dashboard";
+import { loadDashboard } from "@/builder/api/dashboard";
 import { useSaveDashboard } from "@/builder/hooks/useSaveDashboard";
 import { useDownloadDashboard } from "@/builder/hooks/useDownloadDashboard";
 import { useSettingsDraft, settingsOf } from "@/builder/settings/hooks/useSettingsDraft";
@@ -18,7 +18,7 @@ import { ContentSetting } from "@/builder/settings/ContentSetting";
 import { TabSetting } from "@/builder/settings/TabSetting";
 import { ContentPickerDialog } from "@/builder/settings/components/ContentPickerDialog";
 import { PythonWorkbench } from "@/builder/workbench/PythonWorkbench";
-import { dashboardSchema } from "@/schema/dashboard";
+import { dashboardSchema, type DashboardSettings } from "@/schema/dashboard";
 
 export interface BuilderActions {
   addContent: (tabIndex: number) => void;

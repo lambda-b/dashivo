@@ -10,6 +10,7 @@ export const DashboardPreviewContext = createContext<DashboardSchema | null>(nul
 export const useSavedDashboard = () =>
   useQuery({
     queryKey: dashboardQueryKey,
+    queryFn: () => dashboardSchema.parse(source),
     initialData: () => dashboardSchema.parse(source),
     enabled: false,
     staleTime: Infinity,

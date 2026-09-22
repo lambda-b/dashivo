@@ -1,10 +1,9 @@
 import type { Plugin } from "vite";
-import { buildDashboard } from "../build/build-dashboard.ts";
-import { withDashboardOperation } from "../server/dashboard-operation.ts";
+import type { DashboardBuildService } from "../server/dashboard-build-service.ts";
 
 export const dashboardDownloadEndpoint = "/__dashlet/build";
 
-export const dashboardDownload = (projectRoot: string): Plugin => ({
+export const dashboardDownload = (buildService: DashboardBuildService): Plugin => ({
   name: "dashlet-dashboard-download",
   apply: "serve",
   configureServer: (server) => {
@@ -17,7 +16,7 @@ export const dashboardDownload = (projectRoot: string): Plugin => ({
       }
 
       try {
-        const dashboard = await withDashboardOperation(() => buildDashboard(projectRoot));
+        const dashboard = await buildService.build();
 
         response.setHeader("Content-Type", "text/html; charset=utf-8");
         response.setHeader("Content-Disposition", 'attachment; filename="dashboard.html"');
