@@ -9,7 +9,9 @@ import { parseJsonBody, parseQuery } from "@dashlet/server/controllers/validate-
  */
 export const createPythonLogic: Handler<ServerEnv> = async (context) => {
   const definition = await parseJsonBody(context.req.raw, pythonLogicCreateSchema);
-  const dashboard = await context.get("pythonLogicService").create(definition);
+  const dashboard = await context
+    .get("pythonLogicService")
+    .create(context.req.param("id")!, definition);
 
   return context.json({ dashboard });
 };
@@ -19,7 +21,9 @@ export const createPythonLogic: Handler<ServerEnv> = async (context) => {
  */
 export const getPythonSource: Handler<ServerEnv> = async (context) => {
   const query = parseQuery(context.req.query(), pythonSourceQuerySchema);
-  const source = await context.get("pythonLogicService").read(query.path);
+  const source = await context
+    .get("pythonLogicService")
+    .read(context.req.query("dashboardId") ?? "", query.path);
 
   return context.json({ source });
 };
@@ -30,7 +34,9 @@ export const getPythonSource: Handler<ServerEnv> = async (context) => {
 export const updatePythonSource: Handler<ServerEnv> = async (context) => {
   const query = parseQuery(context.req.query(), pythonSourceQuerySchema);
 
-  await context.get("pythonLogicService").write(query.path, await context.req.text());
+  await context
+    .get("pythonLogicService")
+    .write(context.req.query("dashboardId") ?? "", query.path, await context.req.text());
 
   return context.json({ path: query.path });
 };

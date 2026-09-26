@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useSavedDashboard } from "@/app/context/useDashboard";
+import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { useCreatePythonLogic } from "@/builder/hooks/useCreatePythonLogic";
 import { createUniqueIndexedName } from "@/utils/createUniqueIndexedName";
 
@@ -13,12 +13,15 @@ export const LogicDialog = ({
   files: string[];
 }) => {
   const dashboard = useSavedDashboard();
+  const dashboardId = useDashboardId();
 
   const [id, setId] = useState(() =>
     createUniqueIndexedName(
       [
         ...dashboard.analysis.logic.map((logic) => logic.id),
-        ...files.map((path) => path.replace(/^logic\//, "").replace(/\.py$/, "")),
+        ...files
+          .filter((path) => path.startsWith(`logic/${dashboardId}/`))
+          .map((path) => path.replace(`logic/${dashboardId}/`, "").replace(/\.py$/, "")),
       ],
       "logic-",
     ),
@@ -42,7 +45,7 @@ export const LogicDialog = ({
     try {
       await createLogic.mutateAsync({
         id,
-        path: `logic/${id}.py`,
+        path: `logic/${dashboardId}/${id}.py`,
         source: `from dashlet import plot
 
 
@@ -78,7 +81,9 @@ def execute(inputs, params):
           onChange={(event) => setId(event.target.value)}
         />
       </label>
-      <p className="break-all font-mono text-xs text-stone-500">Pythonファイル: logic/{id}.py</p>
+      <p className="break-all font-mono text-xs text-stone-500">
+        Pythonファイル: logic/{dashboardId}/{id}.py
+      </p>
       {error && (
         <p role="alert" className="text-red-700">
           {error}

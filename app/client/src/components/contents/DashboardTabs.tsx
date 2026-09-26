@@ -22,7 +22,7 @@ export const DashboardTabs = ({ tabs, onEditTabs }: DashboardTabsProps) => (
               )
             }
             key={tab.id}
-            to={`/${tab.id}`}
+            to={tab.id}
           >
             {tab.label}
           </NavLink>

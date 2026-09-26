@@ -3,18 +3,18 @@ import {
   assetsEndpoint,
   dashboardAssetCatalogSchema,
   inputSourceEndpoint,
-  pythonLogicEndpoint,
+  dashboardPythonLogicEndpoint,
   pythonSourceEndpoint,
   dashboardResponseSchema,
   sourceResponseSchema,
 } from "@shared/api";
 import type { PythonLogicCreate } from "@shared/dashboard";
 
-const pythonSourceUrl = (path: string) =>
-  `${pythonSourceEndpoint}?path=${encodeURIComponent(path)}`;
+const pythonSourceUrl = (dashboardId: string, path: string) =>
+  `${pythonSourceEndpoint}?dashboardId=${encodeURIComponent(dashboardId)}&path=${encodeURIComponent(path)}`;
 
-export const loadPythonSource = async (path: string) => {
-  const response = await fetch(pythonSourceUrl(path));
+export const loadPythonSource = async (dashboardId: string, path: string) => {
+  const response = await fetch(pythonSourceUrl(dashboardId, path));
   const result: unknown = await response.json();
   if (!response.ok) {
     throw new Error(
@@ -37,8 +37,8 @@ export const loadInputSource = async (path: string) => {
   return sourceResponseSchema.parse(result).source;
 };
 
-export const savePythonSource = async (path: string, source: string) => {
-  const response = await fetch(pythonSourceUrl(path), {
+export const savePythonSource = async (dashboardId: string, path: string, source: string) => {
+  const response = await fetch(pythonSourceUrl(dashboardId, path), {
     method: "PUT",
     headers: { "Content-Type": "text/x-python; charset=utf-8" },
     body: source,
@@ -51,8 +51,8 @@ export const savePythonSource = async (path: string, source: string) => {
   }
 };
 
-export const createPythonLogic = async (definition: PythonLogicCreate) => {
-  const response = await fetch(pythonLogicEndpoint, {
+export const createPythonLogic = async (dashboardId: string, definition: PythonLogicCreate) => {
+  const response = await fetch(dashboardPythonLogicEndpoint(dashboardId), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(definition),

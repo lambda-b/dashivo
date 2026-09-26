@@ -4,21 +4,22 @@ import { useSavedDashboard } from "@/app/context/useDashboard";
 import { loadPythonSource } from "@/builder/api/python";
 import { Definitions } from "@/builder/workbench/definitions/Definitions";
 import { CodeWorkspace } from "@/builder/workbench/code/CodeWorkspace";
+import { useDashboardId } from "@/app/context/useDashboard";
 
 export const PythonWorkbench = ({ logicId }: { logicId?: string }) => {
   const dashboard = useSavedDashboard();
+  const dashboardId = useDashboardId();
   const navigate = useNavigate();
   const location = useLocation();
 
   const logic = dashboard.analysis.logic.find((logic) => logic.id === logicId);
   const source = useQuery({
-    queryKey: ["python-source", logic?.path],
+    queryKey: ["python-source", dashboardId, logic?.path],
     enabled: !!logic,
-    queryFn: () => loadPythonSource(logic!.path),
+    queryFn: () => loadPythonSource(dashboardId, logic!.path),
   });
 
-  const back =
-    (location.state as { returnTo?: string } | null)?.returnTo ?? "/" + dashboard.tabs[0].id;
+  const back = (location.state as { returnTo?: string } | null)?.returnTo ?? `/d/${dashboardId}`;
 
   return (
     <div className="animate-workbench-in fixed inset-0 z-50 flex flex-col overflow-hidden bg-white text-stone-800 shadow-2xl motion-reduce:animate-none">
@@ -42,7 +43,9 @@ export const PythonWorkbench = ({ logicId }: { logicId?: string }) => {
       <div className="grid min-h-0 flex-1 grid-cols-[15rem_minmax(0,1fr)_minmax(0,1fr)]">
         <Definitions
           selected={logic?.id}
-          onSelect={(id) => navigate("/builder/python/" + id, { state: { returnTo: back } })}
+          onSelect={(id) =>
+            navigate(`/d/${dashboardId}/builder/python/${id}`, { state: { returnTo: back } })
+          }
         />
         {logic && source.data !== undefined ? (
           <CodeWorkspace key={logic.id} path={logic.path} savedSource={source.data} />

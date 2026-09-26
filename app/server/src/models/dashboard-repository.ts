@@ -12,15 +12,23 @@ export interface DashboardSnapshot {
   version: string;
 }
 
+export interface DashboardListItem {
+  id: string;
+  title: string;
+  updatedAt: string;
+}
+
 export interface DashboardRepository {
+  listDashboards(): Promise<DashboardListItem[]>;
+  createDashboard(title: string): Promise<DashboardListItem>;
   listAssets(): Promise<DashboardAssetCatalog>;
-  readDashboard(): Promise<DashboardSnapshot>;
-  writeDashboard(dashboard: DashboardSchema, expectedVersion: string): Promise<void>;
+  readDashboard(id: string): Promise<DashboardSnapshot>;
+  writeDashboard(id: string, dashboard: DashboardSchema, expectedVersion: string): Promise<void>;
   readInput(path: string): Promise<string>;
   readPython(path: string): Promise<string>;
   writePython(path: string, source: string): Promise<void>;
   createPython(path: string, source: string): Promise<void>;
   deletePython(path: string): Promise<void>;
   /** Commit the Python source and its Dashboard reference as one persistence operation. */
-  registerPythonLogicAtomically(registration: PythonLogicRegistration): Promise<void>;
+  registerPythonLogicAtomically(id: string, registration: PythonLogicRegistration): Promise<void>;
 }

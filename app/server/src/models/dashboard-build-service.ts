@@ -1,3 +1,3 @@
 export interface DashboardBuildService {
-  build(): Promise<ArrayBuffer>;
+  build(dashboardId: string): Promise<ArrayBuffer>;
 }

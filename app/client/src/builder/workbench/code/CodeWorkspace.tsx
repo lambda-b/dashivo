@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LoaderCircle, Play, Save } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSavedDashboard } from "@/app/context/useDashboard";
+import { useDashboardId } from "@/app/context/useDashboard";
 import { savePythonSource } from "@/builder/api/python";
 import { PythonCodeEditor } from "@/builder/workbench/code/PythonCodeEditor";
 import { Inspection } from "@/builder/workbench/inspection/Inspection";
@@ -11,6 +12,7 @@ import type { ParameterValue } from "@shared/dashboard";
 
 export const CodeWorkspace = ({ path, savedSource }: { path: string; savedSource: string }) => {
   const dashboard = useSavedDashboard();
+  const dashboardId = useDashboardId();
   const client = useQueryClient();
 
   const [source, setSource] = useState(savedSource);
@@ -20,9 +22,9 @@ export const CodeWorkspace = ({ path, savedSource }: { path: string; savedSource
   useUnsavedChanges(source !== savedSource);
 
   const save = useMutation({
-    mutationFn: (code: string) => savePythonSource(path, code),
+    mutationFn: (code: string) => savePythonSource(dashboardId, path, code),
     onSuccess: (_, code) => {
-      client.setQueryData(["python-source", path], code);
+      client.setQueryData(["python-source", dashboardId, path], code);
       void client.invalidateQueries({ queryKey: ["analysis"] });
     },
   });

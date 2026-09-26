@@ -1,7 +1,7 @@
-import { apiErrorSchema, downloadEndpoint } from "@shared/api";
+import { apiErrorSchema, dashboardDownloadEndpoint } from "@shared/api";
 
-export const downloadDashboardFile = async () => {
-  const response = await fetch(downloadEndpoint, { method: "POST" });
+export const downloadDashboardFile = async (id: string) => {
+  const response = await fetch(dashboardDownloadEndpoint(id), { method: "POST" });
 
   if (!response.ok) {
     const result: unknown = await response.json().catch(() => undefined);

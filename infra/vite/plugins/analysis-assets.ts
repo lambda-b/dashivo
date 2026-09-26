@@ -16,7 +16,10 @@ const resolveDashboardAsset = (dashboardRoot: string, assetPath: string) => {
   return normalizePath(resolvedPath);
 };
 
-export const analysisAssets = (projectRoot: string): Plugin => ({
+export const analysisAssets = (
+  projectRoot: string,
+  dashboardPath = path.join(projectRoot, "dashboard", "dashboard.json"),
+): Plugin => ({
   name: "dashlet-analysis-assets",
   enforce: "pre",
   resolveId: (id) => (id === analysisAssetsModuleId ? resolvedModuleId : undefined),
@@ -24,7 +27,6 @@ export const analysisAssets = (projectRoot: string): Plugin => ({
     if (id !== resolvedModuleId) return undefined;
 
     const dashboardRoot = path.join(projectRoot, "dashboard");
-    const dashboardPath = path.join(dashboardRoot, "dashboard.json");
     this.addWatchFile(dashboardPath);
     const dashboard = dashboardSchema.parse(JSON.parse(await fs.readFile(dashboardPath, "utf8")));
     const imports: string[] = [];

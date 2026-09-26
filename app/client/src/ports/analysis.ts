@@ -27,14 +27,18 @@ export const loadInputs = (analysis: AnalysisDefinition) =>
   );
 
 export const analysisPort = {
-  async execute(params: Record<string, unknown>, analysis?: AnalysisDefinition) {
+  async execute(
+    params: Record<string, unknown>,
+    analysis?: AnalysisDefinition,
+    dashboardId = "sales-overview",
+  ) {
     if (import.meta.env.DEV && analysis) {
       const sources = await loadInputs(analysis);
       const results: Record<string, unknown> = {};
 
       for (const logic of analysis.logic) {
         const result = await this.preview({
-          analysisSource: await loadPythonSource(logic.path),
+          analysisSource: await loadPythonSource(dashboardId, logic.path),
           sources,
           params,
         });

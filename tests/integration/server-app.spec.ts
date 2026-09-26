@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { createServerApp } from "@dashlet/server/app";
 import {
-  dashboardEndpoint,
-  downloadEndpoint,
+  dashboardItemEndpoint,
+  dashboardDownloadEndpoint,
   inputSourceEndpoint,
-  pythonLogicEndpoint,
+  dashboardPythonLogicEndpoint,
 } from "@dashlet/shared/api";
 import { dashboardSchema } from "@dashlet/shared/dashboard";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
@@ -17,6 +17,14 @@ const createTestApp = () =>
       build: async () => Uint8Array.from(new TextEncoder().encode("<html>viewer</html>")).buffer,
     },
     repository: {
+      listDashboards: async () => [
+        { id: "sales-overview", title: dashboard.title, updatedAt: "2026-01-01T00:00:00.000Z" },
+      ],
+      createDashboard: async (title) => ({
+        id: "new-dashboard",
+        title,
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      }),
       listAssets: async () => ({ csv: ["data/raw/sales.csv"], python: ["logic/analysis.py"] }),
       readDashboard: async () => ({ dashboard, version: "v1" }),
       writeDashboard: async () => {},
@@ -31,12 +39,12 @@ const createTestApp = () =>
 
 test("Hono API validates shared contracts without exposing persistence", async () => {
   const app = createTestApp();
-  const loaded = await app.request(dashboardEndpoint);
+  const loaded = await app.request(dashboardItemEndpoint("sales-overview"));
 
   expect(loaded.status).toBe(200);
   expect((await loaded.json()).dashboard).toEqual(dashboard);
 
-  const invalid = await app.request(dashboardEndpoint, {
+  const invalid = await app.request(dashboardItemEndpoint("sales-overview"), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ settings: { title: "missing fields" } }),
@@ -52,7 +60,9 @@ test("Hono API serves inputs and downloadable viewer through injected services",
   expect(input.status).toBe(200);
   expect(await input.json()).toEqual({ source: "input:data/raw/sales.csv" });
 
-  const download = await app.request(downloadEndpoint, { method: "POST" });
+  const download = await app.request(dashboardDownloadEndpoint("sales-overview"), {
+    method: "POST",
+  });
 
   expect(download.status).toBe(200);
   expect(download.headers.get("Content-Disposition")).toBe('attachment; filename="dashboard.html"');
@@ -61,7 +71,7 @@ test("Hono API serves inputs and downloadable viewer through injected services",
 
 test("Hono API creates Python logic through its dedicated service", async () => {
   const app = createTestApp();
-  const response = await app.request(pythonLogicEndpoint, {
+  const response = await app.request(dashboardPythonLogicEndpoint("sales-overview"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

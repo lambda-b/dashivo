@@ -10,15 +10,16 @@ import type { DashboardSchema } from "@dashlet/shared/dashboard";
 const pyodideWasmFile = "pyodide.asm.wasm";
 const pythonStandardLibraryFile = "python_stdlib.zip";
 
-export const preparePyodide = async (projectRoot: string) => {
+export const preparePyodide = async (
+  projectRoot: string,
+  dashboardPath = path.join(projectRoot, "dashboard", "dashboard.json"),
+  cacheRoot = path.join(projectRoot, ".pyodide-cache"),
+) => {
   const pyodideRoot = path.join(projectRoot, "node_modules", "pyodide");
-  const cacheRoot = path.join(projectRoot, ".pyodide-cache");
-  const dashboardRoot = path.join(projectRoot, "dashboard");
-  const dashboard: DashboardSchema = JSON.parse(
-    await fs.readFile(path.join(dashboardRoot, "dashboard.json"), "utf8"),
-  );
+  const dashboard: DashboardSchema = JSON.parse(await fs.readFile(dashboardPath, "utf8"));
   const analysisSources = await Promise.all(
     dashboard.analysis.logic.map(async (logic) => {
+      const dashboardRoot = path.join(projectRoot, "dashboard");
       const logicPath = path.resolve(dashboardRoot, logic.path);
       const relativePath = path.relative(dashboardRoot, logicPath);
 

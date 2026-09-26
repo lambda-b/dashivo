@@ -7,9 +7,9 @@ import {
 import type { DashboardRepository } from "@dashlet/server/models/dashboard-repository";
 
 export const createPythonLogicService = (repository: DashboardRepository) => ({
-  create: async (definition: PythonLogicCreate) => {
+  create: async (dashboardId: string, definition: PythonLogicCreate) => {
     const { id, path, source } = pythonLogicCreateSchema.parse(definition);
-    const snapshot = await repository.readDashboard();
+    const snapshot = await repository.readDashboard(dashboardId);
     const current = dashboardSchema.parse(snapshot.dashboard);
     const next = dashboardSchema.parse({
       ...current,
@@ -19,7 +19,7 @@ export const createPythonLogicService = (repository: DashboardRepository) => ({
       },
     });
 
-    await repository.registerPythonLogicAtomically({
+    await repository.registerPythonLogicAtomically(dashboardId, {
       dashboard: next,
       expectedVersion: snapshot.version,
       logic: { id, path, source },
@@ -27,8 +27,9 @@ export const createPythonLogicService = (repository: DashboardRepository) => ({
 
     return next;
   },
-  read: (path: string) => repository.readPython(pythonSourcePathSchema.parse(path)),
-  write: (path: string, source: string) =>
+  read: (_dashboardId: string, path: string) =>
+    repository.readPython(pythonSourcePathSchema.parse(path)),
+  write: (_dashboardId: string, path: string, source: string) =>
     repository.writePython(pythonSourcePathSchema.parse(path), source),
 });
 

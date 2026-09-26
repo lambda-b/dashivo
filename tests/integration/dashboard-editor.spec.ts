@@ -26,10 +26,12 @@ test("validates dashboard data in the application service", async () => {
       path.join(projectRoot, "dashboard/dashboard.json"),
       `${JSON.stringify(dashboardSchema.parse(dashboardSource), null, 2)}\n`,
     );
-    expect(await dashboardDefinitionService.read()).toEqual(dashboardSchema.parse(dashboardSource));
+    expect(await dashboardDefinitionService.read("sales-overview")).toEqual(
+      dashboardSchema.parse(dashboardSource),
+    );
 
     await fs.writeFile(path.join(projectRoot, "dashboard/dashboard.json"), '{"title":"Invalid"}');
-    await expect(dashboardDefinitionService.read()).rejects.toThrow();
+    await expect(dashboardDefinitionService.read("sales-overview")).rejects.toThrow();
   } finally {
     await fs.rm(projectRoot, { recursive: true });
   }
@@ -47,15 +49,17 @@ test("updates the dashboard and registers logic through separate application ser
     );
     const { analysis, ...settings } = dashboardSchema.parse(dashboardSource);
 
-    await dashboardDefinitionService.update({ settings: { ...settings, title: "Saved settings" } });
-    await dashboardDefinitionService.update({
+    await dashboardDefinitionService.update("sales-overview", {
+      settings: { ...settings, title: "Saved settings" },
+    });
+    await dashboardDefinitionService.update("sales-overview", {
       analysis: {
         ...analysis,
         inputs: [...analysis.inputs, { id: "extra", type: "csv", path: "data/raw/sales.csv" }],
       },
     });
 
-    const created = await pythonLogicService.create({
+    const created = await pythonLogicService.create("sales-overview", {
       id: "new-logic",
       path: "logic/new-logic.py",
       source: "from dashlet import plot\ndef execute(inputs, params): return plot.metric(1)\n",
@@ -67,7 +71,11 @@ test("updates the dashboard and registers logic through separate application ser
 
     const code = await repository.readPython("logic/new-logic.py");
     await expect(
-      pythonLogicService.create({ id: "new-logic", path: "logic/new-logic.py", source: "pass" }),
+      pythonLogicService.create("sales-overview", {
+        id: "new-logic",
+        path: "logic/new-logic.py",
+        source: "pass",
+      }),
     ).rejects.toThrow();
     expect(await repository.readPython("logic/new-logic.py")).toBe(code);
   } finally {

@@ -5,6 +5,7 @@ import {
   dashboardQueryKey,
   DashboardPreviewContext,
   useSavedDashboard,
+  useDashboardId,
 } from "@/app/context/useDashboard";
 import { loadDashboard } from "@/builder/api/dashboard";
 import { useSaveDashboard } from "@/builder/hooks/useSaveDashboard";
@@ -47,6 +48,7 @@ export const DashboardBuilder = ({
   children: (actions: BuilderActions) => ReactNode;
 }) => {
   const saved = useSavedDashboard();
+  const dashboardId = useDashboardId();
   const { draft, update, reset } = useSettingsDraft();
 
   const [preview, setPreview] = useState<DashboardSettings>();
@@ -59,7 +61,7 @@ export const DashboardBuilder = ({
 
   const navigate = useNavigate();
   const location = useLocation();
-  const route = matchPath("/builder/python/:logicId?", location.pathname);
+  const route = matchPath("/d/:dashboardId/builder/python/:logicId?", location.pathname);
 
   const contentActions = useContentActions(draft, update);
   const parameterActions = useParameterActions(draft, update);
@@ -67,10 +69,9 @@ export const DashboardBuilder = ({
   const save = useSaveDashboard();
   const download = useDownloadDashboard();
   const loaded = useQuery({
-    queryKey: dashboardQueryKey,
-    queryFn: loadDashboard,
+    queryKey: [...dashboardQueryKey, dashboardId],
+    queryFn: ({ signal }) => loadDashboard(dashboardId, { signal }),
     staleTime: Infinity,
-    refetchOnMount: "always",
   });
 
   const apply = () => {
@@ -100,7 +101,7 @@ export const DashboardBuilder = ({
               setSection("contents");
             },
             openAnalysis: () =>
-              navigate("/builder/python/" + (saved.analysis.logic[0]?.id ?? ""), {
+              navigate(`/d/${dashboardId}/builder/python/${saved.analysis.logic[0]?.id ?? ""}`, {
                 state: { returnTo: location.pathname },
               }),
             openHeader: () => setSection("header"),

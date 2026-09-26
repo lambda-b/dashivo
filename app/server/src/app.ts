@@ -7,6 +7,7 @@ import {
 } from "@dashlet/server/context";
 import { configureServerRoutes } from "@dashlet/server/router";
 import { DashboardRevisionConflict } from "@dashlet/server/models/dashboard-revision-conflict";
+import { DashboardNotFound } from "@dashlet/server/models/dashboard-not-found";
 
 export const createServerApp = (dependencies: ServerDependencies) => {
   const app = new Hono<ServerEnv>();
@@ -20,6 +21,10 @@ export const createServerApp = (dependencies: ServerDependencies) => {
 
     if (error instanceof DashboardRevisionConflict) {
       return context.json({ error: error.message }, 409);
+    }
+
+    if (error instanceof DashboardNotFound) {
+      return context.json({ error: error.message }, 404);
     }
 
     console.error(error);

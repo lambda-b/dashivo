@@ -3,16 +3,17 @@ import path from "node:path";
 import type { Plugin } from "vite";
 
 export const dashboardOutput = (): Plugin => {
-  let outDir = "";
-
   return {
     name: "dashlet-dashboard-output",
     apply: "build",
-    configResolved: (config) => {
-      outDir = config.build.outDir;
-    },
-    closeBundle: () => {
-      fs.renameSync(path.join(outDir, "index.html"), path.join(outDir, "dashboard.html"));
+    writeBundle: (options) => {
+      const outDir = options.dir ?? "";
+      const indexPath = path.join(outDir, "index.html");
+      const dashboardPath = path.join(outDir, "dashboard.html");
+
+      if (fs.existsSync(indexPath)) fs.renameSync(indexPath, dashboardPath);
+      else if (!fs.existsSync(dashboardPath))
+        throw new Error("Vite did not emit an HTML dashboard.");
     },
   };
 };

@@ -16,7 +16,7 @@ export const ContentArea = ({
   onEditContent?: (tabIndex: number, contentIndex: number) => void;
 }) => {
   const dashboard = useDashboard();
-  const defaultTabPath = "/" + dashboard.tabs[0].id;
+  const defaultTabPath = dashboard.tabs[0].id;
 
   return (
     <div className="min-w-0 flex-1">
@@ -32,7 +32,7 @@ export const ContentArea = ({
           </section>
         ) : analysis.data ? (
           <Routes>
-            <Route element={<Navigate replace to={defaultTabPath} />} path="/" />
+            <Route element={<Navigate replace to={defaultTabPath} />} path="" />
             {dashboard.tabs.map((tab, tabIndex) => (
               <Route
                 element={
@@ -47,7 +47,7 @@ export const ContentArea = ({
                   />
                 }
                 key={tab.id}
-                path={`/${tab.id}`}
+                path={tab.id}
               />
             ))}
             <Route element={<Navigate replace to={defaultTabPath} />} path="*" />

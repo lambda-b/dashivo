@@ -13,7 +13,12 @@ const queryClient = new QueryClient();
 createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={createHashRouter([{ path: "*", element: <App /> }])} />
+      <RouterProvider
+        router={createHashRouter([
+          { path: "/", element: <App /> },
+          { path: "/d/:dashboardId/*", element: <App /> },
+        ])}
+      />
     </QueryClientProvider>
   </StrictMode>,
 );
