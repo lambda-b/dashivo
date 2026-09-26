@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { ContentPlacementDefinition, DashboardSchema } from "@dashlet/shared/dashboard";
+import type { ContentPlacementDefinition, DashboardSchema } from "@shared/dashboard";
 import { createUniqueIndexedName } from "@/utils/createUniqueIndexedName";
 
 const moveItem = <Item>(items: Item[], index: number, direction: -1 | 1) => {

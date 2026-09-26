@@ -1,5 +1,5 @@
 import { ChartRenderer } from "@/components/contents/chart/ChartRenderer";
-import type { ChartContentDefinition, DataRow } from "@dashlet/shared/dashboard";
+import type { ChartContentDefinition, DataRow } from "@shared/dashboard";
 
 interface ChartPanelProps {
   definition: ChartContentDefinition;

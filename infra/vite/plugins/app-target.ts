@@ -1,5 +1,5 @@
 import type { Plugin } from "vite";
-import type { AppTarget } from "../virtual/dashlet/app-target.ts";
+import type { AppTarget } from "@dashlet/infra/vite/virtual/dashlet/app-target";
 
 const moduleId = "virtual:dashlet/app-target";
 const resolvedModuleId = `\0${moduleId}`;

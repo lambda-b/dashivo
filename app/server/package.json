@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./app": "./src/app.ts",
+    "./controllers/*": "./src/controllers/*.ts",
     "./models/*": "./src/models/*.ts",
     "./services/*": "./src/services/*.ts"
   },

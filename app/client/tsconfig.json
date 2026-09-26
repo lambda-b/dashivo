@@ -10,6 +10,7 @@
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@/*": ["./src/*"],
+      "@shared/*": ["../shared/src/*"],
       "#dashboard/*": ["../../dashboard/*"],
       "#generated/*": ["../../.pyodide-cache/*"]
     },

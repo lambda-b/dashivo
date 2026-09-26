@@ -10,7 +10,7 @@ import type {
   ContentDefinition,
   DataRow,
   TabDefinition,
-} from "@dashlet/shared/dashboard";
+} from "@shared/dashboard";
 
 interface DashboardContentProps {
   analysis: AnalysisDefinition;

@@ -1,5 +1,5 @@
 import { createColumnHelper, tableFeatures } from "@tanstack/react-table";
-import type { DataRow, TableContentDefinition } from "@dashlet/shared/dashboard";
+import type { DataRow, TableContentDefinition } from "@shared/dashboard";
 
 export const tableAdapterFeatures = tableFeatures({});
 const columnHelper = createColumnHelper<typeof tableAdapterFeatures, DataRow>();

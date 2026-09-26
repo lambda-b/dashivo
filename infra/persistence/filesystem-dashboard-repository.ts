@@ -7,7 +7,7 @@ import {
   dashboardSchema,
   type DashboardSchema,
 } from "@dashlet/shared/dashboard";
-import { withDashboardOperation } from "./dashboard-operation.ts";
+import { withDashboardOperation } from "@dashlet/infra/persistence/dashboard-operation";
 
 const resolvePythonPath = (projectRoot: string, sourcePath: string) => {
   const logicRoot = path.join(projectRoot, "dashboard", "logic");

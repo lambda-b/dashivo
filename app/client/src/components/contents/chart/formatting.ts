@@ -1,7 +1,4 @@
-import type {
-  AxisFormattingDefinition,
-  ChartFormattingDefinition,
-} from "@dashlet/shared/dashboard";
+import type { AxisFormattingDefinition, ChartFormattingDefinition } from "@shared/dashboard";
 
 export const formatChartValue = (value: unknown, format: AxisFormattingDefinition["format"]) => {
   if (format === "auto") return String(value ?? "");

@@ -3,7 +3,7 @@ import { DateRangeControl } from "@/components/controls/DateRangeControl";
 import { RadioControl } from "@/components/controls/RadioControl";
 import { SelectControl } from "@/components/controls/SelectControl";
 import { SliderControl } from "@/components/controls/SliderControl";
-import type { DashboardSchema, ParameterValue } from "@dashlet/shared/dashboard";
+import type { DashboardSchema, ParameterValue } from "@shared/dashboard";
 
 interface ControlPanelProps {
   controls: DashboardSchema["controls"];

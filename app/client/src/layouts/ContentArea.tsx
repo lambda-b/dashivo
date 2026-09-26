@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useDashboard } from "@/app/context/useDashboard";
 import { DashboardContent } from "@/components/contents/DashboardContent";
 import { DashboardTabs } from "@/components/contents/DashboardTabs";
-import type { AnalysisResults } from "@dashlet/shared/dashboard";
+import type { AnalysisResults } from "@shared/dashboard";
 
 export const ContentArea = ({
   analysis,

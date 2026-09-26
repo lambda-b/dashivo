@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { NavLink } from "react-router-dom";
 import { EditButton } from "@/components/primitives/EditButton";
-import type { DashboardSchema } from "@dashlet/shared/dashboard";
+import type { DashboardSchema } from "@shared/dashboard";
 
 interface DashboardTabsProps {
   tabs: DashboardSchema["tabs"];

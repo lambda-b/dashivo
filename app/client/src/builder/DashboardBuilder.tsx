@@ -18,7 +18,7 @@ import { ContentSetting } from "@/builder/settings/ContentSetting";
 import { TabSetting } from "@/builder/settings/TabSetting";
 import { ContentPickerDialog } from "@/builder/settings/components/ContentPickerDialog";
 import { PythonWorkbench } from "@/builder/workbench/PythonWorkbench";
-import { dashboardSchema, type DashboardSettings } from "@dashlet/shared/dashboard";
+import { dashboardSchema, type DashboardSettings } from "@shared/dashboard";
 
 export interface BuilderActions {
   addContent: (tabIndex: number) => void;

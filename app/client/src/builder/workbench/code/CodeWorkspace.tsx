@@ -7,7 +7,7 @@ import { PythonCodeEditor } from "@/builder/workbench/code/PythonCodeEditor";
 import { Inspection } from "@/builder/workbench/inspection/Inspection";
 import { useUnsavedChanges } from "@/builder/hooks/useUnsavedChanges";
 import { analysisPort, loadInputs } from "@/ports/analysis";
-import type { ParameterValue } from "@dashlet/shared/dashboard";
+import type { ParameterValue } from "@shared/dashboard";
 
 export const CodeWorkspace = ({ path, savedSource }: { path: string; savedSource: string }) => {
   const dashboard = useSavedDashboard();

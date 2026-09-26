@@ -8,7 +8,7 @@ import {
   analysisResultsSchema,
   dataRowSchema,
   type AnalysisDefinition,
-} from "@dashlet/shared/dashboard";
+} from "@shared/dashboard";
 
 export interface AnalysisPreviewInput {
   analysisSource: string;

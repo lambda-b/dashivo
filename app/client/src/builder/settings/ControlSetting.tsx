@@ -5,7 +5,7 @@ import { CheckboxControlSetting } from "@/builder/settings/controls/CheckboxCont
 import { ChoiceControlSetting } from "@/builder/settings/controls/ChoiceControlSetting";
 import { DateRangeControlSetting } from "@/builder/settings/controls/DateRangeControlSetting";
 import { SliderControlSetting } from "@/builder/settings/controls/SliderControlSetting";
-import type { ControlDefinition, DashboardSchema } from "@dashlet/shared/dashboard";
+import type { ControlDefinition, DashboardSchema } from "@shared/dashboard";
 
 interface ControlActions {
   add: (type: ControlDefinition["type"]) => void;

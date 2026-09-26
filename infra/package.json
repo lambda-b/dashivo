@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./persistence/*": "./persistence/*.ts"
+    "./build/*": "./build/*.ts",
+    "./persistence/*": "./persistence/*.ts",
+    "./vite/plugins/*": "./vite/plugins/*.ts",
+    "./vite/virtual/*": "./vite/virtual/*.ts"
   },
   "dependencies": {
     "@dashlet/server": "workspace:*",

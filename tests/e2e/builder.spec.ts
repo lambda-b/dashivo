@@ -16,7 +16,7 @@ test("downloads the saved dashboard as a standalone viewer", async ({ page }) =>
   const html = await text(stream!);
   expect(html).toContain("<!doctype html>");
   expect(html).not.toContain("Dashboard Builder");
-  expect(html).not.toContain("/__dashlet/dashboard");
+  expect(html).not.toContain("/api/dashboard");
 });
 
 test("confirms closing and reloading when Python has unsaved changes", async ({ page }) => {
@@ -52,8 +52,8 @@ for (const failFirstSave of [false, true]) {
       releaseFirst = resolve;
     });
 
-    await page.route("**/__dashlet/dashboard", async (route) => {
-      if (route.request().method() === "POST") {
+    await page.route("**/api/dashboard", async (route) => {
+      if (route.request().method() === "PUT") {
         requests++;
         if (requests === 1) {
           await firstSave;
@@ -95,7 +95,7 @@ for (const failFirstSave of [false, true]) {
 
 test("edits, validates, and saves the dashboard configuration in development", async ({ page }) => {
   let savedDashboard: { title?: string; tabs?: { id: string; label: string }[] } | undefined;
-  await page.route("**/__dashlet/dashboard", async (route) => {
+  await page.route("**/api/dashboard", async (route) => {
     if (route.request().method() === "GET") {
       await route.fulfill({ json: { dashboard: dashboardSource } });
       return;
@@ -225,15 +225,15 @@ test("Workbench runs Figure code with explicit parameters and independent CSV pr
 test("logic creation saves a file and registration in one request", async ({ page }) => {
   let dashboard = structuredClone(dashboardSource);
   let createdSource = "";
-  await page.route("**/__dashlet/dashboard", async (route) => {
-    if (route.request().method() === "POST") {
+  await page.route("**/api/dashboard", async (route) => {
+    if (route.request().method() === "PUT") {
       const { logic } = route.request().postDataJSON();
       createdSource = logic.source;
       dashboard.analysis.logic.push({ id: logic.id, type: "python", path: logic.path });
     }
     await route.fulfill({ json: { dashboard } });
   });
-  await page.route("**/__dashlet/python-source?path=logic%2Flogic-1.py", (route) =>
+  await page.route("**/api/sources/python?path=logic%2Flogic-1.py", (route) =>
     route.fulfill({ json: { source: createdSource } }),
   );
   await page.goto("http://127.0.0.1:3030");

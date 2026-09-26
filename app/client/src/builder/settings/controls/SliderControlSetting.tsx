@@ -4,7 +4,7 @@ import { ControlIdentityFields } from "@/builder/settings/components/ControlIden
 import { IconButton } from "@/components/primitives/IconButton";
 import { NumberInput } from "@/components/primitives/NumberInput";
 import { Slider } from "@/components/primitives/Slider";
-import type { SliderControlDefinition } from "@dashlet/shared/dashboard";
+import type { SliderControlDefinition } from "@shared/dashboard";
 
 interface SliderControlSettingProps {
   control: SliderControlDefinition;

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import type { MetricContentDefinition } from "@dashlet/shared/dashboard";
+import type { MetricContentDefinition } from "@shared/dashboard";
 
 interface MetricCardProps {
   definition: MetricContentDefinition;

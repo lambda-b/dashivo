@@ -1,5 +1,5 @@
 import { SelectList } from "@/components/primitives/SelectList";
-import type { SelectControlDefinition } from "@dashlet/shared/dashboard";
+import type { SelectControlDefinition } from "@shared/dashboard";
 
 interface SelectControlProps {
   control: SelectControlDefinition;

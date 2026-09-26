@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
-import { buildDashboardFile } from "@/builder/api/download";
+import { downloadDashboardFile } from "@/builder/api/download";
 
 export const useDownloadDashboard = () =>
   useMutation({
-    mutationFn: buildDashboardFile,
+    mutationFn: downloadDashboardFile,
     onSuccess: (dashboard) => {
       const url = URL.createObjectURL(dashboard);
       const link = document.createElement("a");

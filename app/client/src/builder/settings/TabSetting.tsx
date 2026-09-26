@@ -1,4 +1,4 @@
-import type { DashboardSchema } from "@dashlet/shared/dashboard";
+import type { DashboardSchema } from "@shared/dashboard";
 import { useTabActions } from "@/builder/settings/hooks/useTabActions";
 import { TabItemSetting } from "@/builder/settings/tabs/TabItemSetting";
 

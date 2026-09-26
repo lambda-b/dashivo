@@ -86,4 +86,4 @@ def execute(inputs, params):
 
 戻り値は `plot.line`・`bar`・`pie`・`scatter`・`table`・`metric` で作るFigureです。種類、列の対応、タイトル、書式はPython側に集約し、JSONにはロジック参照と配置だけを保持します。Workbenchでは「実行」でのみ出力を更新し、検証用パラメータは閲覧画面へ影響しません。入力CSVはコードの実行に関係なく先頭5行を確認できます。詳細は確認エリアの「ヘルプ」、入力補助はコード内の `#chart` などのスニペットを参照してください。
 
-`app/client/src/` 内のimportは `@/` を起点にし、共有契約は `@dashlet/shared/*` から参照します。Pyodideはdevでは配布ファイルを動的に読み込み、buildでは `virtual:dashlet/pyodide-runtime` を埋め込み実装へ差し替えます。
+`app/client/src/` 内のimportは `@/` を起点にし、共有契約は `@shared/*` から参照します。Node.jsからも直接読み込むserverとinfraは、Node.jsで解決できるworkspace package名（`@dashlet/server/*`、`@dashlet/infra/*`）を使います。Pyodideはdevでは配布ファイルを動的に読み込み、buildでは `virtual:dashlet/pyodide-runtime` を埋め込み実装へ差し替えます。

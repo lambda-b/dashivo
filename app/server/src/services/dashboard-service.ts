@@ -1,6 +1,6 @@
 import type { DashboardChange } from "@dashlet/shared/dashboard";
-import type { DashboardBuildService } from "../models/dashboard-build-service.ts";
-import type { DashboardRepository } from "../models/dashboard-repository.ts";
+import type { DashboardBuildService } from "@dashlet/server/models/dashboard-build-service";
+import type { DashboardRepository } from "@dashlet/server/models/dashboard-repository";
 
 export interface DashboardServiceDependencies {
   buildService: DashboardBuildService;

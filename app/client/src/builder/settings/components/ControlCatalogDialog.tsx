@@ -1,6 +1,6 @@
 import { ChevronDown, Plus, X } from "lucide-react";
 import { useEffect, useRef } from "react";
-import type { ControlDefinition } from "@dashlet/shared/dashboard";
+import type { ControlDefinition } from "@shared/dashboard";
 
 type ControlType = ControlDefinition["type"];
 

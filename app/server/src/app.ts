@@ -1,8 +1,9 @@
 import { Hono } from "hono";
-import { createDashboardController } from "./controllers/dashboard-controller.ts";
-import type { DashboardBuildService } from "./models/dashboard-build-service.ts";
-import type { DashboardRepository } from "./models/dashboard-repository.ts";
-import { createDashboardService } from "./services/dashboard-service.ts";
+import { HTTPException } from "hono/http-exception";
+import { registerDashboardRoutes } from "@dashlet/server/controllers/dashboard-controller";
+import type { DashboardBuildService } from "@dashlet/server/models/dashboard-build-service";
+import type { DashboardRepository } from "@dashlet/server/models/dashboard-repository";
+import { createDashboardService } from "@dashlet/server/services/dashboard-service";
 
 export interface ServerDependencies {
   buildService: DashboardBuildService;
@@ -11,6 +12,17 @@ export interface ServerDependencies {
 
 export const createServerApp = (dependencies: ServerDependencies) => {
   const service = createDashboardService(dependencies);
+  const app = new Hono();
 
-  return new Hono().route("/", createDashboardController(service));
+  app.onError((error, context) => {
+    if (error instanceof HTTPException) {
+      return context.json({ error: error.message }, error.status);
+    }
+
+    console.error(error);
+    return context.json({ error: "Internal server error" }, 500);
+  });
+  registerDashboardRoutes(app, service);
+
+  return app;
 };

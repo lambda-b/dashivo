@@ -2,7 +2,7 @@ import {
   analysisResultsSchema,
   type AnalysisResults,
   type DashboardSchema,
-} from "@dashlet/shared/dashboard";
+} from "@shared/dashboard";
 
 export const validateContentBindings = (dashboard: DashboardSchema, results: AnalysisResults) => {
   analysisResultsSchema.parse(results);

@@ -32,12 +32,7 @@ for (const file of manifest.files) {
   }
 }
 
-for (const marker of [
-  "Builderを開く",
-  "DEVELOPMENT ONLY",
-  "Dashboard Builder",
-  "/__dashlet/dashboard",
-]) {
+for (const marker of ["Builderを開く", "DEVELOPMENT ONLY", "Dashboard Builder", "/api/dashboard"]) {
   if (html.includes(marker)) {
     throw new Error(`Development-only marker found: ${marker}`);
   }

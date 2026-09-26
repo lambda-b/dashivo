@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { createServerApp } from "@dashlet/server/app";
-import { buildEndpoint, dashboardEndpoint, inputSourceEndpoint } from "@dashlet/shared/api";
+import { dashboardEndpoint, downloadEndpoint, inputSourceEndpoint } from "@dashlet/shared/api";
 import { dashboardSchema } from "@dashlet/shared/dashboard";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
 
@@ -30,7 +30,7 @@ test("Hono API validates shared contracts without exposing persistence", async (
   expect((await loaded.json()).dashboard).toEqual(dashboard);
 
   const invalid = await app.request(dashboardEndpoint, {
-    method: "POST",
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ settings: { title: "missing fields" } }),
   });
@@ -45,7 +45,7 @@ test("Hono API serves inputs and downloadable viewer through injected services",
   expect(input.status).toBe(200);
   expect(await input.json()).toEqual({ source: "input:data/raw/sales.csv" });
 
-  const download = await app.request(buildEndpoint, { method: "POST" });
+  const download = await app.request(downloadEndpoint, { method: "POST" });
 
   expect(download.status).toBe(200);
   expect(download.headers.get("Content-Disposition")).toBe('attachment; filename="dashboard.html"');

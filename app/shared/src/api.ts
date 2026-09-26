@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { dashboardSchema } from "./dashboard.ts";
+import { dashboardSchema } from "@dashlet/shared/dashboard";
 
-export const assetsEndpoint = "/__dashlet/assets";
-export const buildEndpoint = "/__dashlet/build";
-export const dashboardEndpoint = "/__dashlet/dashboard";
-export const inputSourceEndpoint = "/__dashlet/input-source";
-export const pythonSourceEndpoint = "/__dashlet/python-source";
+export const assetsEndpoint = "/api/assets";
+export const dashboardEndpoint = "/api/dashboard";
+export const downloadEndpoint = "/api/dashboard/download";
+export const inputSourceEndpoint = "/api/sources/csv";
+export const pythonSourceEndpoint = "/api/sources/python";
 
 export const apiErrorSchema = z.object({ error: z.string() });
 export const dashboardResponseSchema = z.object({ dashboard: dashboardSchema });

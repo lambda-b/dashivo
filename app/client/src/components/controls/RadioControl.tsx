@@ -1,5 +1,5 @@
 import { RadioGroup } from "@/components/primitives/RadioGroup";
-import type { RadioControlDefinition } from "@dashlet/shared/dashboard";
+import type { RadioControlDefinition } from "@shared/dashboard";
 
 interface RadioControlProps {
   control: RadioControlDefinition;

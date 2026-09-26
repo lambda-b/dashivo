@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 import source from "#dashboard/dashboard.json";
-import { dashboardSchema, type DashboardSchema } from "@dashlet/shared/dashboard";
+import { dashboardSchema, type DashboardSchema } from "@shared/dashboard";
 
 export const dashboardQueryKey = ["dashboard"] as const;
 

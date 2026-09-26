@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { IconButton } from "@/components/primitives/IconButton";
-import type { TabDefinition } from "@dashlet/shared/dashboard";
+import type { TabDefinition } from "@shared/dashboard";
 
 interface TabItemSettingProps {
   tab: TabDefinition;

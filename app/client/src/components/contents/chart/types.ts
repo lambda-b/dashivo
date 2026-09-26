@@ -1,8 +1,4 @@
-import type {
-  ChartContentDefinition,
-  ChartFormattingDefinition,
-  DataRow,
-} from "@dashlet/shared/dashboard";
+import type { ChartContentDefinition, ChartFormattingDefinition, DataRow } from "@shared/dashboard";
 
 interface ChartAdapterProps<Definition> {
   definition: Definition;

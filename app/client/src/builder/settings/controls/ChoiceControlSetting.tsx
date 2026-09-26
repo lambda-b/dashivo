@@ -4,7 +4,7 @@ import { ControlLayoutField } from "@/builder/settings/components/ControlLayoutF
 import { IconButton } from "@/components/primitives/IconButton";
 import { RadioGroup } from "@/components/primitives/RadioGroup";
 import { Trash2 } from "lucide-react";
-import type { ChoiceControlDefinition } from "@dashlet/shared/dashboard";
+import type { ChoiceControlDefinition } from "@shared/dashboard";
 
 interface ChoiceControlSettingProps {
   control: ChoiceControlDefinition;

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { DashboardSchema, TabDefinition } from "@dashlet/shared/dashboard";
+import type { DashboardSchema, TabDefinition } from "@shared/dashboard";
 
 const createTabId = (dashboard: DashboardSchema) => {
   const ids = new Set(dashboard.tabs.map((tab) => tab.id));

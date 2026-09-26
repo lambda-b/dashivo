@@ -4,7 +4,7 @@ import { ControlIdentityFields } from "@/builder/settings/components/ControlIden
 import { ControlLayoutField } from "@/builder/settings/components/ControlLayoutField";
 import { Checkbox } from "@/components/primitives/Checkbox";
 import { IconButton } from "@/components/primitives/IconButton";
-import type { CheckboxControlDefinition } from "@dashlet/shared/dashboard";
+import type { CheckboxControlDefinition } from "@shared/dashboard";
 
 interface CheckboxControlSettingProps {
   control: CheckboxControlDefinition;

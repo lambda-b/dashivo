@@ -2,7 +2,7 @@ import { BarChartAdapter } from "@/components/contents/chart/BarChartAdapter";
 import { LineChartAdapter } from "@/components/contents/chart/LineChartAdapter";
 import { PieChartAdapter } from "@/components/contents/chart/PieChartAdapter";
 import { ScatterChartAdapter } from "@/components/contents/chart/ScatterChartAdapter";
-import type { ChartContentDefinition, DataRow } from "@dashlet/shared/dashboard";
+import type { ChartContentDefinition, DataRow } from "@shared/dashboard";
 
 interface ChartRendererProps {
   definition: ChartContentDefinition["chart"];

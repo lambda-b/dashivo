@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { ControlDefinition, DashboardSchema } from "@dashlet/shared/dashboard";
+import type { ControlDefinition, DashboardSchema } from "@shared/dashboard";
 
 const createParameterKey = (dashboard: DashboardSchema) => {
   const keys = new Set(dashboard.controls.map((control) => control.key));

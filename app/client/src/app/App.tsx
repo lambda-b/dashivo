@@ -7,7 +7,7 @@ import { ParameterArea } from "@/layouts/ParameterArea";
 import { LogicArea } from "@/layouts/LogicArea";
 import { ContentArea } from "@/layouts/ContentArea";
 import { analysisPort } from "@/ports/analysis";
-import type { ParameterValue } from "@dashlet/shared/dashboard";
+import type { ParameterValue } from "@shared/dashboard";
 import { validateContentBindings } from "@/schema/validation";
 import { appTarget } from "virtual:dashlet/app-target";
 

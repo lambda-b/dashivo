@@ -1,5 +1,5 @@
 import { Slider } from "@/components/primitives/Slider";
-import type { SliderControlDefinition } from "@dashlet/shared/dashboard";
+import type { SliderControlDefinition } from "@shared/dashboard";
 
 interface SliderControlProps {
   control: SliderControlDefinition;

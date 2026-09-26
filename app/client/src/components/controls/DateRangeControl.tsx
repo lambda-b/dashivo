@@ -1,5 +1,5 @@
 import { DateInput } from "@/components/primitives/DateInput";
-import type { DateRangeControlDefinition } from "@dashlet/shared/dashboard";
+import type { DateRangeControlDefinition } from "@shared/dashboard";
 
 interface DateRangeControlProps {
   control: DateRangeControlDefinition;

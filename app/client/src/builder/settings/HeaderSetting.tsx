@@ -1,4 +1,4 @@
-import type { DashboardSchema } from "@dashlet/shared/dashboard";
+import type { DashboardSchema } from "@shared/dashboard";
 
 interface HeaderSettingProps {
   dashboard: DashboardSchema;

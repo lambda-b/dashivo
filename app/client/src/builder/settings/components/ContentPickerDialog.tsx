@@ -2,7 +2,7 @@ import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createContentPlacement } from "@/builder/settings/hooks/useContentActions";
 import { IconButton } from "@/components/primitives/IconButton";
-import type { ContentPlacementDefinition, DashboardSchema } from "@dashlet/shared/dashboard";
+import type { ContentPlacementDefinition, DashboardSchema } from "@shared/dashboard";
 
 export interface ContentPickerResult {
   content: ContentPlacementDefinition;

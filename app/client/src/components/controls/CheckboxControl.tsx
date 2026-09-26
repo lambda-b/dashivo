@@ -1,4 +1,4 @@
-import type { CheckboxControlDefinition } from "@dashlet/shared/dashboard";
+import type { CheckboxControlDefinition } from "@shared/dashboard";
 import { Checkbox } from "@/components/primitives/Checkbox";
 
 interface CheckboxControlProps {

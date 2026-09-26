@@ -2,7 +2,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { useDashboard } from "@/app/context/useDashboard";
 import { EditButton } from "@/components/primitives/EditButton";
 import { ControlPanel } from "@/components/controls/ControlPanel";
-import type { ParameterValue } from "@dashlet/shared/dashboard";
+import type { ParameterValue } from "@shared/dashboard";
 
 export const ParameterArea = ({
   params,

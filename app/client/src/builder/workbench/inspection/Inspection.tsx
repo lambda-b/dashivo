@@ -4,7 +4,7 @@ import { ControlPanel } from "@/components/controls/ControlPanel";
 import { InputInspection } from "@/builder/workbench/inspection/InputInspection";
 import { Help } from "@/builder/workbench/inspection/Help";
 import { useSavedDashboard } from "@/app/context/useDashboard";
-import type { AnalysisOutput, ParameterValue } from "@dashlet/shared/dashboard";
+import type { AnalysisOutput, ParameterValue } from "@shared/dashboard";
 
 export const Inspection = ({
   output,

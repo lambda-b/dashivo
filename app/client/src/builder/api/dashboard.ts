@@ -1,9 +1,9 @@
-import { apiErrorSchema, dashboardEndpoint, dashboardResponseSchema } from "@dashlet/shared/api";
-import type { DashboardChange } from "@dashlet/shared/dashboard";
+import { apiErrorSchema, dashboardEndpoint, dashboardResponseSchema } from "@shared/api";
+import type { DashboardChange } from "@shared/dashboard";
 
 export const saveDashboard = async (change: DashboardChange) => {
   const response = await fetch(dashboardEndpoint, {
-    method: "POST",
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(change),
   });

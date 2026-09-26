@@ -1,8 +1,8 @@
 import { getRequestListener } from "@hono/node-server";
 import {
   assetsEndpoint,
-  buildEndpoint,
   dashboardEndpoint,
+  downloadEndpoint,
   inputSourceEndpoint,
   pythonSourceEndpoint,
 } from "@dashlet/shared/api";
@@ -11,8 +11,8 @@ import type { Plugin } from "vite";
 
 const apiPaths: ReadonlySet<string> = new Set([
   assetsEndpoint,
-  buildEndpoint,
   dashboardEndpoint,
+  downloadEndpoint,
   inputSourceEndpoint,
   pythonSourceEndpoint,
 ]);

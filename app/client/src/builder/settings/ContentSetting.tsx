@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { IconButton } from "@/components/primitives/IconButton";
 import { SelectList } from "@/components/primitives/SelectList";
-import type { ContentPlacementDefinition, DashboardSchema } from "@dashlet/shared/dashboard";
+import type { ContentPlacementDefinition, DashboardSchema } from "@shared/dashboard";
 
 interface ContentActions {
   update: (tabIndex: number, contentIndex: number, content: ContentPlacementDefinition) => void;

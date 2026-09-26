@@ -1,7 +1,7 @@
 import { ControlSettingCard } from "@/builder/settings/components/ControlSettingCard";
 import { ControlIdentityFields } from "@/builder/settings/components/ControlIdentityFields";
 import { DateInput } from "@/components/primitives/DateInput";
-import type { DateRangeControlDefinition } from "@dashlet/shared/dashboard";
+import type { DateRangeControlDefinition } from "@shared/dashboard";
 
 interface DateRangeControlSettingProps {
   control: DateRangeControlDefinition;

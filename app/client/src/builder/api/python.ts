@@ -5,7 +5,7 @@ import {
   inputSourceEndpoint,
   pythonSourceEndpoint,
   sourceResponseSchema,
-} from "@dashlet/shared/api";
+} from "@shared/api";
 
 const pythonSourceUrl = (path: string) =>
   `${pythonSourceEndpoint}?path=${encodeURIComponent(path)}`;
