@@ -1,7 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { useDashboard } from "@/app/context/useDashboard";
+import { useDashboard, useDashboardId } from "@/app/context/useDashboard";
 import { DashboardContent } from "@/components/contents/DashboardContent";
 import { DashboardTabs } from "@/components/contents/DashboardTabs";
+import { appTarget } from "virtual:dashlet/app-target";
 import type { AnalysisResults } from "@shared/dashboard";
 
 export const ContentArea = ({
@@ -16,11 +17,13 @@ export const ContentArea = ({
   onEditContent?: (tabIndex: number, contentIndex: number) => void;
 }) => {
   const dashboard = useDashboard();
-  const defaultTabPath = dashboard.tabs[0].id;
+  const dashboardId = useDashboardId();
+  const dashboardPath = appTarget === "editor" ? `/d/${dashboardId}` : "";
+  const defaultTabPath = `${dashboardPath}/${dashboard.tabs[0].id}`;
 
   return (
     <div className="min-w-0 flex-1">
-      <DashboardTabs onEditTabs={onEditTabs} tabs={dashboard.tabs} />
+      <DashboardTabs basePath={dashboardPath} onEditTabs={onEditTabs} tabs={dashboard.tabs} />
 
       <div className="mt-5">
         {analysis.isError ? (

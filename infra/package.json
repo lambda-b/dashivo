@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./build/*": "./build/*.ts",
+    "./export/*": "./export/*.ts",
     "./persistence/*": "./persistence/*.ts",
     "./vite/plugins/*": "./vite/plugins/*.ts",
     "./vite/configuration": "./vite/configuration.ts",

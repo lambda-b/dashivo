@@ -4,11 +4,12 @@ import { EditButton } from "@/components/primitives/EditButton";
 import type { DashboardSchema } from "@shared/dashboard";
 
 interface DashboardTabsProps {
+  basePath: string;
   tabs: DashboardSchema["tabs"];
   onEditTabs?: () => void;
 }
 
-export const DashboardTabs = ({ tabs, onEditTabs }: DashboardTabsProps) => (
+export const DashboardTabs = ({ basePath, tabs, onEditTabs }: DashboardTabsProps) => (
   <nav aria-label="コンテンツタブ" className="border-b border-stone-200">
     <div className="flex items-start justify-between gap-4">
       <div className="flex gap-6 overflow-x-auto">
@@ -22,7 +23,7 @@ export const DashboardTabs = ({ tabs, onEditTabs }: DashboardTabsProps) => (
               )
             }
             key={tab.id}
-            to={tab.id}
+            to={`${basePath}/${tab.id}`}
           >
             {tab.label}
           </NavLink>

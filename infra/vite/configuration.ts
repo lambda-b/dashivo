@@ -4,7 +4,7 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { createServerApp } from "@dashlet/server/app";
-import { createFilesystemDashboardBuildService } from "@dashlet/infra/build/filesystem-dashboard-build-service";
+import { createFilesystemDashboardBuildService } from "@dashlet/infra/export/filesystem-dashboard-build-service";
 import { createFilesystemDashboardRepository } from "@dashlet/infra/persistence/filesystem-dashboard-repository";
 import { analysisAssets } from "@dashlet/infra/vite/plugins/analysis-assets";
 import { appServer } from "@dashlet/infra/vite/plugins/app-server";
