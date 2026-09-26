@@ -49,5 +49,3 @@ tests/results/
 # ===== custom =====
 work
 .codex-local/
-!vite/build/
-!vite/build/**

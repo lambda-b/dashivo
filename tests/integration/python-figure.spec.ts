@@ -11,7 +11,7 @@ test("Python figures serialize data, dates, missing values and formatting", asyn
   await python.loadPackage("pandas");
   python.FS.writeFile(
     "/home/pyodide/dashlet.py",
-    await fs.readFile("src/ports/workers/python/dashlet.py", "utf8"),
+    await fs.readFile("app/client/src/ports/workers/python/dashlet.py", "utf8"),
   );
   const source = `
 from dashlet import plot, serialize

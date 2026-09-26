@@ -1,0 +1,12 @@
+{
+  "name": "@dashlet/tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@dashlet/client": "workspace:*",
+    "@dashlet/infra": "workspace:*",
+    "@dashlet/server": "workspace:*",
+    "@dashlet/shared": "workspace:*"
+  }
+}

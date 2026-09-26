@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.infra.tsbuildinfo",
+    "lib": ["ES2023", "DOM"],
+    "types": ["node"],
+    "allowJs": true,
+    "maxNodeModuleJsDepth": 1,
+    "paths": {
+      "#dashboard/*": ["../dashboard/*"],
+      "#generated/*": ["../.pyodide-cache/*"]
+    }
+  },
+  "include": ["vite", "persistence", "build", "../.pyodide-cache/assets.ts"]
+}

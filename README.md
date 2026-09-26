@@ -28,7 +28,7 @@ Pythonによるデータ分析とReactのUIを、ネットワーク接続なし�
 
    各エリアの編集ボタンから右側の設定パネルを開きます。設定のプレビューと保存は独立しており、現在の保存先は `dashboard/dashboard.json` です。「Pythonロジックを管理」ではロジック定義・コード・確認の3領域を持つWorkbenchへ切り替わります。ロジックとCSV定義は自動保存、Pythonコードは明示的に保存します。
 
-   「HTMLをダウンロード」は保存済みの設定とPythonから閲覧専用の単一HTMLを生成します。EditorとViewerは明示的なビルド対象として分離されており、ViewerにはBuilderと保存APIが含まれません。現在のViteプラグインは開発用HTTPアダプターです。Web公開時は同じビルド処理をサーバーへ移し、Dashboard JSONとPythonコードをDBから供給する想定です。
+   「HTMLをダウンロード」は保存済みの設定とPythonから閲覧専用の単一HTMLを生成します。EditorとViewerは明示的なビルド対象として分離されており、ViewerにはBuilderと保存APIが含まれません。開発時のAPIもHonoで動作し、ViteプラグインはHonoを開発サーバーへ接続するだけのアダプターです。現在はファイルシステムへ保存しますが、Repository実装を交換してDashboard JSONとPythonコードをDB管理へ移行できます。
 
 ## ビルド
 
@@ -59,14 +59,16 @@ pnpm test:e2e
 │  ├─ data/raw/       # ビルドへ埋め込むソースデータ
 │  ├─ logic/          # Python集計ロジック
 │  └─ dashboard.json  # UIとデータBindingのSchema
-├─ src/               # React UIとPython Worker
-├─ vite/
-│  ├─ plugins/        # Dashlet固有のVite plugin
-│  ├─ prepare/        # Pyodide asset収集
-│  └─ virtual/        # serve/buildで差し替えるvirtual module実装
+├─ app/
+│  ├─ client/         # React UIとPython Worker
+│  ├─ server/         # Hono Controller・Service・Model IF
+│  └─ shared/         # client/server共通のZod SchemaとAPI契約
+├─ infra/
+│  ├─ build/          # 単一HTML生成の具体実装
+│  ├─ persistence/    # ファイルシステムRepository実装
+│  └─ vite/           # Vite設定・plugin・Pyodide asset準備
 ├─ tests/             # unit・integration・e2e（resultsは実行結果）
-├─ work/              # プロジェクト計画（Git管理外）
-└─ vite.config.ts     # 単一HTML packaging
+└─ work/              # プロジェクト計画（Git管理外）
 ```
 
 Pythonの分析処理は `dashboard/logic/` の各ファイルに `execute(inputs, params)` として記述します。`inputs` はInput IDをキーにしたDataFrameの辞書、`params` はグローバルパラメータです。DataFrameは呼び出しごとにコピーされます。CSV、Python source、組み込みの `dashlet` ライブラリはいずれもビルド時にHTMLへ埋め込まれます。
@@ -84,4 +86,4 @@ def execute(inputs, params):
 
 戻り値は `plot.line`・`bar`・`pie`・`scatter`・`table`・`metric` で作るFigureです。種類、列の対応、タイトル、書式はPython側に集約し、JSONにはロジック参照と配置だけを保持します。Workbenchでは「実行」でのみ出力を更新し、検証用パラメータは閲覧画面へ影響しません。入力CSVはコードの実行に関係なく先頭5行を確認できます。詳細は確認エリアの「ヘルプ」、入力補助はコード内の `#chart` などのスニペットを参照してください。
 
-`src/` 内のimportは `@/` を起点にします。Pyodideはdevでは配布ファイルを動的に読み込み、buildでは `virtual:dashlet/pyodide-runtime` を埋め込み実装へ差し替えます。
+`app/client/src/` 内のimportは `@/` を起点にし、共有契約は `@dashlet/shared/*` から参照します。Pyodideはdevでは配布ファイルを動的に読み込み、buildでは `virtual:dashlet/pyodide-runtime` を埋め込み実装へ差し替えます。

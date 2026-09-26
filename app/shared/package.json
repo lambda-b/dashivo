@@ -1,0 +1,13 @@
+{
+  "name": "@dashlet/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./src/api.ts",
+    "./dashboard": "./src/dashboard.ts"
+  },
+  "dependencies": {
+    "zod": "^4.5.4"
+  }
+}
