@@ -3,9 +3,12 @@ import {
   assetsEndpoint,
   dashboardAssetCatalogSchema,
   inputSourceEndpoint,
+  pythonLogicEndpoint,
   pythonSourceEndpoint,
+  dashboardResponseSchema,
   sourceResponseSchema,
 } from "@shared/api";
+import type { PythonLogicCreate } from "@shared/dashboard";
 
 const pythonSourceUrl = (path: string) =>
   `${pythonSourceEndpoint}?path=${encodeURIComponent(path)}`;
@@ -46,6 +49,22 @@ export const savePythonSource = async (path: string, source: string) => {
       apiErrorSchema.safeParse(result).data?.error ?? "Pythonを保存できませんでした。",
     );
   }
+};
+
+export const createPythonLogic = async (definition: PythonLogicCreate) => {
+  const response = await fetch(pythonLogicEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(definition),
+  });
+  const result: unknown = await response.json();
+  if (!response.ok) {
+    throw new Error(
+      apiErrorSchema.safeParse(result).data?.error ?? "ロジックを作成できませんでした。",
+    );
+  }
+
+  return dashboardResponseSchema.parse(result).dashboard;
 };
 
 export const loadAssetCatalog = async () => {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSavedDashboard } from "@/app/context/useDashboard";
-import { useSaveDashboard } from "@/builder/hooks/useSaveDashboard";
+import { useCreatePythonLogic } from "@/builder/hooks/useCreatePythonLogic";
 import { createUniqueIndexedName } from "@/utils/createUniqueIndexedName";
 
 export const LogicDialog = ({
@@ -24,8 +24,8 @@ export const LogicDialog = ({
     ),
   );
   const [error, setError] = useState("");
-  const save = useSaveDashboard();
-  const saving = save.isPending;
+  const createLogic = useCreatePythonLogic();
+  const saving = createLogic.isPending;
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -40,11 +40,10 @@ export const LogicDialog = ({
 
     setError("");
     try {
-      await save.mutateAsync({
-        logic: {
-          id,
-          path: `logic/${id}.py`,
-          source: `from dashlet import plot
+      await createLogic.mutateAsync({
+        id,
+        path: `logic/${id}.py`,
+        source: `from dashlet import plot
 
 
 def execute(inputs, params):
@@ -52,7 +51,6 @@ def execute(inputs, params):
     fig.title("新しい数値")
     return fig
 `,
-        },
       });
       onCreated(id);
       onClose();

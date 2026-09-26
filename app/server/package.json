@@ -5,13 +5,14 @@
   "type": "module",
   "exports": {
     "./app": "./src/app.ts",
+    "./context": "./src/context.ts",
     "./controllers/*": "./src/controllers/*.ts",
     "./models/*": "./src/models/*.ts",
+    "./router": "./src/router.ts",
     "./services/*": "./src/services/*.ts"
   },
   "dependencies": {
     "@dashlet/shared": "workspace:*",
-    "@hono/zod-validator": "^0.9.1",
     "hono": "^4.13.8"
   }
 }

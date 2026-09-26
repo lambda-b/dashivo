@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { createServerApp } from "@dashlet/server/app";
-import { dashboardEndpoint, downloadEndpoint, inputSourceEndpoint } from "@dashlet/shared/api";
+import {
+  dashboardEndpoint,
+  downloadEndpoint,
+  inputSourceEndpoint,
+  pythonLogicEndpoint,
+} from "@dashlet/shared/api";
 import { dashboardSchema } from "@dashlet/shared/dashboard";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
 
@@ -13,12 +18,14 @@ const createTestApp = () =>
     },
     repository: {
       listAssets: async () => ({ csv: ["data/raw/sales.csv"], python: ["logic/analysis.py"] }),
-      readDashboard: async () => dashboard,
+      readDashboard: async () => ({ dashboard, version: "v1" }),
+      writeDashboard: async () => {},
       readInput: async (path) => `input:${path}`,
       readPython: async (path) => `python:${path}`,
-      updateDashboard: async (change) =>
-        "settings" in change ? { ...change.settings, analysis: dashboard.analysis } : dashboard,
       writePython: async () => {},
+      createPython: async () => {},
+      deletePython: async () => {},
+      registerPythonLogicAtomically: async () => {},
     },
   });
 
@@ -50,4 +57,20 @@ test("Hono API serves inputs and downloadable viewer through injected services",
   expect(download.status).toBe(200);
   expect(download.headers.get("Content-Disposition")).toBe('attachment; filename="dashboard.html"');
   expect(await download.text()).toBe("<html>viewer</html>");
+});
+
+test("Hono API creates Python logic through its dedicated service", async () => {
+  const app = createTestApp();
+  const response = await app.request(pythonLogicEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: "new-logic",
+      path: "logic/new-logic.py",
+      source: "def execute(inputs, params): return 1",
+    }),
+  });
+
+  expect(response.status).toBe(200);
+  expect((await response.json()).dashboard.analysis.logic.at(-1)?.id).toBe("new-logic");
 });

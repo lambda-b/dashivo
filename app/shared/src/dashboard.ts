@@ -5,6 +5,21 @@ const identifierSchema = z
   .min(1)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "must be a lowercase kebab-case identifier");
 
+const dashboardFilePathSchema = (directory: string, extension: string) =>
+  z
+    .string()
+    .refine(
+      (value) =>
+        value.startsWith(`${directory}/`) &&
+        value.endsWith(extension) &&
+        !value.includes("\\") &&
+        value.split("/").every((segment) => segment !== "" && segment !== "." && segment !== ".."),
+      `Path must reference a ${extension} file under ${directory}`,
+    );
+
+export const pythonSourcePathSchema = dashboardFilePathSchema("logic", ".py");
+export const inputSourcePathSchema = dashboardFilePathSchema("data", ".csv");
+
 const optionSchema = z.object({ label: z.string().min(1), value: z.string().min(1) });
 
 const selectControlSchema = z
@@ -217,14 +232,14 @@ export const analysisSchema = z.object({
     z.object({
       id: identifierSchema,
       type: z.literal("csv"),
-      path: z.string().min(1),
+      path: inputSourcePathSchema,
     }),
   ),
   logic: z.array(
     z.object({
       id: identifierSchema,
       type: z.literal("python"),
-      path: z.string().min(1),
+      path: pythonSourcePathSchema,
     }),
   ),
 });
@@ -321,15 +336,16 @@ export const dashboardSettingsSchema = z.object({
   tabs: dashboardSchema.shape.tabs,
 });
 
-export const dashboardChangeSchema = z.union([
+export const dashboardDefinitionChangeSchema = z.union([
   z.object({ settings: dashboardSettingsSchema }).strict(),
   z.object({ analysis: analysisSchema }).strict(),
-  z
-    .object({
-      logic: z.object({ id: identifierSchema, path: z.string().min(1), source: z.string() }),
-    })
-    .strict(),
 ]);
+
+export const pythonLogicCreateSchema = z.object({
+  id: identifierSchema,
+  path: pythonSourcePathSchema,
+  source: z.string(),
+});
 
 const dataValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
@@ -386,7 +402,8 @@ export const analysisResultsSchema = z.record(identifierSchema, analysisOutputSc
 
 export type DashboardSchema = z.infer<typeof dashboardSchema>;
 export type DashboardSettings = z.infer<typeof dashboardSettingsSchema>;
-export type DashboardChange = z.infer<typeof dashboardChangeSchema>;
+export type DashboardDefinitionChange = z.infer<typeof dashboardDefinitionChangeSchema>;
+export type PythonLogicCreate = z.infer<typeof pythonLogicCreateSchema>;
 export type AnalysisDefinition = DashboardSchema["analysis"];
 export type AnalysisLogicDefinition = AnalysisDefinition["logic"][number];
 export type ControlDefinition = DashboardSchema["controls"][number];

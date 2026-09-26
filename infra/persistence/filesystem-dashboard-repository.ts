@@ -1,13 +1,10 @@
 import fs from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import type { DashboardAssetCatalog } from "@dashlet/shared/api";
+import type { DashboardSchema } from "@dashlet/shared/dashboard";
+import { DashboardRevisionConflict } from "@dashlet/server/models/dashboard-revision-conflict";
 import type { DashboardRepository } from "@dashlet/server/models/dashboard-repository";
-import {
-  dashboardChangeSchema,
-  dashboardSchema,
-  type DashboardSchema,
-} from "@dashlet/shared/dashboard";
-import { withDashboardOperation } from "@dashlet/infra/persistence/dashboard-operation";
 
 const resolvePythonPath = (projectRoot: string, sourcePath: string) => {
   const logicRoot = path.join(projectRoot, "dashboard", "logic");
@@ -43,7 +40,7 @@ const resolveInputPath = (projectRoot: string, sourcePath: string) => {
   return destination;
 };
 
-const listDashboardFiles = async (dashboardRoot: string, pattern: string) => {
+const listFiles = async (dashboardRoot: string, pattern: string) => {
   const files: string[] = [];
 
   for await (const file of fs.glob(pattern, { cwd: dashboardRoot })) files.push(file);
@@ -51,115 +48,95 @@ const listDashboardFiles = async (dashboardRoot: string, pattern: string) => {
   return files.toSorted();
 };
 
-export const readPythonSource = (projectRoot: string, sourcePath: string) =>
+const readPython = (projectRoot: string, sourcePath: string) =>
   fs.readFile(resolvePythonPath(projectRoot, sourcePath), "utf8");
 
-export const readInputSource = (projectRoot: string, sourcePath: string) =>
-  fs.readFile(resolveInputPath(projectRoot, sourcePath), "utf8");
-
-export const writePythonSource = async (
-  projectRoot: string,
-  sourcePath: string,
-  source: string,
-) => {
+const writePython = async (projectRoot: string, sourcePath: string, source: string) => {
   const destination = resolvePythonPath(projectRoot, sourcePath);
 
   await fs.mkdir(path.dirname(destination), { recursive: true });
   await fs.writeFile(destination, source, "utf8");
 };
 
-export const createPythonSource = async (
-  projectRoot: string,
-  sourcePath: string,
-  source: string,
-) => {
+const createPython = async (projectRoot: string, sourcePath: string, source: string) => {
   const destination = resolvePythonPath(projectRoot, sourcePath);
 
   await fs.mkdir(path.dirname(destination), { recursive: true });
   await fs.writeFile(destination, source, { encoding: "utf8", flag: "wx" });
 };
 
-export const readDashboardFile = async (projectRoot: string) =>
-  dashboardSchema.parse(
-    JSON.parse(await fs.readFile(path.join(projectRoot, "dashboard/dashboard.json"), "utf8")),
-  );
+const deletePython = (projectRoot: string, sourcePath: string) =>
+  fs.unlink(resolvePythonPath(projectRoot, sourcePath));
 
-export const writeDashboardFile = async (
+const readInput = (projectRoot: string, sourcePath: string) =>
+  fs.readFile(resolveInputPath(projectRoot, sourcePath), "utf8");
+
+const readDashboard = async (projectRoot: string) => {
+  const source = await fs.readFile(path.join(projectRoot, "dashboard/dashboard.json"), "utf8");
+
+  return {
+    dashboard: JSON.parse(source) as unknown,
+    version: createHash("sha256").update(source).digest("hex"),
+  };
+};
+
+const writeDashboard = async (
   projectRoot: string,
-  source: unknown,
-): Promise<DashboardSchema> => {
-  const dashboard = dashboardSchema.parse(source);
+  dashboard: DashboardSchema,
+  expectedVersion: string,
+) => {
   const destination = path.join(projectRoot, "dashboard", "dashboard.json");
-  const currentSource = await fs
-    .readFile(destination, "utf8")
-    .catch((error: NodeJS.ErrnoException) => {
-      if (error.code === "ENOENT") return undefined;
-      throw error;
-    });
-
-  if (currentSource) {
-    const current = dashboardSchema.safeParse(JSON.parse(currentSource));
-
-    if (current.success && JSON.stringify(current.data) === JSON.stringify(dashboard)) {
-      return dashboard;
-    }
-  }
-
-  await fs.writeFile(destination, `${JSON.stringify(dashboard, null, 2)}\n`, "utf8");
-
-  return dashboard;
-};
-
-export const updateDashboardFile = (projectRoot: string, source: unknown) => {
-  const change = dashboardChangeSchema.parse(source);
-
-  return withDashboardOperation(async () => {
-    const current = await readDashboardFile(projectRoot);
-
-    if ("settings" in change) {
-      return writeDashboardFile(projectRoot, { ...change.settings, analysis: current.analysis });
-    }
-
-    if ("analysis" in change) {
-      return writeDashboardFile(projectRoot, { ...current, analysis: change.analysis });
-    }
-
-    const { id, path: sourcePath, source: pythonSource } = change.logic;
-    const next = dashboardSchema.parse({
-      ...current,
-      analysis: {
-        ...current.analysis,
-        logic: [...current.analysis.logic, { id, path: sourcePath, type: "python" }],
-      },
-    });
-
-    await createPythonSource(projectRoot, sourcePath, pythonSource);
-
-    try {
-      return await writeDashboardFile(projectRoot, next);
-    } catch (error) {
-      await fs.unlink(resolvePythonPath(projectRoot, sourcePath));
-      throw error;
-    }
+  const serialized = `${JSON.stringify(dashboard, null, 2)}\n`;
+  const current = await fs.readFile(destination, "utf8").catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT") return undefined;
+    throw error;
   });
+
+  const currentVersion = current && createHash("sha256").update(current).digest("hex");
+  if (currentVersion !== expectedVersion) throw new DashboardRevisionConflict();
+  if (current === serialized) return;
+
+  await fs.writeFile(destination, serialized, "utf8");
 };
 
-const listDashboardAssets = async (projectRoot: string): Promise<DashboardAssetCatalog> => {
+const registerPythonLogic = async (
+  projectRoot: string,
+  {
+    dashboard,
+    expectedVersion,
+    logic,
+  }: Parameters<DashboardRepository["registerPythonLogicAtomically"]>[0],
+) => {
+  // Local files cannot provide a multi-file transaction; compensate if updating the definition fails.
+  await createPython(projectRoot, logic.path, logic.source);
+
+  try {
+    await writeDashboard(projectRoot, dashboard, expectedVersion);
+  } catch (error) {
+    await deletePython(projectRoot, logic.path);
+    throw error;
+  }
+};
+
+const listAssets = async (projectRoot: string): Promise<DashboardAssetCatalog> => {
   const dashboardRoot = path.join(projectRoot, "dashboard");
   const [csv, python] = await Promise.all([
-    listDashboardFiles(dashboardRoot, "data/**/*.csv"),
-    listDashboardFiles(dashboardRoot, "logic/**/*.py"),
+    listFiles(dashboardRoot, "data/**/*.csv"),
+    listFiles(dashboardRoot, "logic/**/*.py"),
   ]);
 
   return { csv, python };
 };
 
 export const createFilesystemDashboardRepository = (projectRoot: string): DashboardRepository => ({
-  listAssets: () => listDashboardAssets(projectRoot),
-  readDashboard: () => readDashboardFile(projectRoot),
-  readInput: (sourcePath) => readInputSource(projectRoot, sourcePath),
-  readPython: (sourcePath) => readPythonSource(projectRoot, sourcePath),
-  updateDashboard: (change) => updateDashboardFile(projectRoot, change),
-  writePython: (sourcePath, source) =>
-    withDashboardOperation(() => writePythonSource(projectRoot, sourcePath, source)),
+  listAssets: () => listAssets(projectRoot),
+  readDashboard: () => readDashboard(projectRoot),
+  writeDashboard: (dashboard, expectedVersion) =>
+    writeDashboard(projectRoot, dashboard, expectedVersion),
+  readInput: (sourcePath) => readInput(projectRoot, sourcePath),
+  readPython: (sourcePath) => readPython(projectRoot, sourcePath),
+  writePython: (sourcePath, source) => writePython(projectRoot, sourcePath, source),
+  createPython: (sourcePath, source) => createPython(projectRoot, sourcePath, source),
+  deletePython: (sourcePath) => deletePython(projectRoot, sourcePath),
+  registerPythonLogicAtomically: (registration) => registerPythonLogic(projectRoot, registration),
 });

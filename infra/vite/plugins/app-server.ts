@@ -4,9 +4,10 @@ import {
   dashboardEndpoint,
   downloadEndpoint,
   inputSourceEndpoint,
+  pythonLogicEndpoint,
   pythonSourceEndpoint,
 } from "@dashlet/shared/api";
-import type { Hono } from "hono";
+import type { Env, Hono } from "hono";
 import type { Plugin } from "vite";
 
 const apiPaths: ReadonlySet<string> = new Set([
@@ -14,10 +15,11 @@ const apiPaths: ReadonlySet<string> = new Set([
   dashboardEndpoint,
   downloadEndpoint,
   inputSourceEndpoint,
+  pythonLogicEndpoint,
   pythonSourceEndpoint,
 ]);
 
-export const appServer = (app: Hono): Plugin => {
+export const appServer = <E extends Env>(app: Hono<E>): Plugin => {
   const listener = getRequestListener(app.fetch);
 
   return {

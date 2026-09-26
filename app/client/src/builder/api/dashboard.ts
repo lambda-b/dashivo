@@ -1,7 +1,7 @@
 import { apiErrorSchema, dashboardEndpoint, dashboardResponseSchema } from "@shared/api";
-import type { DashboardChange } from "@shared/dashboard";
+import type { DashboardDefinitionChange } from "@shared/dashboard";
 
-export const saveDashboard = async (change: DashboardChange) => {
+export const saveDashboard = async (change: DashboardDefinitionChange) => {
   const response = await fetch(dashboardEndpoint, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },

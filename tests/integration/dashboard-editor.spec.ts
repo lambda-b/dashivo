@@ -3,60 +3,73 @@ import os from "node:os";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { dashboardSchema } from "@dashlet/shared/dashboard";
-import {
-  writeDashboardFile,
-  updateDashboardFile,
-} from "@dashlet/infra/persistence/filesystem-dashboard-repository";
+import { createFilesystemDashboardRepository } from "@dashlet/infra/persistence/filesystem-dashboard-repository";
+import { createDashboardDefinitionService } from "@dashlet/server/services/dashboard-definition-service";
+import { createPythonLogicService } from "@dashlet/server/services/python-logic-service";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
 
-test("validates and writes dashboard.json", async () => {
+const createService = (projectRoot: string) => {
+  const repository = createFilesystemDashboardRepository(projectRoot);
+  const dashboardDefinitionService = createDashboardDefinitionService(repository);
+  const pythonLogicService = createPythonLogicService(repository);
+
+  return { repository, dashboardDefinitionService, pythonLogicService };
+};
+
+test("validates dashboard data in the application service", async () => {
   const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashlet-editor-"));
   await fs.mkdir(path.join(projectRoot, "dashboard"));
+  const { dashboardDefinitionService } = createService(projectRoot);
 
   try {
-    await writeDashboardFile(projectRoot, dashboardSource);
-    const saved = JSON.parse(
-      await fs.readFile(path.join(projectRoot, "dashboard", "dashboard.json"), "utf8"),
+    await fs.writeFile(
+      path.join(projectRoot, "dashboard/dashboard.json"),
+      `${JSON.stringify(dashboardSchema.parse(dashboardSource), null, 2)}\n`,
     );
-    expect(saved).toEqual(dashboardSchema.parse(dashboardSource));
-    await expect(writeDashboardFile(projectRoot, { title: "Invalid" })).rejects.toThrow();
+    expect(await dashboardDefinitionService.read()).toEqual(dashboardSchema.parse(dashboardSource));
+
+    await fs.writeFile(path.join(projectRoot, "dashboard/dashboard.json"), '{"title":"Invalid"}');
+    await expect(dashboardDefinitionService.read()).rejects.toThrow();
   } finally {
     await fs.rm(projectRoot, { recursive: true });
   }
 });
 
-test("serializes scoped saves and creates logic without overwriting files", async () => {
+test("updates the dashboard and registers logic through separate application services", async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "dashlet-scoped-"));
   await fs.mkdir(path.join(root, "dashboard"));
+  const { repository, dashboardDefinitionService, pythonLogicService } = createService(root);
+
   try {
-    await writeDashboardFile(root, dashboardSource);
+    await fs.writeFile(
+      path.join(root, "dashboard/dashboard.json"),
+      `${JSON.stringify(dashboardSchema.parse(dashboardSource), null, 2)}\n`,
+    );
     const { analysis, ...settings } = dashboardSchema.parse(dashboardSource);
-    await Promise.all([
-      updateDashboardFile(root, { settings: { ...settings, title: "Saved settings" } }),
-      updateDashboardFile(root, {
-        analysis: {
-          ...analysis,
-          inputs: [...analysis.inputs, { id: "extra", type: "csv", path: "data/raw/sales.csv" }],
-        },
-      }),
-    ]);
-    const created = await updateDashboardFile(root, {
-      logic: {
-        id: "new-logic",
-        path: "logic/new-logic.py",
-        source: "from dashlet import plot\ndef execute(inputs, params): return plot.metric(1)\n",
+
+    await dashboardDefinitionService.update({ settings: { ...settings, title: "Saved settings" } });
+    await dashboardDefinitionService.update({
+      analysis: {
+        ...analysis,
+        inputs: [...analysis.inputs, { id: "extra", type: "csv", path: "data/raw/sales.csv" }],
       },
     });
+
+    const created = await pythonLogicService.create({
+      id: "new-logic",
+      path: "logic/new-logic.py",
+      source: "from dashlet import plot\ndef execute(inputs, params): return plot.metric(1)\n",
+    });
+
     expect(created.title).toBe("Saved settings");
     expect(created.analysis.inputs).toHaveLength(2);
     expect(created.analysis.logic.at(-1)?.id).toBe("new-logic");
-    const code = await fs.readFile(path.join(root, "dashboard/logic/new-logic.py"), "utf8");
+
+    const code = await repository.readPython("logic/new-logic.py");
     await expect(
-      updateDashboardFile(root, {
-        logic: { id: "new-logic", path: "logic/new-logic.py", source: "pass" },
-      }),
+      pythonLogicService.create({ id: "new-logic", path: "logic/new-logic.py", source: "pass" }),
     ).rejects.toThrow();
-    expect(await fs.readFile(path.join(root, "dashboard/logic/new-logic.py"), "utf8")).toBe(code);
+    expect(await repository.readPython("logic/new-logic.py")).toBe(code);
   } finally {
     await fs.rm(root, { recursive: true });
   }
