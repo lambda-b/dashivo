@@ -10,13 +10,5 @@
     "resolveJsonModule": true,
     "noEmit": true
   },
-  "files": [],
-  "references": [
-    { "path": "./app/shared" },
-    { "path": "./app/client" },
-    { "path": "./app/server/packages/exporter" },
-    { "path": "./app/server" },
-    { "path": "./infra" },
-    { "path": "./tests" }
-  ]
+  "include": ["playwright.config.ts"]
 }
