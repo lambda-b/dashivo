@@ -1,7 +1,7 @@
 import type { UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { analysisAssets } from "@dashlet/shared-vite/plugins/analysis-assets";
+import { analysisAssets } from "@dashlet/shared-vite/common/plugins/analysis-assets";
 
 export const createDashboardViteConfiguration = (
   clientRoot: string,

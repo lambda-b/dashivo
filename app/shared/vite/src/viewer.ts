@@ -1,16 +1,20 @@
+import { fileURLToPath } from "node:url";
 import { mergeConfig, type UserConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import { createDashboardViteConfiguration } from "@dashlet/shared-vite/common";
-import { analysisAssets } from "@dashlet/shared-vite/plugins/analysis-assets";
-import { dashboardOutput } from "@dashlet/shared-vite/plugins/dashboard-output";
-import { pyodideWasm } from "@dashlet/shared-vite/plugins/pyodide-wasm";
+import { analysisAssets } from "@dashlet/shared-vite/common/plugins/analysis-assets";
+import { dashboardOutput } from "@dashlet/shared-vite/viewer/plugins/dashboard-output";
+import { pyodideWasm } from "@dashlet/shared-vite/viewer/plugins/pyodide-wasm";
+
+const viewerRuntimePath = fileURLToPath(
+  new URL("./viewer/virtual/pyodide-runtime.ts", import.meta.url),
+);
 
 export interface ViewerVitePaths {
   clientRoot: string;
   dashboardPath: string;
   generatedAssetsPath: string;
   outputRoot: string;
-  pyodideRuntimePath: string;
   viewerEntryPath: string;
 }
 
@@ -19,10 +23,9 @@ export const createViewerViteConfiguration = ({
   dashboardPath,
   generatedAssetsPath,
   outputRoot,
-  pyodideRuntimePath,
   viewerEntryPath,
 }: ViewerVitePaths): UserConfig =>
-  mergeConfig(createDashboardViteConfiguration(clientRoot, dashboardPath, pyodideRuntimePath), {
+  mergeConfig(createDashboardViteConfiguration(clientRoot, dashboardPath, viewerRuntimePath), {
     resolve: {
       alias: {
         "#generated/assets": generatedAssetsPath,

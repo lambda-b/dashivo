@@ -9,7 +9,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "virtual:*": ["./vite/virtual/*.d.ts", "./vite/virtual/*.ts"],
+      "virtual:dashlet/analysis-assets": ["../shared/vite/src/common/virtual/analysis-assets.d.ts"],
+      "virtual:dashlet/pyodide-runtime": ["../shared/vite/src/editor/virtual/pyodide-runtime.ts"],
       "@/*": ["./src/*"],
       "@shared/*": ["../shared/schema/src/*"],
       "#dashboard/*": ["../../dashboard/*"]
@@ -18,5 +19,5 @@
     "isolatedModules": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "vite", "vite.config.ts"]
+  "include": ["src", "vite.config.ts"]
 }

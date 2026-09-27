@@ -5,8 +5,8 @@ import { createServerApp } from "@dashlet/server/app";
 import { createDashboardHtmlBuilder } from "@dashlet/server-exporter/build-dashboard";
 import { createEditorViteConfiguration } from "@dashlet/shared-vite/editor";
 import { createFilesystemDashboardRepository } from "@dashlet/infra/local/persistence/filesystem-dashboard-repository";
-import { appServer } from "@dashlet/infra/local/vite/plugins/app-server";
-import { pyodideAssets } from "@dashlet/infra/local/vite/plugins/pyodide-assets";
+import { appServer } from "@dashlet/infra/local/vite/editor/plugins/app-server";
+import { pyodideAssets } from "@dashlet/infra/local/vite/editor/plugins/pyodide-assets";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const editorViteConfig = createEditorViteConfiguration(projectRoot);

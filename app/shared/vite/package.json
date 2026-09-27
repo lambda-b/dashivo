@@ -7,12 +7,14 @@
     "./common": "./src/common.ts",
     "./editor": "./src/editor.ts",
     "./viewer": "./src/viewer.ts",
-    "./plugins/*": "./src/plugins/*.ts"
+    "./common/plugins/*": "./src/common/plugins/*.ts",
+    "./viewer/plugins/*": "./src/viewer/plugins/*.ts"
   },
   "dependencies": {
     "@dashlet/shared-schema": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.1",
+    "pyodide": "^314.0.6",
     "vite": "^8.2.2",
     "vite-plugin-singlefile": "^2.3.3"
   }

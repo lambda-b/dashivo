@@ -13,10 +13,6 @@ export const createViewerViteConfiguration = (
     dashboardPath,
     generatedAssetsPath,
     outputRoot: path.join(projectRoot, "dist"),
-    pyodideRuntimePath: path.join(
-      projectRoot,
-      "app/server/packages/exporter/src/pyodide-runtime.ts",
-    ),
     viewerEntryPath: path.join(projectRoot, "app/client/src/app/ViewerApp.tsx"),
   });
 
