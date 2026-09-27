@@ -2,7 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, mergeConfig, type UserConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import { analysisAssets } from "@dashlet/shared/vite/analysis-assets";
+import { analysisAssets } from "@dashlet/shared/vite/plugins/analysis-assets";
 import { createDashboardViteConfiguration } from "@dashlet/shared/vite/configuration";
 import { dashboardOutput } from "@dashlet/server/export/plugins/dashboard-output";
 import { pyodideWasm } from "@dashlet/server/export/plugins/pyodide-wasm";

@@ -9,6 +9,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
+      "virtual:*": ["./vite/virtual/*.d.ts", "./vite/virtual/*.ts"],
       "@/*": ["./src/*"],
       "@shared/*": ["../shared/src/*"],
       "#dashboard/*": ["../../dashboard/*"],
@@ -18,5 +19,5 @@
     "isolatedModules": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "vite", "vite.config.ts"]
+  "include": ["src", "vite/virtual", "vite.config.ts"]
 }

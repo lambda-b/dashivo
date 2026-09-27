@@ -3,6 +3,8 @@
   "compilerOptions": {
     "tsBuildInfoFile": "../../node_modules/.tmp/tsconfig.server.tsbuildinfo",
     "lib": ["ES2023", "DOM"],
+    "allowJs": true,
+    "maxNodeModuleJsDepth": 1,
     "paths": {
       "#generated/*": ["../../.pyodide-cache/*"]
     }
