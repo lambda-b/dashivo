@@ -5,11 +5,7 @@
     "lib": ["ES2023", "DOM"],
     "types": ["node"],
     "allowJs": true,
-    "maxNodeModuleJsDepth": 1,
-    "paths": {
-      "#dashboard/*": ["../dashboard/*"],
-      "#generated/*": ["../.pyodide-cache/*"]
-    }
+    "maxNodeModuleJsDepth": 1
   },
-  "include": ["vite", "local", "../.pyodide-cache/assets.ts"]
+  "include": ["local"]
 }

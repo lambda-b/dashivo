@@ -2,8 +2,8 @@ import {
   dashboardCreateSchema,
   dashboardCreatedResponseSchema,
   dashboardListResponseSchema,
-} from "@dashlet/shared/api";
-import { dashboardDefinitionChangeSchema } from "@dashlet/shared/dashboard";
+} from "@dashlet/shared-schema/api";
+import { dashboardDefinitionChangeSchema } from "@dashlet/shared-schema/dashboard";
 import type { Handler } from "hono";
 import type { ServerEnv } from "@dashlet/server/context";
 import { parseJsonBody } from "@dashlet/server/controllers/validate-request";

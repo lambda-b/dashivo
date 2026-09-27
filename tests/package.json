@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "dependencies": {
-    "@dashlet/client": "workspace:*",
+  "devDependencies": {
     "@dashlet/infra": "workspace:*",
     "@dashlet/server": "workspace:*",
-    "@dashlet/shared": "workspace:*"
+    "@dashlet/shared-schema": "workspace:*",
+    "@dashlet/shared-utils": "workspace:*",
+    "@playwright/test": "^1.63.0",
+    "pyodide": "^314.0.6"
   }
 }

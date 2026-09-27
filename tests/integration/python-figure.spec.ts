@@ -1,11 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 import { loadPyodide } from "pyodide";
 
 test("Python figures serialize data, dates, missing values and formatting", async () => {
   const python = await loadPyodide({
-    indexURL: path.resolve("node_modules/pyodide"),
+    indexURL: path.dirname(fileURLToPath(import.meta.resolve("pyodide"))),
     packageCacheDir: path.resolve(".pyodide-cache"),
   });
   await python.loadPackage("pandas");

@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { useSavedDashboard } from "@/app/context/useDashboard";
+import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { analysisPort, loadInputs } from "@/ports/analysis";
 import { SelectList } from "@/components/primitives/SelectList";
 
 export const InputInspection = () => {
   const dashboard = useSavedDashboard();
+  const dashboardId = useDashboardId();
   const inputs = dashboard.analysis.inputs;
 
   const [selected, setSelected] = useState(inputs[0]?.id ?? "");
@@ -14,8 +15,8 @@ export const InputInspection = () => {
 
   const current = inputs.find((input) => input.id === selected) ?? inputs[0];
   const query = useQuery({
-    queryKey: ["input-preview", inputs],
-    queryFn: async () => analysisPort.inspect(await loadInputs(dashboard.analysis)),
+    queryKey: ["input-preview", dashboardId, inputs],
+    queryFn: async () => analysisPort.inspect(await loadInputs(dashboardId, dashboard.analysis)),
   });
   const rows = current ? (query.data?.[current.id] ?? []) : [];
   const columns = Object.keys(rows[0] ?? {});

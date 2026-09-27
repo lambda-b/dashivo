@@ -1,15 +1,14 @@
-import path from "node:path";
 import type { UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { analysisAssets } from "@dashlet/shared/vite/plugins/analysis-assets";
+import { analysisAssets } from "@dashlet/shared-vite/plugins/analysis-assets";
 
 export const createDashboardViteConfiguration = (
-  projectRoot: string,
+  clientRoot: string,
   dashboardPath: string,
   pyodideRuntimePath: string,
 ): UserConfig => ({
-  root: path.join(projectRoot, "app/client"),
+  root: clientRoot,
   resolve: {
     tsconfigPaths: true,
     alias: {

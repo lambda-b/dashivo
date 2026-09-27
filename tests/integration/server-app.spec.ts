@@ -3,33 +3,32 @@ import { createServerApp } from "@dashlet/server/app";
 import {
   dashboardItemEndpoint,
   dashboardDownloadEndpoint,
-  inputSourceEndpoint,
+  dashboardInputSourceEndpoint,
   dashboardPythonLogicEndpoint,
-} from "@dashlet/shared/api";
-import { dashboardSchema } from "@dashlet/shared/dashboard";
+} from "@dashlet/shared-schema/api";
+import { dashboardSchema } from "@dashlet/shared-schema/dashboard";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
 
 const dashboard = dashboardSchema.parse(dashboardSource);
 
 const createTestApp = () =>
   createServerApp({
-    projectRoot: process.cwd(),
     dashboardHtmlBuilder: async () =>
       Uint8Array.from(new TextEncoder().encode("<html>viewer</html>")).buffer,
     repository: {
       listDashboards: async () => [
         { id: "sales-overview", title: dashboard.title, updatedAt: "2026-01-01T00:00:00.000Z" },
       ],
-      createDashboard: async (title) => ({
+      createDashboard: async (_preferredId, createdDashboard) => ({
         id: "new-dashboard",
-        title,
+        title: createdDashboard.title,
         updatedAt: "2026-01-01T00:00:00.000Z",
       }),
       listAssets: async () => ({ csv: ["data/raw/sales.csv"], python: ["logic/analysis.py"] }),
       readDashboard: async () => ({ dashboard, version: "v1" }),
       writeDashboard: async () => {},
-      readInput: async (path) => `input:${path}`,
-      readPython: async (path) => `python:${path}`,
+      readInput: async (_id, path) => `input:${path}`,
+      readPython: async (_id, path) => `python:${path}`,
       writePython: async () => {},
       createPython: async () => {},
       deletePython: async () => {},
@@ -55,7 +54,9 @@ test("Hono API validates shared contracts without exposing persistence", async (
 
 test("Hono API serves inputs and downloadable viewer through injected services", async () => {
   const app = createTestApp();
-  const input = await app.request(`${inputSourceEndpoint}?path=data%2Fraw%2Fsales.csv`);
+  const input = await app.request(
+    `${dashboardInputSourceEndpoint("sales-overview")}?path=data%2Fraw%2Fsales.csv`,
+  );
 
   expect(input.status).toBe(200);
   expect(await input.json()).toEqual({ source: "input:data/raw/sales.csv" });

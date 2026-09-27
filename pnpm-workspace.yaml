@@ -1,5 +1,6 @@
 packages:
   - app/*
+  - app/shared/*
   - app/server/packages/*
   - infra
   - tests

@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { loadPyodide, version as pyodideVersion } from "pyodide";
-import type { DashboardSchema } from "@dashlet/shared/dashboard";
+import type { DashboardSchema } from "@dashlet/shared-schema/dashboard";
 
 const pyodideWasmFile = "pyodide.asm.wasm";
 const pythonStandardLibraryFile = "python_stdlib.zip";
@@ -15,7 +15,7 @@ export const preparePyodide = async (
   dashboardPath = path.join(projectRoot, "dashboard", "dashboard.json"),
   cacheRoot = path.join(projectRoot, ".pyodide-cache"),
 ) => {
-  const pyodideRoot = path.join(projectRoot, "node_modules", "pyodide");
+  const pyodideRoot = path.dirname(fileURLToPath(import.meta.resolve("pyodide")));
   const dashboard: DashboardSchema = JSON.parse(await fs.readFile(dashboardPath, "utf8"));
   const analysisSources = await Promise.all(
     dashboard.analysis.logic.map(async (logic) => {

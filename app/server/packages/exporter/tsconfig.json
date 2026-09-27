@@ -6,8 +6,8 @@
     "allowJs": true,
     "maxNodeModuleJsDepth": 1,
     "paths": {
-      "#generated/*": ["../../../../.pyodide-cache/*"]
+      "#generated/assets": ["./src/virtual/generated-assets.d.ts"]
     }
   },
-  "include": ["src", "../../../../.pyodide-cache/assets.ts"]
+  "include": ["src"]
 }

@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import type { DashboardAssetCatalog } from "@dashlet/shared/api";
-import type { DashboardSchema } from "@dashlet/shared/dashboard";
+import type { DashboardAssetCatalog } from "@dashlet/shared-schema/api";
+import { dashboardIdSchema, type DashboardSchema } from "@dashlet/shared-schema/dashboard";
 import { DashboardRevisionConflict } from "@dashlet/server/models/dashboard-revision-conflict";
 import { DashboardNotFound } from "@dashlet/server/models/dashboard-not-found";
 import type {
@@ -16,24 +16,9 @@ const legacyDashboardId = "sales-overview";
 const legacyDashboardPath = (projectRoot: string) =>
   path.join(projectRoot, "dashboard", "dashboard.json");
 const dashboardPath = (projectRoot: string, id: string) => {
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) throw new Error("Invalid dashboard id");
-  return path.join(dashboardDirectory(projectRoot), `${id}.json`);
+  const dashboardId = dashboardIdSchema.parse(id);
+  return path.join(dashboardDirectory(projectRoot), `${dashboardId}.json`);
 };
-
-const emptyDashboard = (title: string): DashboardSchema => ({
-  title,
-  description: "",
-  analysis: { inputs: [], logic: [] },
-  controls: [],
-  tabs: [{ id: "overview", label: "概要", contents: [] }],
-});
-
-const dashboardIdFromTitle = (title: string) =>
-  title
-    .normalize("NFKD")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "") || "dashboard";
 
 const resolvePythonPath = (projectRoot: string, sourcePath: string) => {
   const logicRoot = path.join(projectRoot, "dashboard", "logic");
@@ -77,28 +62,41 @@ const listFiles = async (dashboardRoot: string, pattern: string) => {
   return files.toSorted();
 };
 
-const readPython = (projectRoot: string, sourcePath: string) =>
-  fs.readFile(resolvePythonPath(projectRoot, sourcePath), "utf8");
+const readPython = async (projectRoot: string, id: string, sourcePath: string) => {
+  await readDashboardById(projectRoot, id);
+  return fs.readFile(resolvePythonPath(projectRoot, sourcePath), "utf8");
+};
 
-const writePython = async (projectRoot: string, sourcePath: string, source: string) => {
+const writePython = async (projectRoot: string, id: string, sourcePath: string, source: string) => {
+  await readDashboardById(projectRoot, id);
   const destination = resolvePythonPath(projectRoot, sourcePath);
 
   await fs.mkdir(path.dirname(destination), { recursive: true });
   await fs.writeFile(destination, source, "utf8");
 };
 
-const createPython = async (projectRoot: string, sourcePath: string, source: string) => {
+const createPython = async (
+  projectRoot: string,
+  id: string,
+  sourcePath: string,
+  source: string,
+) => {
+  await readDashboardById(projectRoot, id);
   const destination = resolvePythonPath(projectRoot, sourcePath);
 
   await fs.mkdir(path.dirname(destination), { recursive: true });
   await fs.writeFile(destination, source, { encoding: "utf8", flag: "wx" });
 };
 
-const deletePython = (projectRoot: string, sourcePath: string) =>
-  fs.unlink(resolvePythonPath(projectRoot, sourcePath));
+const deletePython = async (projectRoot: string, id: string, sourcePath: string) => {
+  await readDashboardById(projectRoot, id);
+  await fs.unlink(resolvePythonPath(projectRoot, sourcePath));
+};
 
-const readInput = (projectRoot: string, sourcePath: string) =>
-  fs.readFile(resolveInputPath(projectRoot, sourcePath), "utf8");
+const readInput = async (projectRoot: string, id: string, sourcePath: string) => {
+  await readDashboardById(projectRoot, id);
+  return fs.readFile(resolveInputPath(projectRoot, sourcePath), "utf8");
+};
 
 const readDashboardById = async (projectRoot: string, id: string) => {
   const filePath = dashboardPath(projectRoot, id);
@@ -181,10 +179,14 @@ const listDashboards = async (projectRoot: string) => {
   return dashboards.toSorted((left, right) => right.updatedAt.localeCompare(left.updatedAt));
 };
 
-const createDashboard = async (projectRoot: string, title: string) => {
+const createDashboard = async (
+  projectRoot: string,
+  preferredId: string,
+  dashboard: DashboardSchema,
+) => {
   const directory = dashboardDirectory(projectRoot);
   await fs.mkdir(directory, { recursive: true });
-  const baseId = dashboardIdFromTitle(title);
+  const baseId = dashboardIdSchema.parse(preferredId);
   let id = baseId;
   let suffix = 2;
   while (true) {
@@ -201,7 +203,7 @@ const createDashboard = async (projectRoot: string, title: string) => {
     try {
       await fs.writeFile(
         dashboardPath(projectRoot, id),
-        `${JSON.stringify(emptyDashboard(title), null, 2)}\n`,
+        `${JSON.stringify(dashboard, null, 2)}\n`,
         { encoding: "utf8", flag: "wx" },
       );
       break;
@@ -211,7 +213,7 @@ const createDashboard = async (projectRoot: string, title: string) => {
     }
   }
   const info = await fs.stat(dashboardPath(projectRoot, id));
-  return { id, title, updatedAt: info.mtime.toISOString() };
+  return { id, title: dashboard.title, updatedAt: info.mtime.toISOString() };
 };
 
 const registerPythonLogic = async (
@@ -220,17 +222,18 @@ const registerPythonLogic = async (
   { dashboard, expectedVersion, logic }: PythonLogicRegistration,
 ) => {
   // Local files cannot provide a multi-file transaction; compensate if updating the definition fails.
-  await createPython(projectRoot, logic.path, logic.source);
+  await createPython(projectRoot, id, logic.path, logic.source);
 
   try {
     await writeDashboard(projectRoot, id, dashboard, expectedVersion);
   } catch (error) {
-    await deletePython(projectRoot, logic.path);
+    await deletePython(projectRoot, id, logic.path);
     throw error;
   }
 };
 
-const listAssets = async (projectRoot: string): Promise<DashboardAssetCatalog> => {
+const listAssets = async (projectRoot: string, id: string): Promise<DashboardAssetCatalog> => {
+  await readDashboardById(projectRoot, id);
   const dashboardRoot = path.join(projectRoot, "dashboard");
   const [csv, python] = await Promise.all([
     listFiles(dashboardRoot, "data/**/*.csv"),
@@ -242,16 +245,16 @@ const listAssets = async (projectRoot: string): Promise<DashboardAssetCatalog> =
 
 export const createFilesystemDashboardRepository = (projectRoot: string): DashboardRepository => ({
   listDashboards: () => listDashboards(projectRoot),
-  createDashboard: (title) => createDashboard(projectRoot, title),
-  listAssets: () => listAssets(projectRoot),
+  createDashboard: (preferredId, dashboard) => createDashboard(projectRoot, preferredId, dashboard),
+  listAssets: (id) => listAssets(projectRoot, id),
   readDashboard: (id) => readDashboardById(projectRoot, id),
   writeDashboard: (id, dashboard, expectedVersion) =>
     writeDashboard(projectRoot, id, dashboard, expectedVersion),
-  readInput: (sourcePath) => readInput(projectRoot, sourcePath),
-  readPython: (sourcePath) => readPython(projectRoot, sourcePath),
-  writePython: (sourcePath, source) => writePython(projectRoot, sourcePath, source),
-  createPython: (sourcePath, source) => createPython(projectRoot, sourcePath, source),
-  deletePython: (sourcePath) => deletePython(projectRoot, sourcePath),
+  readInput: (id, sourcePath) => readInput(projectRoot, id, sourcePath),
+  readPython: (id, sourcePath) => readPython(projectRoot, id, sourcePath),
+  writePython: (id, sourcePath, source) => writePython(projectRoot, id, sourcePath, source),
+  createPython: (id, sourcePath, source) => createPython(projectRoot, id, sourcePath, source),
+  deletePython: (id, sourcePath) => deletePython(projectRoot, id, sourcePath),
   registerPythonLogicAtomically: (id, registration) =>
     registerPythonLogic(projectRoot, id, registration),
 });

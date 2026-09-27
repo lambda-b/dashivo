@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { useCreatePythonLogic } from "@/builder/hooks/useCreatePythonLogic";
-import { createUniqueIndexedName } from "@dashlet/shared/utils/createUniqueIndexedName";
+import { createUniqueIndexedName } from "@dashlet/shared-utils/createUniqueIndexedName";
 
 export const LogicDialog = ({
   onClose,

@@ -1,0 +1,19 @@
+{
+  "name": "@dashlet/shared-vite",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./common": "./src/common.ts",
+    "./editor": "./src/editor.ts",
+    "./viewer": "./src/viewer.ts",
+    "./plugins/*": "./src/plugins/*.ts"
+  },
+  "dependencies": {
+    "@dashlet/shared-schema": "workspace:*",
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.2.2",
+    "vite-plugin-singlefile": "^2.3.3"
+  }
+}

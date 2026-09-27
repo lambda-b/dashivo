@@ -1,25 +1,31 @@
 import { z } from "zod";
 import {
   dashboardSchema,
+  dashboardIdSchema,
   inputSourcePathSchema,
   pythonSourcePathSchema,
-} from "@dashlet/shared/dashboard";
+} from "@dashlet/shared-schema/dashboard";
 
-export const assetsEndpoint = "/api/assets";
 export const dashboardsEndpoint = "/api/dashboards";
 export const dashboardEndpoint = `${dashboardsEndpoint}/:id`;
 export const dashboardItemEndpoint = (id: string) =>
   `${dashboardsEndpoint}/${encodeURIComponent(id)}`;
 export const downloadEndpoint = `${dashboardEndpoint}/download`;
 export const dashboardDownloadEndpoint = (id: string) => `${dashboardItemEndpoint(id)}/download`;
-export const inputSourceEndpoint = "/api/sources/csv";
-export const pythonSourceEndpoint = "/api/sources/python";
+export const assetsEndpoint = `${dashboardEndpoint}/assets`;
+export const dashboardAssetsEndpoint = (id: string) => `${dashboardItemEndpoint(id)}/assets`;
+export const inputSourceEndpoint = `${dashboardEndpoint}/sources/csv`;
+export const dashboardInputSourceEndpoint = (id: string) =>
+  `${dashboardItemEndpoint(id)}/sources/csv`;
+export const pythonSourceEndpoint = `${dashboardEndpoint}/sources/python`;
+export const dashboardPythonSourceEndpoint = (id: string) =>
+  `${dashboardItemEndpoint(id)}/sources/python`;
 export const pythonLogicEndpoint = `${dashboardEndpoint}/python-logics`;
 export const dashboardPythonLogicEndpoint = (id: string) =>
   `${dashboardItemEndpoint(id)}/python-logics`;
 
 export const dashboardListItemSchema = z.object({
-  id: z.string().min(1),
+  id: dashboardIdSchema,
   title: z.string().min(1),
   updatedAt: z.string(),
 });

@@ -39,7 +39,7 @@ export const CodeWorkspace = ({ path, savedSource }: { path: string; savedSource
             params[control.key] ?? control.defaultValue,
           ]),
         ),
-        sources: await loadInputs(dashboard.analysis),
+        sources: await loadInputs(dashboardId, dashboard.analysis),
       }),
   });
 

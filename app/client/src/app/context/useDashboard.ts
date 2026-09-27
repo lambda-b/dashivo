@@ -6,7 +6,7 @@ import { dashboardSchema, type DashboardSchema } from "@shared/dashboard";
 const bundledDashboard = dashboardSchema.parse(source);
 
 export const dashboardQueryKey = ["dashboard"] as const;
-export const DashboardIdContext = createContext("sales-overview");
+export const DashboardIdContext = createContext("");
 export const useDashboardId = () => useContext(DashboardIdContext);
 
 export const DashboardPreviewContext = createContext<DashboardSchema | null>(null);

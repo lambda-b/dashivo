@@ -6,7 +6,7 @@ import {
   inputSourceEndpoint,
   pythonLogicEndpoint,
   pythonSourceEndpoint,
-} from "@dashlet/shared/api";
+} from "@dashlet/shared-schema/api";
 import type { Hono } from "hono";
 import type { ServerEnv } from "@dashlet/server/context";
 import { getDashboardAssets, getInputSource } from "@dashlet/server/controllers/dashboard-asset";

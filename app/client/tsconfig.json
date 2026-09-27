@@ -11,9 +11,8 @@
     "paths": {
       "virtual:*": ["./vite/virtual/*.d.ts", "./vite/virtual/*.ts"],
       "@/*": ["./src/*"],
-      "@shared/*": ["../shared/src/*"],
-      "#dashboard/*": ["../../dashboard/*"],
-      "#generated/*": ["../../.pyodide-cache/*"]
+      "@shared/*": ["../shared/schema/src/*"],
+      "#dashboard/*": ["../../dashboard/*"]
     },
     "types": ["vite/client", "node"],
     "isolatedModules": true,

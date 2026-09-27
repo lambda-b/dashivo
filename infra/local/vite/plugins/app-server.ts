@@ -1,24 +1,6 @@
 import { getRequestListener } from "@hono/node-server";
-import {
-  assetsEndpoint,
-  dashboardEndpoint,
-  inputSourceEndpoint,
-  pythonSourceEndpoint,
-} from "@dashlet/shared/api";
 import type { Env, Hono } from "hono";
 import type { Plugin } from "vite";
-
-const apiPaths: ReadonlySet<string> = new Set([
-  "/api/dashboards",
-  assetsEndpoint,
-  dashboardEndpoint,
-  inputSourceEndpoint,
-  pythonSourceEndpoint,
-]);
-
-const isApiPath = (pathname: string) =>
-  apiPaths.has(pathname) ||
-  /^\/api\/dashboards\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/(?:download|python-logics))?$/.test(pathname);
 
 export const appServer = <E extends Env>(app: Hono<E>): Plugin => {
   const listener = getRequestListener(app.fetch);
@@ -31,7 +13,7 @@ export const appServer = <E extends Env>(app: Hono<E>): Plugin => {
       server.middlewares.use((request, response, next) => {
         const url = new URL(request.url ?? "/", "http://localhost");
 
-        if (!isApiPath(url.pathname)) {
+        if (!url.pathname.startsWith("/api/")) {
           next();
           return;
         }

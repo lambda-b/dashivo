@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { dashboardSchema } from "@dashlet/shared/dashboard";
+import { dashboardSchema } from "@dashlet/shared-schema/dashboard";
 import { createFilesystemDashboardRepository } from "@dashlet/infra/local/persistence/filesystem-dashboard-repository";
 import { createDashboardDefinitionService } from "@dashlet/server/services/dashboard-definition-service";
 import { createPythonLogicService } from "@dashlet/server/services/python-logic-service";
@@ -69,7 +69,7 @@ test("updates the dashboard and registers logic through separate application ser
     expect(created.analysis.inputs).toHaveLength(2);
     expect(created.analysis.logic.at(-1)?.id).toBe("new-logic");
 
-    const code = await repository.readPython("logic/new-logic.py");
+    const code = await repository.readPython("sales-overview", "logic/new-logic.py");
     await expect(
       pythonLogicService.create("sales-overview", {
         id: "new-logic",
@@ -77,7 +77,7 @@ test("updates the dashboard and registers logic through separate application ser
         source: "pass",
       }),
     ).rejects.toThrow();
-    expect(await repository.readPython("logic/new-logic.py")).toBe(code);
+    expect(await repository.readPython("sales-overview", "logic/new-logic.py")).toBe(code);
   } finally {
     await fs.rm(root, { recursive: true });
   }

@@ -61,12 +61,13 @@ pnpm test:e2e
 │  └─ dashboard.json  # UIとデータBindingのSchema
 ├─ app/
 │  ├─ client/         # React UIとPython Worker
-│  ├─ server/         # Hono Controller・Service・Model IF
-│  └─ shared/         # client/server共通のZod SchemaとAPI契約
+│  ├─ server/         # Hono API、サービス、HTML exporter
+│  └─ shared/
+│     ├─ schema/      # DashboardとHTTP APIのZod契約・URL
+│     ├─ utils/       # 環境に依存しない共通関数
+│     └─ vite/        # editor/viewer共通のVite設定とplugin
 ├─ infra/
-│  ├─ build/          # 単一HTML生成の具体実装
-│  ├─ persistence/    # ファイルシステムRepository実装
-│  └─ vite/           # Vite設定・plugin・Pyodide asset準備
+│  └─ local/          # ファイル永続化と開発サーバー連携
 ├─ tests/             # unit・integration・e2e（resultsは実行結果）
 └─ work/              # プロジェクト計画（Git管理外）
 ```
@@ -86,4 +87,4 @@ def execute(inputs, params):
 
 戻り値は `plot.line`・`bar`・`pie`・`scatter`・`table`・`metric` で作るFigureです。種類、列の対応、タイトル、書式はPython側に集約し、JSONにはロジック参照と配置だけを保持します。Workbenchでは「実行」でのみ出力を更新し、検証用パラメータは閲覧画面へ影響しません。入力CSVはコードの実行に関係なく先頭5行を確認できます。詳細は確認エリアの「ヘルプ」、入力補助はコード内の `#chart` などのスニペットを参照してください。
 
-`app/client/src/` 内のimportは `@/` を起点にし、共有契約は `@shared/*` から参照します。Node.jsからも直接読み込むserverとinfraは、Node.jsで解決できるworkspace package名（`@dashlet/server/*`、`@dashlet/infra/*`）を使います。Pyodideはdevでは配布ファイルを動的に読み込み、buildでは `virtual:dashlet/pyodide-runtime` を埋め込み実装へ差し替えます。
+`app/client/src/` 内のimportは `@/` を起点にし、共有契約は `@shared/api`・`@shared/dashboard` から参照します。Node.jsからも直接読み込むserverとinfraは、workspace package名（`@dashlet/shared-schema/api`、`@dashlet/shared-schema/dashboard` など）を使います。Vite設定は独立した `@dashlet/shared-vite` にまとめ、editorとviewerから共通設定を利用します。Pyodideはdevでは配布ファイルを動的に読み込み、buildでは `virtual:dashlet/pyodide-runtime` を埋め込み実装へ差し替えます。

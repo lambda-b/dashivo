@@ -12,8 +12,7 @@
     "./services/*": "./src/services/*.ts"
   },
   "dependencies": {
-    "@dashlet/server-exporter": "workspace:*",
-    "@dashlet/shared": "workspace:*",
+    "@dashlet/shared-schema": "workspace:*",
     "hono": "^4.13.8"
   }
 }

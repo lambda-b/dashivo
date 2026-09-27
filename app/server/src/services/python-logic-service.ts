@@ -1,15 +1,22 @@
 import {
+  dashboardIdSchema,
   dashboardSchema,
   pythonLogicCreateSchema,
   pythonSourcePathSchema,
   type PythonLogicCreate,
-} from "@dashlet/shared/dashboard";
-import type { DashboardRepository } from "@dashlet/server/models/dashboard-repository";
+} from "@dashlet/shared-schema/dashboard";
+import type {
+  DashboardDefinitionRepository,
+  PythonLogicRepository,
+} from "@dashlet/server/models/dashboard-repository";
 
-export const createPythonLogicService = (repository: DashboardRepository) => ({
+export const createPythonLogicService = (
+  repository: DashboardDefinitionRepository & PythonLogicRepository,
+) => ({
   create: async (dashboardId: string, definition: PythonLogicCreate) => {
+    const validDashboardId = dashboardIdSchema.parse(dashboardId);
     const { id, path, source } = pythonLogicCreateSchema.parse(definition);
-    const snapshot = await repository.readDashboard(dashboardId);
+    const snapshot = await repository.readDashboard(validDashboardId);
     const current = dashboardSchema.parse(snapshot.dashboard);
     const next = dashboardSchema.parse({
       ...current,
@@ -19,7 +26,7 @@ export const createPythonLogicService = (repository: DashboardRepository) => ({
       },
     });
 
-    await repository.registerPythonLogicAtomically(dashboardId, {
+    await repository.registerPythonLogicAtomically(validDashboardId, {
       dashboard: next,
       expectedVersion: snapshot.version,
       logic: { id, path, source },
@@ -27,10 +34,14 @@ export const createPythonLogicService = (repository: DashboardRepository) => ({
 
     return next;
   },
-  read: (_dashboardId: string, path: string) =>
-    repository.readPython(pythonSourcePathSchema.parse(path)),
-  write: (_dashboardId: string, path: string, source: string) =>
-    repository.writePython(pythonSourcePathSchema.parse(path), source),
+  read: (dashboardId: string, path: string) =>
+    repository.readPython(dashboardIdSchema.parse(dashboardId), pythonSourcePathSchema.parse(path)),
+  write: (dashboardId: string, path: string, source: string) =>
+    repository.writePython(
+      dashboardIdSchema.parse(dashboardId),
+      pythonSourcePathSchema.parse(path),
+      source,
+    ),
 });
 
 export type PythonLogicService = ReturnType<typeof createPythonLogicService>;

@@ -1,5 +1,5 @@
-import { pythonSourceQuerySchema } from "@dashlet/shared/api";
-import { pythonLogicCreateSchema } from "@dashlet/shared/dashboard";
+import { pythonSourceQuerySchema } from "@dashlet/shared-schema/api";
+import { pythonLogicCreateSchema } from "@dashlet/shared-schema/dashboard";
 import type { Handler } from "hono";
 import type { ServerEnv } from "@dashlet/server/context";
 import { parseJsonBody, parseQuery } from "@dashlet/server/controllers/validate-request";
@@ -21,9 +21,7 @@ export const createPythonLogic: Handler<ServerEnv> = async (context) => {
  */
 export const getPythonSource: Handler<ServerEnv> = async (context) => {
   const query = parseQuery(context.req.query(), pythonSourceQuerySchema);
-  const source = await context
-    .get("pythonLogicService")
-    .read(context.req.query("dashboardId") ?? "", query.path);
+  const source = await context.get("pythonLogicService").read(context.req.param("id")!, query.path);
 
   return context.json({ source });
 };
@@ -36,7 +34,7 @@ export const updatePythonSource: Handler<ServerEnv> = async (context) => {
 
   await context
     .get("pythonLogicService")
-    .write(context.req.query("dashboardId") ?? "", query.path, await context.req.text());
+    .write(context.req.param("id")!, query.path, await context.req.text());
 
   return context.json({ path: query.path });
 };

@@ -1,8 +1,8 @@
 import type { DashboardRepository } from "@dashlet/server/models/dashboard-repository";
+import type { DashboardHtmlBuilder } from "@dashlet/server/models/dashboard-html-builder";
 import { createDashboardAssetService } from "@dashlet/server/services/dashboard-asset-service";
 import { createDashboardDefinitionService } from "@dashlet/server/services/dashboard-definition-service";
 import { createDashboardDownloadService } from "@dashlet/server/services/dashboard-download-service";
-import type { DashboardHtmlBuilder } from "@dashlet/server/services/dashboard-download-service";
 import { createPythonLogicService } from "@dashlet/server/services/python-logic-service";
 import type { DashboardAssetService } from "@dashlet/server/services/dashboard-asset-service";
 import type { DashboardDefinitionService } from "@dashlet/server/services/dashboard-definition-service";
@@ -11,9 +11,8 @@ import type { PythonLogicService } from "@dashlet/server/services/python-logic-s
 import type { MiddlewareHandler } from "hono";
 
 export interface ServerDependencies {
-  projectRoot: string;
   repository: DashboardRepository;
-  dashboardHtmlBuilder?: DashboardHtmlBuilder;
+  dashboardHtmlBuilder: DashboardHtmlBuilder;
 }
 
 export type ServerEnv = {
@@ -29,17 +28,12 @@ export type ServerServices = ServerEnv["Variables"];
 
 export const configureServerContext = ({
   dashboardHtmlBuilder,
-  projectRoot,
   repository,
 }: ServerDependencies) => {
   const services: ServerServices = {
     assetService: createDashboardAssetService(repository),
     dashboardDefinitionService: createDashboardDefinitionService(repository),
-    dashboardDownloadService: createDashboardDownloadService(
-      repository,
-      projectRoot,
-      dashboardHtmlBuilder,
-    ),
+    dashboardDownloadService: createDashboardDownloadService(repository, dashboardHtmlBuilder),
     pythonLogicService: createPythonLogicService(repository),
   };
 

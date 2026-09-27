@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { FileCode2, Plus, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useSavedDashboard } from "@/app/context/useDashboard";
+import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { useSaveDashboard } from "@/builder/hooks/useSaveDashboard";
 import { loadAssetCatalog } from "@/builder/api/python";
 import { LogicDialog } from "@/builder/workbench/definitions/LogicDialog";
 import { SelectList } from "@/components/primitives/SelectList";
 import { IconButton } from "@/components/primitives/IconButton";
-import { createUniqueIndexedName } from "@dashlet/shared/utils/createUniqueIndexedName";
+import { createUniqueIndexedName } from "@dashlet/shared-utils/createUniqueIndexedName";
 
 export const Definitions = ({
   selected,
@@ -17,9 +17,13 @@ export const Definitions = ({
   onSelect: (id: string) => void;
 }) => {
   const dashboard = useSavedDashboard();
+  const dashboardId = useDashboardId();
   const [adding, setAdding] = useState(false);
 
-  const catalog = useQuery({ queryKey: ["dashboard-assets"], queryFn: loadAssetCatalog });
+  const catalog = useQuery({
+    queryKey: ["dashboard-assets", dashboardId],
+    queryFn: () => loadAssetCatalog(dashboardId),
+  });
   const save = useSaveDashboard();
 
   const usedTabs = dashboard.tabs.filter((tab) =>

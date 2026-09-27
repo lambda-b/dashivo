@@ -5,6 +5,8 @@ const identifierSchema = z
   .min(1)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "must be a lowercase kebab-case identifier");
 
+export const dashboardIdSchema = identifierSchema;
+
 const dashboardFilePathSchema = (directory: string, extension: string) =>
   z
     .string()
@@ -328,6 +330,14 @@ export const dashboardSchema = z
       }
     }
   });
+
+export const createEmptyDashboard = (title: string): DashboardSchema => ({
+  title,
+  description: "",
+  analysis: { inputs: [], logic: [] },
+  controls: [],
+  tabs: [{ id: "overview", label: "概要", contents: [] }],
+});
 
 export const dashboardSettingsSchema = z.object({
   title: dashboardSchema.shape.title,

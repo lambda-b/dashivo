@@ -1,4 +1,5 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { normalizePath } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
@@ -9,13 +10,13 @@ const pyodideCoreAssets = [
   "python_stdlib.zip",
 ] as const;
 
+const pyodideRoot = path.dirname(fileURLToPath(import.meta.resolve("pyodide")));
+
 export const pyodideAssets = (projectRoot: string) =>
   viteStaticCopy({
     targets: [
       {
-        src: pyodideCoreAssets.map((name) =>
-          normalizePath(path.join(projectRoot, "node_modules", "pyodide", name)),
-        ),
+        src: pyodideCoreAssets.map((name) => normalizePath(path.join(pyodideRoot, name))),
         dest: "pyodide",
         rename: { stripBase: true },
       },

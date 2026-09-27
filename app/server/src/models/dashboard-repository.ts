@@ -1,5 +1,5 @@
-import type { DashboardAssetCatalog } from "@dashlet/shared/api";
-import type { DashboardSchema, PythonLogicCreate } from "@dashlet/shared/dashboard";
+import type { DashboardAssetCatalog, DashboardListItem } from "@dashlet/shared-schema/api";
+import type { DashboardSchema, PythonLogicCreate } from "@dashlet/shared-schema/dashboard";
 
 export interface PythonLogicRegistration {
   dashboard: DashboardSchema;
@@ -12,23 +12,26 @@ export interface DashboardSnapshot {
   version: string;
 }
 
-export interface DashboardListItem {
-  id: string;
-  title: string;
-  updatedAt: string;
-}
-
-export interface DashboardRepository {
+export interface DashboardDefinitionRepository {
   listDashboards(): Promise<DashboardListItem[]>;
-  createDashboard(title: string): Promise<DashboardListItem>;
-  listAssets(): Promise<DashboardAssetCatalog>;
+  createDashboard(preferredId: string, dashboard: DashboardSchema): Promise<DashboardListItem>;
   readDashboard(id: string): Promise<DashboardSnapshot>;
   writeDashboard(id: string, dashboard: DashboardSchema, expectedVersion: string): Promise<void>;
-  readInput(path: string): Promise<string>;
-  readPython(path: string): Promise<string>;
-  writePython(path: string, source: string): Promise<void>;
-  createPython(path: string, source: string): Promise<void>;
-  deletePython(path: string): Promise<void>;
+}
+
+export interface DashboardAssetRepository {
+  listAssets(id: string): Promise<DashboardAssetCatalog>;
+  readInput(id: string, path: string): Promise<string>;
+}
+
+export interface PythonLogicRepository {
+  readPython(id: string, path: string): Promise<string>;
+  writePython(id: string, path: string, source: string): Promise<void>;
+  createPython(id: string, path: string, source: string): Promise<void>;
+  deletePython(id: string, path: string): Promise<void>;
   /** Commit the Python source and its Dashboard reference as one persistence operation. */
   registerPythonLogicAtomically(id: string, registration: PythonLogicRegistration): Promise<void>;
 }
+
+export interface DashboardRepository
+  extends DashboardDefinitionRepository, DashboardAssetRepository, PythonLogicRepository {}

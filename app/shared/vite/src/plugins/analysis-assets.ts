@@ -2,13 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { Plugin } from "vite";
 import { normalizePath } from "vite";
-import { dashboardSchema } from "@dashlet/shared/dashboard";
-import type { AnalysisLogicDefinition } from "@dashlet/shared/dashboard";
-
-export type AnalysisAssetDefinition = Pick<AnalysisLogicDefinition, "id" | "path"> & {
-  inputs: { id: string; sourceData: string }[];
-  analysisSource: string;
-};
+import { dashboardSchema } from "@dashlet/shared-schema/dashboard";
 
 export const analysisAssetsModuleId = "virtual:dashlet/analysis-assets";
 const resolvedModuleId = `\0${analysisAssetsModuleId}`;
