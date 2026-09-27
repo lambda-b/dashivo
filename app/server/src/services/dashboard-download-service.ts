@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { dashboardSchema, type DashboardSchema } from "@dashlet/shared/dashboard";
 import type { DashboardRepository } from "@dashlet/server/models/dashboard-repository";
-import { buildDashboard } from "@dashlet/server/services/build-dashboard";
+import { buildDashboard } from "@dashlet/server-exporter/build-dashboard";
 
 export type DashboardHtmlBuilder = (
   sourceRoot: string,

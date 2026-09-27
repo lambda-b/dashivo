@@ -2,8 +2,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { build } from "vite";
-import { preparePyodide } from "@dashlet/server/export/prepare/pyodide";
-import { createViewerViteConfiguration } from "@dashlet/server/export/configuration";
+import { preparePyodide } from "@dashlet/server-exporter/prepare/pyodide";
+import { createViewerViteConfiguration } from "@dashlet/server-exporter/configuration";
 
 export const buildDashboard = async (
   sourceRoot: string,

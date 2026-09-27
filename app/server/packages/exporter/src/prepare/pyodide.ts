@@ -97,6 +97,6 @@ const scriptPath = process.argv[1] && pathToFileURL(path.resolve(process.argv[1]
 
 if (scriptPath === import.meta.url) {
   await preparePyodide(
-    path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../../"),
+    path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../../../"),
   );
 }

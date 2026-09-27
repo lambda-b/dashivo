@@ -4,9 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./export/configuration": "./src/export/configuration.ts",
-    "./export/plugins/*": "./src/export/plugins/*.ts",
-    "./export/prepare/*": "./src/export/prepare/*.ts",
     "./app": "./src/app.ts",
     "./context": "./src/context.ts",
     "./controllers/*": "./src/controllers/*.ts",
@@ -15,11 +12,8 @@
     "./services/*": "./src/services/*.ts"
   },
   "dependencies": {
-    "@dashlet/client": "workspace:*",
+    "@dashlet/server-exporter": "workspace:*",
     "@dashlet/shared": "workspace:*",
-    "hono": "^4.13.8",
-    "pyodide": "^314.0.6",
-    "vite": "^8.2.2",
-    "vite-plugin-singlefile": "^2.3.3"
+    "hono": "^4.13.8"
   }
 }

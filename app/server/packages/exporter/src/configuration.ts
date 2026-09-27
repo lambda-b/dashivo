@@ -4,8 +4,8 @@ import { defineConfig, mergeConfig, type UserConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import { analysisAssets } from "@dashlet/shared/vite/plugins/analysis-assets";
 import { createDashboardViteConfiguration } from "@dashlet/shared/vite/configuration";
-import { dashboardOutput } from "@dashlet/server/export/plugins/dashboard-output";
-import { pyodideWasm } from "@dashlet/server/export/plugins/pyodide-wasm";
+import { dashboardOutput } from "@dashlet/server-exporter/plugins/dashboard-output";
+import { pyodideWasm } from "@dashlet/server-exporter/plugins/pyodide-wasm";
 
 export const createViewerViteConfiguration = (
   projectRoot: string,
@@ -16,7 +16,7 @@ export const createViewerViteConfiguration = (
     createDashboardViteConfiguration(
       projectRoot,
       dashboardPath,
-      path.join(projectRoot, "app/server/src/export/pyodide-runtime.ts"),
+      path.join(projectRoot, "app/server/packages/exporter/src/pyodide-runtime.ts"),
     ),
     {
       resolve: {
@@ -40,6 +40,6 @@ export const createViewerViteConfiguration = (
     },
   );
 
-const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../");
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../../");
 
 export default defineConfig(() => createViewerViteConfiguration(projectRoot));
