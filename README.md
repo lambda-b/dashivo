@@ -44,6 +44,8 @@ open dist/dashboard.html
 
 検査は以下で実行します。
 
+`pnpm check` の型検査は、必要に応じてPyodide資産を `.pyodide-cache/` に生成します。初回はパッケージの取得が発生します。
+
 ```bash
 pnpm check
 pnpm build
