@@ -1,6 +1,5 @@
 import { wrap } from "comlink";
 import { z } from "zod";
-import { loadInputSource, loadPythonSource } from "@/builder/api/python";
 import type { PythonAnalysisWorkerApi } from "@/ports/workers/python/analysis.worker";
 import PythonAnalysisWorker from "@/ports/workers/python/analysis.worker?worker&inline";
 import {
@@ -18,13 +17,15 @@ export interface AnalysisPreviewInput {
 
 const api = wrap<PythonAnalysisWorkerApi>(new PythonAnalysisWorker());
 
-export const loadInputs = (analysis: AnalysisDefinition) =>
-  Promise.all(
+export const loadInputs = async (analysis: AnalysisDefinition) => {
+  const { loadInputSource } = await import("@/builder/api/python");
+  return Promise.all(
     analysis.inputs.map(async (input) => ({
       id: input.id,
       sourceData: await loadInputSource(input.path),
     })),
   );
+};
 
 export const analysisPort = {
   async execute(
@@ -34,6 +35,7 @@ export const analysisPort = {
   ) {
     if (import.meta.env.DEV && analysis) {
       const sources = await loadInputs(analysis);
+      const { loadPythonSource } = await import("@/builder/api/python");
       const results: Record<string, unknown> = {};
 
       for (const logic of analysis.logic) {

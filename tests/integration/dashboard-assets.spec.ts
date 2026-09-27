@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { createFilesystemDashboardRepository } from "@dashlet/infra/persistence/filesystem-dashboard-repository";
+import { createFilesystemDashboardRepository } from "@dashlet/infra/local/persistence/filesystem-dashboard-repository";
 
 test("reads and writes Python only under dashboard/logic", async () => {
   const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashlet-assets-"));

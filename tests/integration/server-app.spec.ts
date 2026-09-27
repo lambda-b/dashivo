@@ -13,9 +13,9 @@ const dashboard = dashboardSchema.parse(dashboardSource);
 
 const createTestApp = () =>
   createServerApp({
-    buildService: {
-      build: async () => Uint8Array.from(new TextEncoder().encode("<html>viewer</html>")).buffer,
-    },
+    projectRoot: process.cwd(),
+    dashboardHtmlBuilder: async () =>
+      Uint8Array.from(new TextEncoder().encode("<html>viewer</html>")).buffer,
     repository: {
       listDashboards: async () => [
         { id: "sales-overview", title: dashboard.title, updatedAt: "2026-01-01T00:00:00.000Z" },

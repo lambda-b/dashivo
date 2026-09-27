@@ -11,5 +11,5 @@
       "#generated/*": ["../.pyodide-cache/*"]
     }
   },
-  "include": ["vite", "persistence", "export", "../.pyodide-cache/assets.ts"]
+  "include": ["vite", "local", "../.pyodide-cache/assets.ts"]
 }

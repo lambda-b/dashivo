@@ -1,8 +1,8 @@
-import type { DashboardBuildService } from "@dashlet/server/models/dashboard-build-service";
 import type { DashboardRepository } from "@dashlet/server/models/dashboard-repository";
 import { createDashboardAssetService } from "@dashlet/server/services/dashboard-asset-service";
 import { createDashboardDefinitionService } from "@dashlet/server/services/dashboard-definition-service";
 import { createDashboardDownloadService } from "@dashlet/server/services/dashboard-download-service";
+import type { DashboardHtmlBuilder } from "@dashlet/server/services/dashboard-download-service";
 import { createPythonLogicService } from "@dashlet/server/services/python-logic-service";
 import type { DashboardAssetService } from "@dashlet/server/services/dashboard-asset-service";
 import type { DashboardDefinitionService } from "@dashlet/server/services/dashboard-definition-service";
@@ -11,8 +11,9 @@ import type { PythonLogicService } from "@dashlet/server/services/python-logic-s
 import type { MiddlewareHandler } from "hono";
 
 export interface ServerDependencies {
-  buildService: DashboardBuildService;
+  projectRoot: string;
   repository: DashboardRepository;
+  dashboardHtmlBuilder?: DashboardHtmlBuilder;
 }
 
 export type ServerEnv = {
@@ -26,11 +27,19 @@ export type ServerEnv = {
 
 export type ServerServices = ServerEnv["Variables"];
 
-export const configureServerContext = ({ buildService, repository }: ServerDependencies) => {
+export const configureServerContext = ({
+  dashboardHtmlBuilder,
+  projectRoot,
+  repository,
+}: ServerDependencies) => {
   const services: ServerServices = {
     assetService: createDashboardAssetService(repository),
     dashboardDefinitionService: createDashboardDefinitionService(repository),
-    dashboardDownloadService: createDashboardDownloadService(buildService),
+    dashboardDownloadService: createDashboardDownloadService(
+      repository,
+      projectRoot,
+      dashboardHtmlBuilder,
+    ),
     pythonLogicService: createPythonLogicService(repository),
   };
 

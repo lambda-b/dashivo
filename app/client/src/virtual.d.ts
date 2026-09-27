@@ -7,10 +7,6 @@ declare module "virtual:dashlet/analysis-assets" {
   }[];
 }
 
-declare module "virtual:dashlet/app-target" {
-  export const appTarget: "editor" | "viewer";
-}
-
 declare module "virtual:dashlet/pyodide-runtime" {
   import type { PyodideAPI } from "pyodide";
 

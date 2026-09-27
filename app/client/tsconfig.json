@@ -14,9 +14,9 @@
       "#dashboard/*": ["../../dashboard/*"],
       "#generated/*": ["../../.pyodide-cache/*"]
     },
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "isolatedModules": true,
     "jsx": "react-jsx"
   },
-  "include": ["src"]
+  "include": ["src", "vite", "vite.config.ts"]
 }

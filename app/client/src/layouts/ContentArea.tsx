@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useDashboard, useDashboardId } from "@/app/context/useDashboard";
 import { DashboardContent } from "@/components/contents/DashboardContent";
 import { DashboardTabs } from "@/components/contents/DashboardTabs";
-import { appTarget } from "virtual:dashlet/app-target";
 import type { AnalysisResults } from "@shared/dashboard";
 
 export const ContentArea = ({
@@ -18,7 +17,7 @@ export const ContentArea = ({
 }) => {
   const dashboard = useDashboard();
   const dashboardId = useDashboardId();
-  const dashboardPath = appTarget === "editor" ? `/d/${dashboardId}` : "";
+  const dashboardPath = import.meta.env.MODE !== "viewer" ? `/d/${dashboardId}` : "";
   const defaultTabPath = `${dashboardPath}/${dashboard.tabs[0].id}`;
 
   return (

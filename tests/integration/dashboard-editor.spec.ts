@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { dashboardSchema } from "@dashlet/shared/dashboard";
-import { createFilesystemDashboardRepository } from "@dashlet/infra/persistence/filesystem-dashboard-repository";
+import { createFilesystemDashboardRepository } from "@dashlet/infra/local/persistence/filesystem-dashboard-repository";
 import { createDashboardDefinitionService } from "@dashlet/server/services/dashboard-definition-service";
 import { createPythonLogicService } from "@dashlet/server/services/python-logic-service";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };

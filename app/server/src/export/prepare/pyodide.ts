@@ -19,7 +19,7 @@ export const preparePyodide = async (
   const dashboard: DashboardSchema = JSON.parse(await fs.readFile(dashboardPath, "utf8"));
   const analysisSources = await Promise.all(
     dashboard.analysis.logic.map(async (logic) => {
-      const dashboardRoot = path.join(projectRoot, "dashboard");
+      const dashboardRoot = path.dirname(dashboardPath);
       const logicPath = path.resolve(dashboardRoot, logic.path);
       const relativePath = path.relative(dashboardRoot, logicPath);
 
@@ -96,5 +96,7 @@ export const preparePyodide = async (
 const scriptPath = process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href;
 
 if (scriptPath === import.meta.url) {
-  await preparePyodide(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.."));
+  await preparePyodide(
+    path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../../"),
+  );
 }

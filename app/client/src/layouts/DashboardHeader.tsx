@@ -2,7 +2,6 @@ import clsx from "clsx";
 import { Download } from "lucide-react";
 import { useDashboard } from "@/app/context/useDashboard";
 import { EditButton } from "@/components/primitives/EditButton";
-import { appTarget } from "virtual:dashlet/app-target";
 
 export const DashboardHeader = ({
   onEditHeader,
@@ -28,7 +27,7 @@ export const DashboardHeader = ({
               D
             </span>
             <p className="text-brand text-[0.6875rem] font-bold tracking-[0.16em]">
-              DASHLET{appTarget === "editor" && " · BUILDER PREVIEW"}
+              DASHLET{import.meta.env.MODE !== "viewer" && " · BUILDER PREVIEW"}
             </p>
           </div>
           <h1 className="text-3xl font-bold tracking-[-0.035em] sm:text-4xl">{dashboard.title}</h1>

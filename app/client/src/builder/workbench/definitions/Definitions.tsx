@@ -7,7 +7,7 @@ import { loadAssetCatalog } from "@/builder/api/python";
 import { LogicDialog } from "@/builder/workbench/definitions/LogicDialog";
 import { SelectList } from "@/components/primitives/SelectList";
 import { IconButton } from "@/components/primitives/IconButton";
-import { createUniqueIndexedName } from "@/utils/createUniqueIndexedName";
+import { createUniqueIndexedName } from "@dashlet/shared/utils/createUniqueIndexedName";
 
 export const Definitions = ({
   selected,

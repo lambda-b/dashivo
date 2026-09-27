@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./utils/createUniqueIndexedName": "./src/utils/createUniqueIndexedName.ts"
+    "./vite.config": "./vite.config.ts"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.3",
@@ -17,6 +17,7 @@
     "@radix-ui/react-slider": "^1.4.7",
     "@tanstack/react-query": "^5.102.8",
     "@tanstack/react-table": "^9.2.4",
+    "@types/node": "^24.3.1",
     "@uiw/react-codemirror": "^4.25.11",
     "clsx": "^2.1.1",
     "comlink": "^4.4.2",
@@ -27,6 +28,7 @@
     "react-router-dom": "^7.18.3",
     "recharts": "^3.10.1",
     "tailwindcss": "^4.3.3",
+    "vite": "^8.2.2",
     "yaml": "^2.9.1",
     "zod": "^4.5.4"
   }

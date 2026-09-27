@@ -4,22 +4,17 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./export/*": "./export/*.ts",
-    "./persistence/*": "./persistence/*.ts",
-    "./vite/plugins/*": "./vite/plugins/*.ts",
-    "./vite/configuration": "./vite/configuration.ts",
-    "./vite/virtual/*": "./vite/virtual/*.ts"
+    "./local/*": "./local/*.ts",
+    "./vite/plugins/app-server": "./vite/plugins/app-server.ts",
+    "./vite/plugins/pyodide-assets": "./vite/plugins/pyodide-assets.ts"
   },
   "dependencies": {
+    "@dashlet/client": "workspace:*",
     "@dashlet/server": "workspace:*",
     "@dashlet/shared": "workspace:*",
     "@hono/node-server": "^2.1.1",
-    "@tailwindcss/vite": "^4.3.3",
-    "@vitejs/plugin-react": "^6.1.1",
     "hono": "^4.13.8",
-    "pyodide": "^314.0.6",
     "vite": "^8.2.2",
-    "vite-plugin-singlefile": "^2.3.3",
     "vite-plugin-static-copy": "^4.1.1"
   }
 }
