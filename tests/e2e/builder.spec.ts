@@ -52,7 +52,7 @@ for (const failFirstSave of [false, true]) {
       releaseFirst = resolve;
     });
 
-    await page.route("**/api/dashboard", async (route) => {
+    await page.route("**/api/dashboards/sales-overview", async (route) => {
       if (route.request().method() === "PUT") {
         requests++;
         if (requests === 1) {
@@ -68,6 +68,18 @@ for (const failFirstSave of [false, true]) {
       await route.fulfill({ json: { dashboard } });
     });
 
+    await page.route("**/api/dashboards/sales-overview/assets", (route) =>
+      route.fulfill({
+        json: {
+          csv: ["data/sales-overview/raw/sales.csv"],
+          python: ["logic/analysis.py"],
+        },
+      }),
+    );
+    await page.route("**/api/dashboards/sales-overview/sources/csv**", (route) =>
+      route.fulfill({ status: 201, json: { path: "data/sales-overview/new.csv" } }),
+    );
+
     await page.goto("http://127.0.0.1:3030");
     await page.getByRole("button", { name: "ヘッダーを編集" }).click();
     await page.getByLabel("タイトル").fill("Serialized save");
@@ -76,13 +88,15 @@ for (const failFirstSave of [false, true]) {
     await page.getByRole("button", { name: "Builderを閉じる" }).click();
 
     await page.getByRole("button", { name: "Pythonロジックを管理" }).click();
-    await page.getByRole("button", { name: "CSVを追加" }).click();
-    await expect(page.getByRole("button", { name: "CSVを追加" })).toBeDisabled();
-    expect(requests).toBe(1);
-
+    await page.getByLabel("アップロードするCSVファイル").setInputFiles({
+      name: "new.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from("date,total\n2026-01-01,100\n"),
+    });
+    await expect(page.getByRole("button", { name: "CSVを登録中…" })).toBeVisible();
     releaseFirst();
     await expect(page.getByLabel("Input ID")).toHaveCount(2);
-    expect(requests).toBe(2);
+    await expect.poll(() => requests).toBe(2);
 
     await page.getByRole("button", { name: "Dashboardへ戻る" }).click();
     const savedTitle = failFirstSave ? dashboardSource.title : "Serialized save";
@@ -95,7 +109,7 @@ for (const failFirstSave of [false, true]) {
 
 test("edits, validates, and saves the dashboard configuration in development", async ({ page }) => {
   let savedDashboard: { title?: string; tabs?: { id: string; label: string }[] } | undefined;
-  await page.route("**/api/dashboard", async (route) => {
+  await page.route("**/api/dashboards/sales-overview", async (route) => {
     if (route.request().method() === "GET") {
       await route.fulfill({ json: { dashboard: dashboardSource } });
       return;
@@ -225,7 +239,7 @@ test("Workbench runs Figure code with explicit parameters and independent CSV pr
 test("logic creation saves a file and registration in one request", async ({ page }) => {
   let dashboard = structuredClone(dashboardSource);
   let createdSource = "";
-  await page.route("**/api/dashboard", async (route) => {
+  await page.route("**/api/dashboards/sales-overview", async (route) => {
     if (route.request().method() === "PUT") {
       const { logic } = route.request().postDataJSON();
       createdSource = logic.source;

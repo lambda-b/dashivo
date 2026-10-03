@@ -4,6 +4,7 @@ import {
   dashboardInputSourceEndpoint,
   dashboardPythonLogicEndpoint,
   dashboardPythonSourceEndpoint,
+  inputSourceUploadResponseSchema,
   dashboardResponseSchema,
   sourceResponseSchema,
 } from "@shared/api";
@@ -31,6 +32,20 @@ export const loadInputSource = async (dashboardId: string, path: string) => {
   );
 
   return sourceResponseSchema.parse(result).source;
+};
+
+export const uploadInputSource = async (dashboardId: string, file: File) => {
+  const result = await requestJson(
+    `${dashboardInputSourceEndpoint(dashboardId)}?fileName=${encodeURIComponent(file.name)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "text/csv; charset=utf-8" },
+      body: file,
+    },
+    "CSVを登録できませんでした。",
+  );
+
+  return inputSourceUploadResponseSchema.parse(result).path;
 };
 
 export const savePythonSource = async (dashboardId: string, path: string, source: string) => {

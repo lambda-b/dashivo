@@ -2,7 +2,7 @@
   "title": "Sales pulse",
   "description": "地域別の売上と注文状況を、ブラウザ内Pythonで集計します。",
   "analysis": {
-    "inputs": [{ "id": "sales", "type": "csv", "path": "data/raw/sales.csv" }],
+    "inputs": [{ "id": "sales", "type": "csv", "path": "data/sales-overview/raw/sales.csv" }],
     "logic": [
       { "id": "sales-analysis", "type": "python", "path": "logic/analysis.py" },
       { "id": "sales-revenue", "type": "python", "path": "logic/revenue.py" },

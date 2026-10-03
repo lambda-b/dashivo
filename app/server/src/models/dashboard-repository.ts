@@ -22,6 +22,7 @@ export interface DashboardDefinitionRepository {
 export interface DashboardAssetRepository {
   listAssets(id: string): Promise<DashboardAssetCatalog>;
   readInput(id: string, path: string): Promise<string>;
+  createInput(id: string, fileName: string, source: string): Promise<string>;
 }
 
 export interface PythonLogicRepository {

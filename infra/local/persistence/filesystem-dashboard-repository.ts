@@ -5,6 +5,7 @@ import type { DashboardAssetCatalog } from "@dashlet/shared-schema/api";
 import { dashboardIdSchema, type DashboardSchema } from "@dashlet/shared-schema/dashboard";
 import { DashboardRevisionConflict } from "@dashlet/server/models/dashboard-revision-conflict";
 import { DashboardNotFound } from "@dashlet/server/models/dashboard-not-found";
+import { InputSourceConflict } from "@dashlet/server/models/input-source-conflict";
 import type {
   DashboardRepository,
   PythonLogicRegistration,
@@ -95,7 +96,24 @@ const deletePython = async (projectRoot: string, id: string, sourcePath: string)
 
 const readInput = async (projectRoot: string, id: string, sourcePath: string) => {
   await readDashboardById(projectRoot, id);
+  if (!sourcePath.startsWith(`data/${id}/`)) {
+    throw new Error("Input source must belong to the requested dashboard");
+  }
   return fs.readFile(resolveInputPath(projectRoot, sourcePath), "utf8");
+};
+
+const createInput = async (projectRoot: string, id: string, fileName: string, source: string) => {
+  await readDashboardById(projectRoot, id);
+  const sourcePath = `data/${id}/${fileName}`;
+  const destination = resolveInputPath(projectRoot, sourcePath);
+
+  await fs.mkdir(path.dirname(destination), { recursive: true });
+  await fs.writeFile(destination, source, { encoding: "utf8", flag: "wx" }).catch((error) => {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") throw new InputSourceConflict();
+    throw error;
+  });
+
+  return sourcePath;
 };
 
 const readDashboardById = async (projectRoot: string, id: string) => {
@@ -236,7 +254,7 @@ const listAssets = async (projectRoot: string, id: string): Promise<DashboardAss
   await readDashboardById(projectRoot, id);
   const dashboardRoot = path.join(projectRoot, "dashboard");
   const [csv, python] = await Promise.all([
-    listFiles(dashboardRoot, "data/**/*.csv"),
+    listFiles(dashboardRoot, `data/${id}/**/*.csv`),
     listFiles(dashboardRoot, "logic/**/*.py"),
   ]);
 
@@ -251,6 +269,7 @@ export const createFilesystemDashboardRepository = (projectRoot: string): Dashbo
   writeDashboard: (id, dashboard, expectedVersion) =>
     writeDashboard(projectRoot, id, dashboard, expectedVersion),
   readInput: (id, sourcePath) => readInput(projectRoot, id, sourcePath),
+  createInput: (id, fileName, source) => createInput(projectRoot, id, fileName, source),
   readPython: (id, sourcePath) => readPython(projectRoot, id, sourcePath),
   writePython: (id, sourcePath, source) => writePython(projectRoot, id, sourcePath, source),
   createPython: (id, sourcePath, source) => createPython(projectRoot, id, sourcePath, source),

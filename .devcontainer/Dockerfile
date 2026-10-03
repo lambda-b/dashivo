@@ -1,6 +1,8 @@
 ARG VARIANT="jammy"
 FROM mcr.microsoft.com/devcontainers/base:${VARIANT}
 
+# AWS CLI and GitHub CLI are added through devcontainer.json Features.
+# Keep the base image focused on shared runtime and browser dependencies.
 ENV TZ=Asia/Tokyo
 ARG NODE_VERSION="24.12.0"
 ARG PLAYWRIGHT_VERSION="1.63.0"

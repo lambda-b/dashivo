@@ -43,8 +43,17 @@ export const dashboardAssetCatalogSchema = z.object({
   python: z.array(z.string()),
 });
 export const inputSourceQuerySchema = z.object({ path: inputSourcePathSchema });
+export const inputSourceUploadQuerySchema = z.object({
+  fileName: z
+    .string()
+    .trim()
+    .min(1)
+    .max(120)
+    .regex(/^[^/\\\\]+\.csv$/i, "File name must be a .csv file name"),
+});
 export const pythonSourceQuerySchema = z.object({ path: pythonSourcePathSchema });
 export const sourceResponseSchema = z.object({ source: z.string() });
+export const inputSourceUploadResponseSchema = z.object({ path: inputSourcePathSchema });
 
 export type DashboardListItem = z.infer<typeof dashboardListItemSchema>;
 

@@ -8,6 +8,8 @@ import {
 import { configureServerRoutes } from "@dashlet/server/router";
 import { DashboardRevisionConflict } from "@dashlet/server/models/dashboard-revision-conflict";
 import { DashboardNotFound } from "@dashlet/server/models/dashboard-not-found";
+import { InputSourceConflict } from "@dashlet/server/models/input-source-conflict";
+import { InputSourceAccessDenied } from "@dashlet/server/models/input-source-access-denied";
 
 export const createServerApp = (dependencies: ServerDependencies) => {
   const app = new Hono<ServerEnv>();
@@ -25,6 +27,14 @@ export const createServerApp = (dependencies: ServerDependencies) => {
 
     if (error instanceof DashboardNotFound) {
       return context.json({ error: error.message }, 404);
+    }
+
+    if (error instanceof InputSourceConflict) {
+      return context.json({ error: error.message }, 409);
+    }
+
+    if (error instanceof InputSourceAccessDenied) {
+      return context.json({ error: error.message }, 403);
     }
 
     console.error(error);

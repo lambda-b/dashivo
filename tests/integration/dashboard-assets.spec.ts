@@ -11,6 +11,23 @@ test("reads and writes Python only under dashboard/logic", async () => {
   try {
     await fs.mkdir(path.join(projectRoot, "dashboard"));
     await fs.writeFile(path.join(projectRoot, "dashboard/dashboard.json"), '{"title":"Test"}');
+    const uploadedPath = await repository.createInput(
+      "sales-overview",
+      "orders.csv",
+      "date,total\n2026-01-01,100\n",
+    );
+
+    expect(uploadedPath).toBe("data/sales-overview/orders.csv");
+    await expect(repository.readInput("sales-overview", uploadedPath)).resolves.toContain("total");
+    await expect(repository.listAssets("sales-overview")).resolves.toMatchObject({
+      csv: [uploadedPath],
+    });
+    await expect(
+      repository.readInput("sales-overview", "data/another-dashboard/orders.csv"),
+    ).rejects.toThrow("requested dashboard");
+    await expect(
+      repository.createInput("sales-overview", "orders.csv", "duplicate"),
+    ).rejects.toThrow("登録済み");
     await repository.writePython(
       "sales-overview",
       "logic/nested/example.py",

@@ -9,7 +9,11 @@ import {
 } from "@dashlet/shared-schema/api";
 import type { Hono } from "hono";
 import type { ServerEnv } from "@dashlet/server/context";
-import { getDashboardAssets, getInputSource } from "@dashlet/server/controllers/dashboard-asset";
+import {
+  getDashboardAssets,
+  getInputSource,
+  uploadInputSource,
+} from "@dashlet/server/controllers/dashboard-asset";
 import { downloadDashboard } from "@dashlet/server/controllers/dashboard-download";
 import {
   createDashboard,
@@ -30,6 +34,7 @@ export const configureServerRoutes = (app: Hono<ServerEnv>) => {
   app.put(dashboardEndpoint, updateDashboard);
   app.get(assetsEndpoint, getDashboardAssets);
   app.get(inputSourceEndpoint, getInputSource);
+  app.post(inputSourceEndpoint, uploadInputSource);
   app.post(downloadEndpoint, downloadDashboard);
   app.post(pythonLogicEndpoint, createPythonLogic);
   app.get(pythonSourceEndpoint, getPythonSource);

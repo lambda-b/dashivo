@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { FileCode2, Plus, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { FileCode2, Plus, Trash2, Upload } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { useSaveDashboard } from "@/builder/hooks/useSaveDashboard";
-import { loadAssetCatalog } from "@/builder/api/python";
+import { loadAssetCatalog, uploadInputSource } from "@/builder/api/python";
 import { LogicDialog } from "@/builder/workbench/definitions/LogicDialog";
 import { SelectList } from "@/components/primitives/SelectList";
 import { IconButton } from "@/components/primitives/IconButton";
@@ -19,6 +19,9 @@ export const Definitions = ({
   const dashboard = useSavedDashboard();
   const dashboardId = useDashboardId();
   const [adding, setAdding] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const catalog = useQuery({
     queryKey: ["dashboard-assets", dashboardId],
@@ -44,6 +47,34 @@ export const Definitions = ({
         inputs: analysis.inputs.map((input, i) => (i === index ? { ...input, ...change } : input)),
       },
     });
+  };
+
+  const registerCsv = async (file?: File) => {
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError("");
+
+    try {
+      const path = await uploadInputSource(dashboardId, file);
+      const id = createUniqueIndexedName(
+        dashboard.analysis.inputs.map((input) => input.id),
+        "input-",
+      );
+
+      await save.mutateAsync({
+        analysis: {
+          ...dashboard.analysis,
+          inputs: [...dashboard.analysis.inputs, { id, type: "csv", path }],
+        },
+      });
+      await catalog.refetch();
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "CSVを登録できませんでした。");
+    } finally {
+      setUploading(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
   };
 
   return (
@@ -137,33 +168,27 @@ export const Definitions = ({
           />
         </div>
       ))}
+      <input
+        ref={fileInput}
+        aria-label="アップロードするCSVファイル"
+        accept=".csv,text/csv"
+        className="sr-only"
+        disabled={uploading || save.isPending}
+        onChange={(event) => void registerCsv(event.currentTarget.files?.[0])}
+        type="file"
+      />
       <button
-        className="w-full cursor-pointer rounded-md border border-dashed border-stone-300 px-2 py-2 text-xs font-semibold text-stone-600 hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
-        disabled={save.isPending || !catalog.data?.csv[0]}
-        onClick={() =>
-          save.mutate({
-            analysis: {
-              ...dashboard.analysis,
-              inputs: [
-                ...dashboard.analysis.inputs,
-                {
-                  id: createUniqueIndexedName(
-                    dashboard.analysis.inputs.map((input) => input.id),
-                    "input-",
-                  ),
-                  type: "csv",
-                  path: catalog.data!.csv[0],
-                },
-              ],
-            },
-          })
-        }
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-stone-300 px-2 py-2 text-xs font-semibold text-stone-600 hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+        disabled={uploading || save.isPending}
+        onClick={() => fileInput.current?.click()}
+        type="button"
       >
-        CSVを追加
+        <Upload aria-hidden="true" className="size-3.5" />
+        {uploading ? "CSVを登録中…" : "CSVをアップロード"}
       </button>
-      {(save.error || catalog.error) && (
+      {(save.error || catalog.error || uploadError) && (
         <p role="alert" className="break-all text-xs text-red-700">
-          {(save.error ?? catalog.error)?.message}
+          {uploadError || (save.error ?? catalog.error)?.message}
         </p>
       )}
       {adding && (

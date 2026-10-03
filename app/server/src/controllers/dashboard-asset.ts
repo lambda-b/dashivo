@@ -1,4 +1,4 @@
-import { inputSourceQuerySchema } from "@dashlet/shared-schema/api";
+import { inputSourceQuerySchema, inputSourceUploadQuerySchema } from "@dashlet/shared-schema/api";
 import type { Handler } from "hono";
 import type { ServerEnv } from "@dashlet/server/context";
 import { parseQuery } from "@dashlet/server/controllers/validate-request";
@@ -17,4 +17,17 @@ export const getInputSource: Handler<ServerEnv> = async (context) => {
   const source = await context.get("assetService").readInput(context.req.param("id")!, query.path);
 
   return context.json({ source });
+};
+
+/**
+ * ダッシュボード専用のCSV入力ファイルを登録する。
+ */
+export const uploadInputSource: Handler<ServerEnv> = async (context) => {
+  const query = parseQuery(context.req.query(), inputSourceUploadQuerySchema);
+  const source = await context.req.text();
+  const path = await context
+    .get("assetService")
+    .createInput(context.req.param("id")!, query.fileName, source);
+
+  return context.json({ path }, 201);
 };

@@ -55,7 +55,10 @@ test("updates the dashboard and registers logic through separate application ser
     await dashboardDefinitionService.update("sales-overview", {
       analysis: {
         ...analysis,
-        inputs: [...analysis.inputs, { id: "extra", type: "csv", path: "data/raw/sales.csv" }],
+        inputs: [
+          ...analysis.inputs,
+          { id: "extra", type: "csv", path: "data/sales-overview/raw/sales.csv" },
+        ],
       },
     });
 

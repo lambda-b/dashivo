@@ -24,10 +24,14 @@ const createTestApp = () =>
         title: createdDashboard.title,
         updatedAt: "2026-01-01T00:00:00.000Z",
       }),
-      listAssets: async () => ({ csv: ["data/raw/sales.csv"], python: ["logic/analysis.py"] }),
+      listAssets: async () => ({
+        csv: ["data/sales-overview/raw/sales.csv"],
+        python: ["logic/analysis.py"],
+      }),
       readDashboard: async () => ({ dashboard, version: "v1" }),
       writeDashboard: async () => {},
       readInput: async (_id, path) => `input:${path}`,
+      createInput: async (id, fileName) => `data/${id}/${fileName}`,
       readPython: async (_id, path) => `python:${path}`,
       writePython: async () => {},
       createPython: async () => {},
@@ -55,11 +59,29 @@ test("Hono API validates shared contracts without exposing persistence", async (
 test("Hono API serves inputs and downloadable viewer through injected services", async () => {
   const app = createTestApp();
   const input = await app.request(
-    `${dashboardInputSourceEndpoint("sales-overview")}?path=data%2Fraw%2Fsales.csv`,
+    `${dashboardInputSourceEndpoint("sales-overview")}?path=data%2Fsales-overview%2Fraw%2Fsales.csv`,
   );
 
   expect(input.status).toBe(200);
-  expect(await input.json()).toEqual({ source: "input:data/raw/sales.csv" });
+  expect(await input.json()).toEqual({ source: "input:data/sales-overview/raw/sales.csv" });
+
+  const unrelatedInput = await app.request(
+    `${dashboardInputSourceEndpoint("sales-overview")}?path=data%2Fanother-dashboard%2Fprivate.csv`,
+  );
+
+  expect(unrelatedInput.status).toBe(403);
+
+  const uploaded = await app.request(
+    `${dashboardInputSourceEndpoint("sales-overview")}?fileName=orders.csv`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "text/csv" },
+      body: "date,total\n2026-01-01,100\n",
+    },
+  );
+
+  expect(uploaded.status).toBe(201);
+  expect(await uploaded.json()).toEqual({ path: "data/sales-overview/orders.csv" });
 
   const download = await app.request(dashboardDownloadEndpoint("sales-overview"), {
     method: "POST",

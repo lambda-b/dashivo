@@ -8,6 +8,10 @@
       "PLAYWRIGHT_VERSION": "1.63.0"
     }
   },
+  "features": {
+    "ghcr.io/devcontainers/features/aws-cli:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
   // Codex の状態はプロジェクト内に保持し、認証情報はホスト側のものを利用する
   "initializeCommand": ".devcontainer/scripts/initialize.sh",
   "mounts": [
