@@ -1,8 +1,8 @@
 import { expose } from "comlink";
 import type { PyProxy } from "pyodide/ffi";
-import { analysisDefinitions } from "virtual:dashlet/analysis-assets";
-import { initializePyodide } from "virtual:dashlet/pyodide-runtime";
-import dashletSource from "@/ports/workers/python/dashlet.py?raw";
+import { analysisDefinitions } from "virtual:dashivo/analysis-assets";
+import { initializePyodide } from "virtual:dashivo/pyodide-runtime";
+import dashivoSource from "@/ports/workers/python/dashivo.py?raw";
 
 interface Source {
   id: string;
@@ -23,8 +23,8 @@ export interface PythonAnalysisWorkerApi {
 
 const runtime = initializePyodide().then(async (python) => {
   await python.loadPackage("pandas");
-  python.FS.writeFile("/home/pyodide/dashlet.py", dashletSource);
-  python.runPython("import dashlet, pandas as pd, io, json");
+  python.FS.writeFile("/home/pyodide/dashivo.py", dashivoSource);
+  python.runPython("import dashivo, pandas as pd, io, json");
   return python;
 });
 
@@ -53,7 +53,7 @@ const run = async ({ analysisSource, params, sources }: PreviewInput) => {
     inputs.set(source.id, copy);
   }
 
-  using namespace = python.toPy({ __name__: "dashlet_logic" });
+  using namespace = python.toPy({ __name__: "dashivo_logic" });
   python.runPython(analysisSource, { globals: namespace });
   using execute = namespace.get("execute");
   if (typeof execute !== "function")
@@ -61,7 +61,7 @@ const run = async ({ analysisSource, params, sources }: PreviewInput) => {
 
   using pythonParams = python.toPy(params);
   using figure = execute(inputs, pythonParams);
-  using serialize = python.runPython("dashlet.serialize");
+  using serialize = python.runPython("dashivo.serialize");
   return JSON.parse(serialize(figure));
 };
 
@@ -85,7 +85,7 @@ const api: PythonAnalysisWorkerApi = {
   async inspect(sources) {
     const python = await runtime;
     using head = python.runPython(
-      "lambda frame: json.dumps(dashlet._rows(frame.head(5)), allow_nan=False)",
+      "lambda frame: json.dumps(dashivo._rows(frame.head(5)), allow_nan=False)",
     );
     const rows: Record<string, unknown> = {};
     for (const source of sources) rows[source.id] = JSON.parse(head(await getFrame(source)));

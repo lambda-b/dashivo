@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { useQuery } from "@dashlet/shared-lib/query";
+import { useQuery } from "@dashivo/shared-lib/query";
 import source from "#dashboard/dashboard.json";
 import { dashboardSchema, type DashboardSchema } from "@shared/dashboard";
 import { messages } from "@/messages";

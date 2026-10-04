@@ -1,4 +1,4 @@
-import { useQuery } from "@dashlet/shared-lib/query";
+import { useQuery } from "@dashivo/shared-lib/query";
 import { useDashboard, useDashboardId } from "@/app/context/useDashboard";
 import type { BuilderActions } from "@/builder/DashboardBuilder";
 import { DashboardHeader } from "@/layouts/DashboardHeader";

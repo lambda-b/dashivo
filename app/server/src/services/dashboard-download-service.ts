@@ -2,13 +2,13 @@ import {
   dashboardIdSchema,
   dashboardSchema,
   type DashboardSchema,
-} from "@dashlet/shared-schema/dashboard";
+} from "@dashivo/shared-schema/dashboard";
 import type {
   DashboardAssetRepository,
   DashboardDefinitionRepository,
   PythonLogicRepository,
-} from "@dashlet/server/models/dashboard-repository";
-import type { DashboardHtmlBuilder } from "@dashlet/server/models/dashboard-html-builder";
+} from "@dashivo/server/models/dashboard-repository";
+import type { DashboardHtmlBuilder } from "@dashivo/server/models/dashboard-html-builder";
 
 const loadSources = async (
   repository: DashboardDefinitionRepository & DashboardAssetRepository & PythonLogicRepository,

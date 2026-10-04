@@ -1,5 +1,5 @@
-import type { DashboardAssetCatalog, DashboardListItem } from "@dashlet/shared-schema/api";
-import type { DashboardSchema, PythonLogicCreate } from "@dashlet/shared-schema/dashboard";
+import type { DashboardAssetCatalog, DashboardListItem } from "@dashivo/shared-schema/api";
+import type { DashboardSchema, PythonLogicCreate } from "@dashivo/shared-schema/dashboard";
 
 export interface PythonLogicRegistration {
   dashboard: DashboardSchema;

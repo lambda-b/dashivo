@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster, toast } from "sonner";
-import { createQueryClient } from "@dashlet/shared-lib/query-client";
+import { createQueryClient } from "@dashivo/shared-lib/query-client";
 import { ApiError } from "@/api/request";
 import { ZodError } from "zod";
 import { createHashRouter, RouterProvider } from "react-router-dom";

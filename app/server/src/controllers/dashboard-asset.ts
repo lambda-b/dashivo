@@ -1,7 +1,7 @@
-import { inputSourceQuerySchema, inputSourceUploadQuerySchema } from "@dashlet/shared-schema/api";
+import { inputSourceQuerySchema, inputSourceUploadQuerySchema } from "@dashivo/shared-schema/api";
 import type { Handler } from "hono";
-import type { ServerEnv } from "@dashlet/server/context";
-import { parseQuery } from "@dashlet/server/controllers/validate-request";
+import type { ServerEnv } from "@dashivo/server/context";
+import { parseQuery } from "@dashivo/server/controllers/validate-request";
 
 /**
  * Dashboardで利用できるCSV・Pythonファイルの一覧を取得する。

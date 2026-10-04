@@ -1,4 +1,4 @@
-from dashlet import plot
+from dashivo import plot
 import numpy as np
 import pandas as pd
 

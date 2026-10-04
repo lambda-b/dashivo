@@ -1,13 +1,13 @@
-import type { DashboardRepository } from "@dashlet/server/models/dashboard-repository";
-import type { DashboardHtmlBuilder } from "@dashlet/server/models/dashboard-html-builder";
-import { createDashboardAssetService } from "@dashlet/server/services/dashboard-asset-service";
-import { createDashboardDefinitionService } from "@dashlet/server/services/dashboard-definition-service";
-import { createDashboardDownloadService } from "@dashlet/server/services/dashboard-download-service";
-import { createPythonLogicService } from "@dashlet/server/services/python-logic-service";
-import type { DashboardAssetService } from "@dashlet/server/services/dashboard-asset-service";
-import type { DashboardDefinitionService } from "@dashlet/server/services/dashboard-definition-service";
-import type { DashboardDownloadService } from "@dashlet/server/services/dashboard-download-service";
-import type { PythonLogicService } from "@dashlet/server/services/python-logic-service";
+import type { DashboardRepository } from "@dashivo/server/models/dashboard-repository";
+import type { DashboardHtmlBuilder } from "@dashivo/server/models/dashboard-html-builder";
+import { createDashboardAssetService } from "@dashivo/server/services/dashboard-asset-service";
+import { createDashboardDefinitionService } from "@dashivo/server/services/dashboard-definition-service";
+import { createDashboardDownloadService } from "@dashivo/server/services/dashboard-download-service";
+import { createPythonLogicService } from "@dashivo/server/services/python-logic-service";
+import type { DashboardAssetService } from "@dashivo/server/services/dashboard-asset-service";
+import type { DashboardDefinitionService } from "@dashivo/server/services/dashboard-definition-service";
+import type { DashboardDownloadService } from "@dashivo/server/services/dashboard-download-service";
+import type { PythonLogicService } from "@dashivo/server/services/python-logic-service";
 import type { MiddlewareHandler } from "hono";
 
 export interface ServerDependencies {

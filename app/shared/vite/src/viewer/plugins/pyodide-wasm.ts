@@ -1,7 +1,7 @@
 import type { Plugin } from "vite";
 
 export const pyodideWasm = (): Plugin => ({
-  name: "dashlet-pyodide-wasm",
+  name: "dashivo-pyodide-wasm",
   transform(code, id) {
     if (!id.endsWith("/pyodide/pyodide.asm.mjs")) return undefined;
 

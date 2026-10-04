@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useMutation } from "@dashlet/shared-lib/query";
+import { useMutation } from "@dashivo/shared-lib/query";
 import { dashboardQueryKey } from "@/app/context/useDashboard";
 import { saveDashboard } from "@/api/dashboard";
 import { useDashboardId } from "@/app/context/useDashboard";

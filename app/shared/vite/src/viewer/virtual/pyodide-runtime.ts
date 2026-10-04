@@ -6,7 +6,7 @@ import { compressedPyodideWasm, compressedPythonAssets } from "#generated/assets
 type LoadPyodideOptions = NonNullable<Parameters<typeof loadPyodide>[0]>;
 type CreatePyodideModule = NonNullable<LoadPyodideOptions["createPyodideModule"]>;
 
-const embeddedAssetUrl = "https://dashlet.invalid/pyodide/";
+const embeddedAssetUrl = "https://dashivo.invalid/pyodide/";
 const nativeFetch = globalThis.fetch.bind(globalThis);
 const embeddedPyodideModule: CreatePyodideModule = (settings) =>
   createPyodideModule(settings) as ReturnType<CreatePyodideModule>;

@@ -2,11 +2,11 @@ import {
   dashboardCreateSchema,
   dashboardCreatedResponseSchema,
   dashboardListResponseSchema,
-} from "@dashlet/shared-schema/api";
-import { dashboardDefinitionChangeSchema } from "@dashlet/shared-schema/dashboard";
+} from "@dashivo/shared-schema/api";
+import { dashboardDefinitionChangeSchema } from "@dashivo/shared-schema/dashboard";
 import type { Handler } from "hono";
-import type { ServerEnv } from "@dashlet/server/context";
-import { parseJsonBody } from "@dashlet/server/controllers/validate-request";
+import type { ServerEnv } from "@dashivo/server/context";
+import { parseJsonBody } from "@dashivo/server/controllers/validate-request";
 
 /** ユーザーが利用できるDashboard一覧を取得する。 */
 export const listDashboards: Handler<ServerEnv> = async (context) =>

@@ -2,12 +2,12 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { build } from "vite";
-import { preparePyodide } from "@dashlet/server-exporter/prepare/pyodide";
-import { createViewerViteConfiguration } from "@dashlet/server-exporter/configuration";
+import { preparePyodide } from "@dashivo/server-exporter/prepare/pyodide";
+import { createViewerViteConfiguration } from "@dashivo/server-exporter/configuration";
 import type {
   DashboardExportSource,
   DashboardHtmlBuilder,
-} from "@dashlet/server/models/dashboard-html-builder";
+} from "@dashivo/server/models/dashboard-html-builder";
 
 const writeSource = async (root: string, { path: sourcePath, source }: DashboardExportSource) => {
   const destination = path.resolve(root, sourcePath);
@@ -22,11 +22,11 @@ const writeSource = async (root: string, { path: sourcePath, source }: Dashboard
 
 export const createDashboardHtmlBuilder = (
   sourceRoot: string,
-  assetCacheRoot = path.join(os.tmpdir(), "dashlet-pyodide-cache"),
+  assetCacheRoot = path.join(os.tmpdir(), "dashivo-pyodide-cache"),
 ): DashboardHtmlBuilder => {
   return async ({ dashboardId, dashboard, sources }) => {
-    const dashboardRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashlet-dashboard-"));
-    const outputRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashlet-build-"));
+    const dashboardRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-dashboard-"));
+    const outputRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-build-"));
     const dashboardPath = path.join(dashboardRoot, "dashboard.json");
     const dashboardCacheRoot = path.join(assetCacheRoot, dashboardId);
 

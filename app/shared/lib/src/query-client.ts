@@ -1,5 +1,5 @@
 import { MutationCache, QueryCache, QueryClient, type DefaultError } from "@tanstack/react-query";
-import type { NotificationMeta } from "@dashlet/shared-lib/query";
+import type { NotificationMeta } from "@dashivo/shared-lib/query";
 
 interface QueryClientOptions {
   notifyError: (error: unknown, message: string, id: string) => void;

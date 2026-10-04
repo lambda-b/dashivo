@@ -1,4 +1,4 @@
-import type { DashboardSchema } from "@dashlet/shared-schema/dashboard";
+import type { DashboardSchema } from "@dashivo/shared-schema/dashboard";
 
 export interface DashboardExportSource {
   path: string;

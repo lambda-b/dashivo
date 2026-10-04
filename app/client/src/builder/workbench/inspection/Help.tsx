@@ -3,7 +3,7 @@ import { snippets } from "@/builder/workbench/code/snippets";
 export const Help = () => (
   <div className="m-5 space-y-4 rounded-xl border border-stone-200 bg-white p-4 text-xs leading-5 text-stone-600">
     <h3 className="text-sm font-bold text-stone-700">Python API</h3>
-    <pre className="overflow-auto rounded-md bg-stone-50 p-3 font-mono text-[0.6875rem]">{`from dashlet import plot
+    <pre className="overflow-auto rounded-md bg-stone-50 p-3 font-mono text-[0.6875rem]">{`from dashivo import plot
 
 def execute(inputs, params):
     data = inputs["sales"]

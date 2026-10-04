@@ -1,4 +1,4 @@
-import { useMutation } from "@dashlet/shared-lib/query";
+import { useMutation } from "@dashivo/shared-lib/query";
 import { messages } from "@/messages";
 
 export const useCopyReference = () => {

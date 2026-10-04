@@ -1,5 +1,5 @@
 {
-  "name": "dashlet",
+  "name": "dashivo",
   "build": {
     "dockerfile": "Dockerfile",
     "args": {

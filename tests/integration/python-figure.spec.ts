@@ -11,11 +11,11 @@ test("Python figures serialize data, dates, missing values and formatting", asyn
   });
   await python.loadPackage("pandas");
   python.FS.writeFile(
-    "/home/pyodide/dashlet.py",
-    await fs.readFile("app/client/src/ports/workers/python/dashlet.py", "utf8"),
+    "/home/pyodide/dashivo.py",
+    await fs.readFile("app/client/src/ports/workers/python/dashivo.py", "utf8"),
   );
   const source = `
-from dashlet import plot, serialize
+from dashivo import plot, serialize
 import pandas as pd
 data = pd.DataFrame({"date": [pd.Timestamp("2026-01-01"), pd.NaT], "revenue": [10.0, float("nan")]})
 fig = plot.line(data, x="date", y="revenue").title("Revenue")
@@ -29,7 +29,7 @@ serialize(fig)
   ]);
   expect(result.view.formatting.yAxis.minimum).toBe(0);
   expect(result.view.title).toBe("Revenue");
-  expect(() => python.runPython("serialize(42)")).toThrow("must return a dashlet Figure");
+  expect(() => python.runPython("serialize(42)")).toThrow("must return a dashivo Figure");
   expect(() => python.runPython('serialize(plot.metric(float("inf")))')).toThrow();
   expect(
     JSON.parse(

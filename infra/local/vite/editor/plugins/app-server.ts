@@ -6,7 +6,7 @@ export const appServer = <E extends Env>(app: Hono<E>): Plugin => {
   const listener = getRequestListener(app.fetch);
 
   return {
-    name: "dashlet-app-server",
+    name: "dashivo-app-server",
     apply: "serve",
     handleHotUpdate: ({ file }) => (file.includes("/dashboard/") ? [] : undefined),
     configureServer: (server) => {

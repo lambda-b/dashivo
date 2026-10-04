@@ -1,7 +1,7 @@
-import { dashboardIdSchema, inputSourcePathSchema } from "@dashlet/shared-schema/dashboard";
-import { inputSourceUploadQuerySchema } from "@dashlet/shared-schema/api";
-import type { DashboardAssetRepository } from "@dashlet/server/models/dashboard-repository";
-import { InputSourceAccessDenied } from "@dashlet/server/models/input-source-access-denied";
+import { dashboardIdSchema, inputSourcePathSchema } from "@dashivo/shared-schema/dashboard";
+import { inputSourceUploadQuerySchema } from "@dashivo/shared-schema/api";
+import type { DashboardAssetRepository } from "@dashivo/server/models/dashboard-repository";
+import { InputSourceAccessDenied } from "@dashivo/server/models/input-source-access-denied";
 
 const ownedInputPath = (dashboardId: string, path: string) => {
   const id = dashboardIdSchema.parse(dashboardId);

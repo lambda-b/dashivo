@@ -27,7 +27,7 @@ export const DashboardHeader = ({
               D
             </span>
             <p className="text-brand text-[0.6875rem] font-bold tracking-[0.16em]">
-              DASHLET{import.meta.env.MODE !== "viewer" && " · BUILDER PREVIEW"}
+              DASHIVO{import.meta.env.MODE !== "viewer" && " · BUILDER PREVIEW"}
             </p>
           </div>
           <h1 className="text-3xl font-bold tracking-[-0.035em] sm:text-4xl">{dashboard.title}</h1>

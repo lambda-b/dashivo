@@ -4,7 +4,7 @@ import {
   dashboardIdSchema,
   inputSourcePathSchema,
   pythonSourcePathSchema,
-} from "@dashlet/shared-schema/dashboard";
+} from "@dashivo/shared-schema/dashboard";
 
 export const dashboardsEndpoint = "/api/dashboards";
 export const dashboardEndpoint = `${dashboardsEndpoint}/:id`;

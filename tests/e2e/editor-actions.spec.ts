@@ -85,7 +85,7 @@ test("Python preview renders output and keeps execution errors in the preview pa
 }) => {
   await page.goto("http://127.0.0.1:3030/#/d/sales-overview/builder/python/sales-analysis");
   const editor = page.locator(".cm-content");
-  await editor.fill(`from dashlet import plot
+  await editor.fill(`from dashivo import plot
 
 def execute(inputs, params):
     fig = plot.metric(42)

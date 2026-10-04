@@ -23,7 +23,7 @@
                   "useInfiniteQuery",
                   "useSuspenseInfiniteQuery"
                 ],
-                "message": "Use the hooks in @dashlet/shared-lib/query to require error notification settings."
+                "message": "Use the hooks in @dashivo/shared-lib/query to require error notification settings."
               }
             ]
           }

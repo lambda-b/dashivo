@@ -2,10 +2,10 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { dashboardSchema } from "@dashlet/shared-schema/dashboard";
-import { createFilesystemDashboardRepository } from "@dashlet/infra/local/persistence/filesystem-dashboard-repository";
-import { createDashboardDefinitionService } from "@dashlet/server/services/dashboard-definition-service";
-import { createPythonLogicService } from "@dashlet/server/services/python-logic-service";
+import { dashboardSchema } from "@dashivo/shared-schema/dashboard";
+import { createFilesystemDashboardRepository } from "@dashivo/infra/local/persistence/filesystem-dashboard-repository";
+import { createDashboardDefinitionService } from "@dashivo/server/services/dashboard-definition-service";
+import { createPythonLogicService } from "@dashivo/server/services/python-logic-service";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
 
 const createService = (projectRoot: string) => {
@@ -17,7 +17,7 @@ const createService = (projectRoot: string) => {
 };
 
 test("validates dashboard data in the application service", async () => {
-  const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashlet-editor-"));
+  const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-editor-"));
   await fs.mkdir(path.join(projectRoot, "dashboard"));
   const { dashboardDefinitionService } = createService(projectRoot);
 
@@ -38,7 +38,7 @@ test("validates dashboard data in the application service", async () => {
 });
 
 test("updates the dashboard and registers logic through separate application services", async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "dashlet-scoped-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-scoped-"));
   await fs.mkdir(path.join(root, "dashboard"));
   const { repository, dashboardDefinitionService, pythonLogicService } = createService(root);
 
@@ -65,7 +65,7 @@ test("updates the dashboard and registers logic through separate application ser
     const created = await pythonLogicService.create("sales-overview", {
       id: "new-logic",
       path: "logic/new-logic.py",
-      source: "from dashlet import plot\ndef execute(inputs, params): return plot.metric(1)\n",
+      source: "from dashivo import plot\ndef execute(inputs, params): return plot.metric(1)\n",
     });
 
     expect(created.title).toBe("Saved settings");

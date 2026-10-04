@@ -4,11 +4,11 @@ import {
   pythonLogicCreateSchema,
   pythonSourcePathSchema,
   type PythonLogicCreate,
-} from "@dashlet/shared-schema/dashboard";
+} from "@dashivo/shared-schema/dashboard";
 import type {
   DashboardDefinitionRepository,
   PythonLogicRepository,
-} from "@dashlet/server/models/dashboard-repository";
+} from "@dashivo/server/models/dashboard-repository";
 
 export const createPythonLogicService = (
   repository: DashboardDefinitionRepository & PythonLogicRepository,

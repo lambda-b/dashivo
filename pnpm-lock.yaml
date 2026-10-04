@@ -53,16 +53,16 @@ importers:
       '@codemirror/view':
         specifier: ^6.43.12
         version: 6.43.12
-      '@dashlet/shared-lib':
+      '@dashivo/shared-lib':
         specifier: workspace:*
         version: link:../shared/lib
-      '@dashlet/shared-schema':
+      '@dashivo/shared-schema':
         specifier: workspace:*
         version: link:../shared/schema
-      '@dashlet/shared-utils':
+      '@dashivo/shared-utils':
         specifier: workspace:*
         version: link:../shared/utils
-      '@dashlet/shared-vite':
+      '@dashivo/shared-vite':
         specifier: workspace:*
         version: link:../shared/vite
       '@radix-ui/react-slider':
@@ -129,7 +129,7 @@ importers:
 
   app/server:
     dependencies:
-      '@dashlet/shared-schema':
+      '@dashivo/shared-schema':
         specifier: workspace:*
         version: link:../shared/schema
       hono:
@@ -138,10 +138,10 @@ importers:
 
   app/server/packages/exporter:
     dependencies:
-      '@dashlet/shared-schema':
+      '@dashivo/shared-schema':
         specifier: workspace:*
         version: link:../../../shared/schema
-      '@dashlet/shared-vite':
+      '@dashivo/shared-vite':
         specifier: workspace:*
         version: link:../../../shared/vite
       pyodide:
@@ -151,7 +151,7 @@ importers:
         specifier: ^8.2.2
         version: 8.2.2(@types/node@24.3.1)(jiti@2.7.0)(yaml@2.9.1)
     devDependencies:
-      '@dashlet/server':
+      '@dashivo/server':
         specifier: workspace:*
         version: link:../..
 
@@ -174,7 +174,7 @@ importers:
 
   app/shared/vite:
     dependencies:
-      '@dashlet/shared-schema':
+      '@dashivo/shared-schema':
         specifier: workspace:*
         version: link:../schema
       '@tailwindcss/vite':
@@ -195,16 +195,16 @@ importers:
 
   infra:
     dependencies:
-      '@dashlet/server':
+      '@dashivo/server':
         specifier: workspace:*
         version: link:../app/server
-      '@dashlet/server-exporter':
+      '@dashivo/server-exporter':
         specifier: workspace:*
         version: link:../app/server/packages/exporter
-      '@dashlet/shared-schema':
+      '@dashivo/shared-schema':
         specifier: workspace:*
         version: link:../app/shared/schema
-      '@dashlet/shared-vite':
+      '@dashivo/shared-vite':
         specifier: workspace:*
         version: link:../app/shared/vite
       '@hono/node-server':
@@ -225,19 +225,19 @@ importers:
 
   tests:
     devDependencies:
-      '@dashlet/infra':
+      '@dashivo/infra':
         specifier: workspace:*
         version: link:../infra
-      '@dashlet/server':
+      '@dashivo/server':
         specifier: workspace:*
         version: link:../app/server
-      '@dashlet/shared-lib':
+      '@dashivo/shared-lib':
         specifier: workspace:*
         version: link:../app/shared/lib
-      '@dashlet/shared-schema':
+      '@dashivo/shared-schema':
         specifier: workspace:*
         version: link:../app/shared/schema
-      '@dashlet/shared-utils':
+      '@dashivo/shared-utils':
         specifier: workspace:*
         version: link:../app/shared/utils
       '@playwright/test':

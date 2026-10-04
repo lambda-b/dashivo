@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import { createViewerViteConfiguration as createViewerViteConfig } from "@dashlet/shared-vite/viewer";
+import { createViewerViteConfiguration as createViewerViteConfig } from "@dashivo/shared-vite/viewer";
 
 export const createViewerViteConfiguration = (
   projectRoot: string,

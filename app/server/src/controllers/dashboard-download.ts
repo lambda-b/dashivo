@@ -1,5 +1,5 @@
 import type { Handler } from "hono";
-import type { ServerEnv } from "@dashlet/server/context";
+import type { ServerEnv } from "@dashivo/server/context";
 
 /**
  * 保存済みDashboard定義から単一HTMLを生成してダウンロードする。

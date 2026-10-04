@@ -4,7 +4,7 @@ import type { Plugin } from "vite";
 
 export const dashboardOutput = (): Plugin => {
   return {
-    name: "dashlet-dashboard-output",
+    name: "dashivo-dashboard-output",
     apply: "build",
     writeBundle: (options) => {
       const outDir = options.dir ?? "";

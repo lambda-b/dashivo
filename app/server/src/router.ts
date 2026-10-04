@@ -6,26 +6,26 @@ import {
   inputSourceEndpoint,
   pythonLogicEndpoint,
   pythonSourceEndpoint,
-} from "@dashlet/shared-schema/api";
+} from "@dashivo/shared-schema/api";
 import type { Hono } from "hono";
-import type { ServerEnv } from "@dashlet/server/context";
+import type { ServerEnv } from "@dashivo/server/context";
 import {
   getDashboardAssets,
   getInputSource,
   uploadInputSource,
-} from "@dashlet/server/controllers/dashboard-asset";
-import { downloadDashboard } from "@dashlet/server/controllers/dashboard-download";
+} from "@dashivo/server/controllers/dashboard-asset";
+import { downloadDashboard } from "@dashivo/server/controllers/dashboard-download";
 import {
   createDashboard,
   getDashboard,
   listDashboards,
   updateDashboard,
-} from "@dashlet/server/controllers/dashboard";
+} from "@dashivo/server/controllers/dashboard";
 import {
   createPythonLogic,
   getPythonSource,
   updatePythonSource,
-} from "@dashlet/server/controllers/python-logic";
+} from "@dashivo/server/controllers/python-logic";
 
 export const configureServerRoutes = (app: Hono<ServerEnv>) => {
   app.get(dashboardsEndpoint, listDashboards);

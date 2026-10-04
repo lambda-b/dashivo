@@ -1,4 +1,4 @@
-"""Dashlet figures: data and presentation, rendered by the browser."""
+"""Dashivo figures: data and presentation, rendered by the browser."""
 
 import copy
 import datetime
@@ -125,5 +125,5 @@ plot = _Plot()
 
 def serialize(figure):
     if not isinstance(figure, Figure):
-        raise TypeError("execute(inputs, params) must return a dashlet Figure")
+        raise TypeError("execute(inputs, params) must return a dashivo Figure")
     return json.dumps(figure.to_dict(), allow_nan=False)

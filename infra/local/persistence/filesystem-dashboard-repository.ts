@@ -1,15 +1,15 @@
 import fs from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import type { DashboardAssetCatalog } from "@dashlet/shared-schema/api";
-import { dashboardIdSchema, type DashboardSchema } from "@dashlet/shared-schema/dashboard";
-import { DashboardRevisionConflict } from "@dashlet/server/models/dashboard-revision-conflict";
-import { DashboardNotFound } from "@dashlet/server/models/dashboard-not-found";
-import { InputSourceConflict } from "@dashlet/server/models/input-source-conflict";
+import type { DashboardAssetCatalog } from "@dashivo/shared-schema/api";
+import { dashboardIdSchema, type DashboardSchema } from "@dashivo/shared-schema/dashboard";
+import { DashboardRevisionConflict } from "@dashivo/server/models/dashboard-revision-conflict";
+import { DashboardNotFound } from "@dashivo/server/models/dashboard-not-found";
+import { InputSourceConflict } from "@dashivo/server/models/input-source-conflict";
 import type {
   DashboardRepository,
   PythonLogicRegistration,
-} from "@dashlet/server/models/dashboard-repository";
+} from "@dashivo/server/models/dashboard-repository";
 
 const dashboardDirectory = (projectRoot: string) =>
   path.join(projectRoot, "dashboard", "definitions");

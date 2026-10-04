@@ -165,7 +165,7 @@ test("shared dialogs close on Escape, restore focus, and prevent dismissal while
       ? route.fulfill({
           json: {
             source:
-              "from dashlet import plot\n\ndef execute(inputs, params):\n    return plot.metric(0)\n",
+              "from dashivo import plot\n\ndef execute(inputs, params):\n    return plot.metric(0)\n",
           },
         })
       : route.continue();

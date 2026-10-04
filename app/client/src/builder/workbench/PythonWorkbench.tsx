@@ -1,6 +1,6 @@
 import { Button } from "@/components/primitives/Button";
 
-import { useSuspenseQuery } from "@dashlet/shared-lib/query";
+import { useSuspenseQuery } from "@dashivo/shared-lib/query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSavedDashboard } from "@/app/context/useDashboard";
 import { loadPythonSource } from "@/api/python";

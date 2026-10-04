@@ -1,5 +1,5 @@
 {
-  "name": "@dashlet/shared-vite",
+  "name": "@dashivo/shared-vite",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
     "./viewer/plugins/*": "./src/viewer/plugins/*.ts"
   },
   "dependencies": {
-    "@dashlet/shared-schema": "workspace:*",
+    "@dashivo/shared-schema": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.1",
     "pyodide": "^314.0.6",

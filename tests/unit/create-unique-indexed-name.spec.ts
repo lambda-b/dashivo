@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createUniqueIndexedName } from "@dashlet/shared-utils/createUniqueIndexedName";
+import { createUniqueIndexedName } from "@dashivo/shared-utils/createUniqueIndexedName";
 
 test("uses the first available number", () => {
   expect(createUniqueIndexedName(["logic-1", "logic-3", "logic-4"], "logic-")).toBe("logic-2");

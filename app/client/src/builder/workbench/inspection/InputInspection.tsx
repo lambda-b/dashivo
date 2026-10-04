@@ -1,6 +1,6 @@
 import { Button } from "@/components/primitives/Button";
 
-import { useSuspenseQuery } from "@dashlet/shared-lib/query";
+import { useSuspenseQuery } from "@dashivo/shared-lib/query";
 import { useState } from "react";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { analysisPort, loadInputs } from "@/ports/analysis";

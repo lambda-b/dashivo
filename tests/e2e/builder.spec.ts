@@ -286,7 +286,7 @@ test("Python receives isolated CSV copies and preserves missing values across th
 }) => {
   await page.goto("http://127.0.0.1:3030/#/builder/python/sales-analysis");
   const editor = page.locator(".cm-content");
-  await editor.fill(`from dashlet import plot
+  await editor.fill(`from dashivo import plot
 import pandas as pd
 
 def execute(inputs, params):
@@ -298,7 +298,7 @@ def execute(inputs, params):
   await expect(page.getByRole("cell", { name: "2026-01-01T00:00:00" })).toBeVisible();
   await page.getByRole("tab", { name: "入力値参照" }).click();
   await expect(page.getByRole("cell", { name: "125000", exact: true })).toBeVisible();
-  await editor.fill(`from dashlet import plot
+  await editor.fill(`from dashivo import plot
 
 def execute(inputs, params):
     return plot.metric(inputs["sales"]["revenue"].sum()).title("Unchanged inputs")

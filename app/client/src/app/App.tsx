@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSuspenseQuery } from "@dashlet/shared-lib/query";
+import { useSuspenseQuery } from "@dashivo/shared-lib/query";
 import { useNavigate, useParams } from "react-router-dom";
 import { DashboardIdContext, dashboardQueryKey } from "@/app/context/useDashboard";
 import { Dashboard } from "@/app/Dashboard";

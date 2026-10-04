@@ -1,8 +1,8 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mergeConfig, type UserConfig } from "vite";
-import { createDashboardViteConfiguration } from "@dashlet/shared-vite/common";
-import { analysisAssets } from "@dashlet/shared-vite/common/plugins/analysis-assets";
+import { createDashboardViteConfiguration } from "@dashivo/shared-vite/common";
+import { analysisAssets } from "@dashivo/shared-vite/common/plugins/analysis-assets";
 
 export const createEditorViteConfiguration = (projectRoot: string): UserConfig => {
   const clientRoot = path.join(projectRoot, "app/client");

@@ -1,8 +1,8 @@
-import { pythonSourceQuerySchema } from "@dashlet/shared-schema/api";
-import { pythonLogicCreateSchema } from "@dashlet/shared-schema/dashboard";
+import { pythonSourceQuerySchema } from "@dashivo/shared-schema/api";
+import { pythonLogicCreateSchema } from "@dashivo/shared-schema/dashboard";
 import type { Handler } from "hono";
-import type { ServerEnv } from "@dashlet/server/context";
-import { parseJsonBody, parseQuery } from "@dashlet/server/controllers/validate-request";
+import type { ServerEnv } from "@dashivo/server/context";
+import { parseJsonBody, parseQuery } from "@dashivo/server/controllers/validate-request";
 
 /**
  * Pythonロジックを新規作成し、Dashboard定義に登録する。

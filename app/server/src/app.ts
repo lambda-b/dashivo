@@ -4,12 +4,12 @@ import {
   configureServerContext,
   type ServerDependencies,
   type ServerEnv,
-} from "@dashlet/server/context";
-import { configureServerRoutes } from "@dashlet/server/router";
-import { DashboardRevisionConflict } from "@dashlet/server/models/dashboard-revision-conflict";
-import { DashboardNotFound } from "@dashlet/server/models/dashboard-not-found";
-import { InputSourceConflict } from "@dashlet/server/models/input-source-conflict";
-import { InputSourceAccessDenied } from "@dashlet/server/models/input-source-access-denied";
+} from "@dashivo/server/context";
+import { configureServerRoutes } from "@dashivo/server/router";
+import { DashboardRevisionConflict } from "@dashivo/server/models/dashboard-revision-conflict";
+import { DashboardNotFound } from "@dashivo/server/models/dashboard-not-found";
+import { InputSourceConflict } from "@dashivo/server/models/input-source-conflict";
+import { InputSourceAccessDenied } from "@dashivo/server/models/input-source-access-denied";
 
 export const createServerApp = (dependencies: ServerDependencies) => {
   const app = new Hono<ServerEnv>();

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { FileCode2, Plus, Trash2, Upload } from "lucide-react";
-import { useQuery } from "@dashlet/shared-lib/query";
+import { useQuery } from "@dashivo/shared-lib/query";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { useDefinitionActions } from "@/builder/hooks/useDefinitionActions";
 import { loadAssetCatalog } from "@/api/python";

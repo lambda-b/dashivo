@@ -1,7 +1,7 @@
 import type { UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { analysisAssets } from "@dashlet/shared-vite/common/plugins/analysis-assets";
+import { analysisAssets } from "@dashivo/shared-vite/common/plugins/analysis-assets";
 
 export const createDashboardViteConfiguration = (
   clientRoot: string,
@@ -13,7 +13,7 @@ export const createDashboardViteConfiguration = (
     tsconfigPaths: true,
     alias: {
       "#dashboard/dashboard.json": dashboardPath,
-      "virtual:dashlet/pyodide-runtime": pyodideRuntimePath,
+      "virtual:dashivo/pyodide-runtime": pyodideRuntimePath,
     },
   },
   plugins: [react(), tailwindcss(), analysisAssets(dashboardPath)],

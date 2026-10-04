@@ -1,5 +1,5 @@
 {
-  "name": "@dashlet/infra",
+  "name": "@dashivo/infra",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -7,10 +7,10 @@
     "./local/*": "./local/*.ts"
   },
   "dependencies": {
-    "@dashlet/server": "workspace:*",
-    "@dashlet/server-exporter": "workspace:*",
-    "@dashlet/shared-schema": "workspace:*",
-    "@dashlet/shared-vite": "workspace:*",
+    "@dashivo/server": "workspace:*",
+    "@dashivo/server-exporter": "workspace:*",
+    "@dashivo/shared-schema": "workspace:*",
+    "@dashivo/shared-vite": "workspace:*",
     "@hono/node-server": "^2.1.1",
     "hono": "^4.13.8",
     "pyodide": "^314.0.6",

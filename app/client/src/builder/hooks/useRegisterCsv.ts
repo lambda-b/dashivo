@@ -1,10 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useMutation } from "@dashlet/shared-lib/query";
+import { useMutation } from "@dashivo/shared-lib/query";
 import { dashboardQueryKey, useDashboardId } from "@/app/context/useDashboard";
 import { ApiError } from "@/api/request";
 import { saveDashboard } from "@/api/dashboard";
 import { uploadInputSource } from "@/api/python";
-import { createUniqueIndexedName } from "@dashlet/shared-utils/createUniqueIndexedName";
+import { createUniqueIndexedName } from "@dashivo/shared-utils/createUniqueIndexedName";
 import type { DashboardSchema } from "@shared/dashboard";
 import { messages } from "@/messages";
 

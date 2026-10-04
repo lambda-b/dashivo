@@ -1,5 +1,5 @@
 {
-  "name": "@dashlet/server",
+  "name": "@dashivo/server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     "./services/*": "./src/services/*.ts"
   },
   "dependencies": {
-    "@dashlet/shared-schema": "workspace:*",
+    "@dashivo/shared-schema": "workspace:*",
     "hono": "^4.13.8"
   }
 }

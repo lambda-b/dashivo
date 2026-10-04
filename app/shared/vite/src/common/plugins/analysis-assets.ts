@@ -2,9 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { Plugin } from "vite";
 import { normalizePath } from "vite";
-import { dashboardSchema } from "@dashlet/shared-schema/dashboard";
+import { dashboardSchema } from "@dashivo/shared-schema/dashboard";
 
-export const analysisAssetsModuleId = "virtual:dashlet/analysis-assets";
+export const analysisAssetsModuleId = "virtual:dashivo/analysis-assets";
 const resolvedModuleId = `\0${analysisAssetsModuleId}`;
 
 const resolveDashboardAsset = (dashboardRoot: string, assetPath: string) => {
@@ -17,7 +17,7 @@ const resolveDashboardAsset = (dashboardRoot: string, assetPath: string) => {
 };
 
 export const analysisAssets = (dashboardPath: string): Plugin => ({
-  name: "dashlet-analysis-assets",
+  name: "dashivo-analysis-assets",
   enforce: "pre",
   resolveId: (id) => (id === analysisAssetsModuleId ? resolvedModuleId : undefined),
   async load(id) {

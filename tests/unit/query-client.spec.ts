@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createQueryClient } from "@dashlet/shared-lib/query-client";
+import { createQueryClient } from "@dashivo/shared-lib/query-client";
 
 const createTestClient = (shouldRetry = () => false) => {
   const notifications: { error: unknown; message: string; id: string }[] = [];

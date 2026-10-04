@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useMutation } from "@dashlet/shared-lib/query";
+import { useMutation } from "@dashivo/shared-lib/query";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { savePythonSource } from "@/api/python";
 import { analysisPort, loadInputs } from "@/ports/analysis";

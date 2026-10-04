@@ -1,5 +1,5 @@
 {
-  "name": "@dashlet/shared-lib",
+  "name": "@dashivo/shared-lib",
   "version": "0.1.0",
   "private": true,
   "type": "module",

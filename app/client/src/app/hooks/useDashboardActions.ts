@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useMutation } from "@dashlet/shared-lib/query";
+import { useMutation } from "@dashivo/shared-lib/query";
 import { useNavigate } from "react-router-dom";
 import { createDashboard } from "@/api/dashboards";
 import { dashboardQueryKey } from "@/app/context/useDashboard";

@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { createServerApp } from "@dashlet/server/app";
+import { createServerApp } from "@dashivo/server/app";
 import {
   dashboardItemEndpoint,
   dashboardDownloadEndpoint,
   dashboardInputSourceEndpoint,
   dashboardPythonLogicEndpoint,
-} from "@dashlet/shared-schema/api";
-import { dashboardSchema } from "@dashlet/shared-schema/dashboard";
+} from "@dashivo/shared-schema/api";
+import { dashboardSchema } from "@dashivo/shared-schema/dashboard";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
 
 const dashboard = dashboardSchema.parse(dashboardSource);

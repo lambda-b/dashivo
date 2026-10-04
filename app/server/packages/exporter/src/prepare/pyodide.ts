@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { loadPyodide, version as pyodideVersion } from "pyodide";
-import type { DashboardSchema } from "@dashlet/shared-schema/dashboard";
+import type { DashboardSchema } from "@dashivo/shared-schema/dashboard";
 
 const pyodideWasmFile = "pyodide.asm.wasm";
 const pythonStandardLibraryFile = "python_stdlib.zip";
@@ -64,7 +64,7 @@ export const preparePyodide = async (
 
   const pyodide = await loadPyodide({ packageCacheDir: cacheRoot });
   const loadedPackages = await pyodide.loadPackagesFromImports(
-    "import pandas as pd\n" + analysisSources.join("\n").replace(/^from dashlet import .*$/gm, ""),
+    "import pandas as pd\n" + analysisSources.join("\n").replace(/^from dashivo import .*$/gm, ""),
     { messageCallback: () => {} },
   );
   const packageFiles = loadedPackages.map((loadedPackage) => loadedPackage.fileName);

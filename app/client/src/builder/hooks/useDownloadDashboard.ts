@@ -1,4 +1,4 @@
-import { useMutation } from "@dashlet/shared-lib/query";
+import { useMutation } from "@dashivo/shared-lib/query";
 import { downloadDashboardFile } from "@/api/download";
 import { useDashboardId } from "@/app/context/useDashboard";
 import { messages } from "@/messages";

@@ -1,5 +1,5 @@
 {
-  "name": "@dashlet/server-exporter",
+  "name": "@dashivo/server-exporter",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,12 +9,12 @@
     "./prepare/*": "./src/prepare/*.ts"
   },
   "dependencies": {
-    "@dashlet/shared-schema": "workspace:*",
-    "@dashlet/shared-vite": "workspace:*",
+    "@dashivo/shared-schema": "workspace:*",
+    "@dashivo/shared-vite": "workspace:*",
     "pyodide": "^314.0.6",
     "vite": "^8.2.2"
   },
   "devDependencies": {
-    "@dashlet/server": "workspace:*"
+    "@dashivo/server": "workspace:*"
   }
 }

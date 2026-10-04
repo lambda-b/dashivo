@@ -1,10 +1,10 @@
 import { fileURLToPath } from "node:url";
 import { mergeConfig, type UserConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import { createDashboardViteConfiguration } from "@dashlet/shared-vite/common";
-import { analysisAssets } from "@dashlet/shared-vite/common/plugins/analysis-assets";
-import { dashboardOutput } from "@dashlet/shared-vite/viewer/plugins/dashboard-output";
-import { pyodideWasm } from "@dashlet/shared-vite/viewer/plugins/pyodide-wasm";
+import { createDashboardViteConfiguration } from "@dashivo/shared-vite/common";
+import { analysisAssets } from "@dashivo/shared-vite/common/plugins/analysis-assets";
+import { dashboardOutput } from "@dashivo/shared-vite/viewer/plugins/dashboard-output";
+import { pyodideWasm } from "@dashivo/shared-vite/viewer/plugins/pyodide-wasm";
 
 const viewerRuntimePath = fileURLToPath(
   new URL("./viewer/virtual/pyodide-runtime.ts", import.meta.url),

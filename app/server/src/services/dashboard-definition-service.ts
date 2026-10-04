@@ -5,8 +5,8 @@ import {
   createEmptyDashboard,
   type DashboardDefinitionChange,
   type DashboardSchema,
-} from "@dashlet/shared-schema/dashboard";
-import type { DashboardDefinitionRepository } from "@dashlet/server/models/dashboard-repository";
+} from "@dashivo/shared-schema/dashboard";
+import type { DashboardDefinitionRepository } from "@dashivo/server/models/dashboard-repository";
 
 export const createDashboardDefinitionService = (repository: DashboardDefinitionRepository) => {
   const list = () => repository.listDashboards();

@@ -9,8 +9,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "virtual:dashlet/analysis-assets": ["../shared/vite/src/common/virtual/analysis-assets.d.ts"],
-      "virtual:dashlet/pyodide-runtime": ["../shared/vite/src/editor/virtual/pyodide-runtime.ts"],
+      "virtual:dashivo/analysis-assets": ["../shared/vite/src/common/virtual/analysis-assets.d.ts"],
+      "virtual:dashivo/pyodide-runtime": ["../shared/vite/src/editor/virtual/pyodide-runtime.ts"],
       "@/*": ["./src/*"],
       "@shared/*": ["../shared/schema/src/*"],
       "#dashboard/*": ["../../dashboard/*"]

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { dashboardSchema, analysisOutputSchema } from "@dashlet/shared-schema/dashboard";
+import { dashboardSchema, analysisOutputSchema } from "@dashivo/shared-schema/dashboard";
 import source from "#dashboard/dashboard.json" with { type: "json" };
 
 const metric = { type: "metric", title: "売上", format: "number", emphasis: "accent" };

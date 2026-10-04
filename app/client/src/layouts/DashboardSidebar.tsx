@@ -25,7 +25,7 @@ export const DashboardSidebar = ({
     <aside className="fixed inset-y-0 left-0 z-40 flex w-[min(18rem,85vw)] flex-col border-r border-stone-200 bg-white shadow-sm">
       <div className="flex items-center justify-between border-b border-stone-200 px-4 py-4">
         <div>
-          <p className="text-brand text-xs font-bold tracking-widest">DASHLET</p>
+          <p className="text-brand text-xs font-bold tracking-widest">DASHIVO</p>
           <h2 className="mt-1 text-sm font-semibold">ダッシュボード</h2>
         </div>
         <IconButton icon={X} label="一覧を閉じる" onClick={() => onOpenChange(false)} />

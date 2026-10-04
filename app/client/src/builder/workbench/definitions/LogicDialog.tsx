@@ -5,10 +5,10 @@ import { FormField } from "@/components/primitives/FormField";
 import { TextInput } from "@/components/primitives/TextInput";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { useCreatePythonLogic } from "@/builder/hooks/useCreatePythonLogic";
-import { createUniqueIndexedName } from "@dashlet/shared-utils/createUniqueIndexedName";
+import { createUniqueIndexedName } from "@dashivo/shared-utils/createUniqueIndexedName";
 import { messages } from "@/messages";
 
-const defaultSource = `from dashlet import plot
+const defaultSource = `from dashivo import plot
 
 def execute(inputs, params):
     fig = plot.metric(0)

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useSuspenseQuery } from "@dashlet/shared-lib/query";
+import { useMutation, useQuery, useSuspenseQuery } from "@dashivo/shared-lib/query";
 
 // 型チェック専用。実行せず、指定漏れとライブラリの型推論を検証する。
 export const useQueryTypeChecks = () => {

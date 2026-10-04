@@ -1,14 +1,14 @@
 {
-  "name": "@dashlet/tests",
+  "name": "@dashivo/tests",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "devDependencies": {
-    "@dashlet/infra": "workspace:*",
-    "@dashlet/server": "workspace:*",
-    "@dashlet/shared-lib": "workspace:*",
-    "@dashlet/shared-schema": "workspace:*",
-    "@dashlet/shared-utils": "workspace:*",
+    "@dashivo/infra": "workspace:*",
+    "@dashivo/server": "workspace:*",
+    "@dashivo/shared-lib": "workspace:*",
+    "@dashivo/shared-schema": "workspace:*",
+    "@dashivo/shared-utils": "workspace:*",
     "@playwright/test": "^1.63.0",
     "pyodide": "^314.0.6"
   }

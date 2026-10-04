@@ -1,4 +1,4 @@
-# Dashlet
+# Dashivo
 
 Pythonによるデータ分析とReactのUIを、ネットワーク接続なしで直接開ける単一HTMLへまとめるダッシュボード基盤です。現在はプロジェクト計画のPhase 4（Builder）を実装しています。
 
@@ -74,10 +74,10 @@ pnpm test:e2e
 └─ work/              # プロジェクト計画（Git管理外）
 ```
 
-Pythonの分析処理は `dashboard/logic/` の各ファイルに `execute(inputs, params)` として記述します。`inputs` はInput IDをキーにしたDataFrameの辞書、`params` はグローバルパラメータです。DataFrameは呼び出しごとにコピーされます。CSV、Python source、組み込みの `dashlet` ライブラリはいずれもビルド時にHTMLへ埋め込まれます。
+Pythonの分析処理は `dashboard/logic/` の各ファイルに `execute(inputs, params)` として記述します。`inputs` はInput IDをキーにしたDataFrameの辞書、`params` はグローバルパラメータです。DataFrameは呼び出しごとにコピーされます。CSV、Python source、組み込みの `dashivo` ライブラリはいずれもビルド時にHTMLへ埋め込まれます。
 
 ```python
-from dashlet import plot
+from dashivo import plot
 
 def execute(inputs, params):
     monthly = inputs["sales"].groupby("month", as_index=False)["revenue"].sum()
@@ -89,4 +89,4 @@ def execute(inputs, params):
 
 戻り値は `plot.line`・`bar`・`pie`・`scatter`・`table`・`metric` で作るFigureです。種類、列の対応、タイトル、書式はPython側に集約し、JSONにはロジック参照と配置だけを保持します。Workbenchでは「実行」でのみ出力を更新し、検証用パラメータは閲覧画面へ影響しません。入力CSVはコードの実行に関係なく先頭5行を確認できます。詳細は確認エリアの「ヘルプ」、入力補助はコード内の `#chart` などのスニペットを参照してください。
 
-`app/client/src/` 内のimportは `@/` を起点にし、共有契約は `@shared/api`・`@shared/dashboard` から参照します。Node.jsからも直接読み込むserverとinfraは、workspace package名（`@dashlet/shared-schema/api`、`@dashlet/shared-schema/dashboard` など）を使います。Vite設定と仮想モジュールは `@dashlet/shared-vite` にまとめ、editorとviewerで実装を分けています。Pyodideはdevでは配布ファイルを動的に読み込み、buildでは `virtual:dashlet/pyodide-runtime` を埋め込み実装へ差し替えます。
+`app/client/src/` 内のimportは `@/` を起点にし、共有契約は `@shared/api`・`@shared/dashboard` から参照します。Node.jsからも直接読み込むserverとinfraは、workspace package名（`@dashivo/shared-schema/api`、`@dashivo/shared-schema/dashboard` など）を使います。Vite設定と仮想モジュールは `@dashivo/shared-vite` にまとめ、editorとviewerで実装を分けています。Pyodideはdevでは配布ファイルを動的に読み込み、buildでは `virtual:dashivo/pyodide-runtime` を埋め込み実装へ差し替えます。
