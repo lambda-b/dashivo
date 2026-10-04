@@ -1,0 +1,108 @@
+{
+  "title": "Serialized save",
+  "description": "地域別の売上と注文状況を、ブラウザ内Pythonで集計します。",
+  "analysis": {
+    "inputs": [
+      {
+        "id": "sales",
+        "type": "csv",
+        "path": "data/sales-overview/raw/sales.csv"
+      },
+      {
+        "id": "input-1",
+        "type": "csv",
+        "path": "data/sales-overview/raw/sales.csv"
+      }
+    ],
+    "logic": [
+      {
+        "id": "sales-analysis",
+        "type": "python",
+        "path": "logic/analysis.py"
+      },
+      {
+        "id": "sales-revenue",
+        "type": "python",
+        "path": "logic/revenue.py"
+      },
+      {
+        "id": "sales-orders",
+        "type": "python",
+        "path": "logic/orders.py"
+      },
+      {
+        "id": "sales-table",
+        "type": "python",
+        "path": "logic/table.py"
+      }
+    ]
+  },
+  "controls": [
+    {
+      "type": "radio",
+      "key": "region",
+      "displayName": "営業地域",
+      "defaultValue": "All",
+      "options": [
+        {
+          "label": "すべて",
+          "value": "All"
+        },
+        {
+          "label": "East",
+          "value": "East"
+        },
+        {
+          "label": "West",
+          "value": "West"
+        }
+      ],
+      "layout": "horizontal"
+    },
+    {
+      "type": "date-range",
+      "key": "date_1",
+      "displayName": "対象期間",
+      "defaultValue": {
+        "from": "2026-01-01",
+        "to": "2026-03-31"
+      }
+    }
+  ],
+  "tabs": [
+    {
+      "id": "summary",
+      "label": "サマリー",
+      "contents": [
+        {
+          "id": "revenue",
+          "logic": "sales-revenue"
+        },
+        {
+          "id": "orders",
+          "logic": "sales-orders"
+        }
+      ]
+    },
+    {
+      "id": "charts",
+      "label": "グラフ",
+      "contents": [
+        {
+          "id": "monthly-revenue",
+          "logic": "sales-analysis"
+        }
+      ]
+    },
+    {
+      "id": "tables",
+      "label": "テーブル",
+      "contents": [
+        {
+          "id": "monthly-summary",
+          "logic": "sales-table"
+        }
+      ]
+    }
+  ]
+}
