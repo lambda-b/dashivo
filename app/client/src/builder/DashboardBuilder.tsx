@@ -7,7 +7,7 @@ import {
   useSavedDashboard,
   useDashboardId,
 } from "@/app/context/useDashboard";
-import { loadDashboard } from "@/builder/api/dashboard";
+import { loadDashboard } from "@/api/dashboard";
 import { useSaveDashboard } from "@/builder/hooks/useSaveDashboard";
 import { useDownloadDashboard } from "@/builder/hooks/useDownloadDashboard";
 import { useSettingsDraft, settingsOf } from "@/builder/settings/hooks/useSettingsDraft";
@@ -137,9 +137,9 @@ export const DashboardBuilder = ({
             ) : (
               <TabSetting dashboard={draft} onChange={update} />
             )}
-            {(error || save.error || loaded.error) && (
+            {(error || loaded.error) && (
               <pre role="alert" className="whitespace-pre-wrap text-xs text-red-700">
-                {error || save.error?.message || loaded.error?.message}
+                {error || loaded.error?.message}
               </pre>
             )}
           </div>

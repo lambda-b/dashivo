@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSavedDashboard } from "@/app/context/useDashboard";
-import { loadPythonSource } from "@/builder/api/python";
+import { loadPythonSource } from "@/api/python";
 import { Definitions } from "@/builder/workbench/definitions/Definitions";
 import { CodeWorkspace } from "@/builder/workbench/code/CodeWorkspace";
 import { useDashboardId } from "@/app/context/useDashboard";

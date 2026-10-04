@@ -18,7 +18,7 @@ export interface AnalysisPreviewInput {
 const api = wrap<PythonAnalysisWorkerApi>(new PythonAnalysisWorker());
 
 export const loadInputs = async (dashboardId: string, analysis: AnalysisDefinition) => {
-  const { loadInputSource } = await import("@/builder/api/python");
+  const { loadInputSource } = await import("@/api/python");
   return Promise.all(
     analysis.inputs.map(async (input) => ({
       id: input.id,
@@ -35,7 +35,7 @@ export const analysisPort = {
   ) {
     if (import.meta.env.DEV) {
       const sources = await loadInputs(dashboardId, analysis);
-      const { loadPythonSource } = await import("@/builder/api/python");
+      const { loadPythonSource } = await import("@/api/python");
       const results: Record<string, unknown> = {};
 
       for (const logic of analysis.logic) {

@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { downloadDashboardFile } from "@/builder/api/download";
+import { downloadDashboardFile } from "@/api/download";
 import { useDashboardId } from "@/app/context/useDashboard";
 
 export const useDownloadDashboard = () => {

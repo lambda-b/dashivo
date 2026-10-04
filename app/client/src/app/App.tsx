@@ -4,8 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { DashboardIdContext, dashboardQueryKey } from "@/app/context/useDashboard";
 import { Dashboard } from "@/app/Dashboard";
 import { DashboardBuilder } from "@/builder/DashboardBuilder";
-import { createDashboard, loadDashboards } from "@/builder/api/dashboards";
-import { loadDashboard } from "@/builder/api/dashboard";
+import { createDashboard, loadDashboards } from "@/api/dashboards";
+import { loadDashboard } from "@/api/dashboard";
 import { DashboardSidebar } from "@/layouts/DashboardSidebar";
 import type { ParameterValue } from "@shared/dashboard";
 

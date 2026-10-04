@@ -9,7 +9,8 @@ import {
   sourceResponseSchema,
 } from "@shared/api";
 import type { PythonLogicCreate } from "@shared/dashboard";
-import { request, requestJson } from "@/builder/api/request";
+import { request, requestJson } from "@/api/request";
+import { messages } from "@/messages";
 
 const pythonSourceUrl = (dashboardId: string, path: string) =>
   `${dashboardPythonSourceEndpoint(dashboardId)}?path=${encodeURIComponent(path)}`;
@@ -18,7 +19,7 @@ export const loadPythonSource = async (dashboardId: string, path: string) => {
   const result = await requestJson(
     pythonSourceUrl(dashboardId, path),
     undefined,
-    "Pythonを読み込めませんでした。",
+    messages.logic.loadFailed,
   );
 
   return sourceResponseSchema.parse(result).source;
@@ -28,7 +29,7 @@ export const loadInputSource = async (dashboardId: string, path: string) => {
   const result = await requestJson(
     `${dashboardInputSourceEndpoint(dashboardId)}?path=${encodeURIComponent(path)}`,
     undefined,
-    "入力データを読み込めませんでした。",
+    messages.csv.loadFailed,
   );
 
   return sourceResponseSchema.parse(result).source;
@@ -42,7 +43,7 @@ export const uploadInputSource = async (dashboardId: string, file: File) => {
       headers: { "Content-Type": "text/csv; charset=utf-8" },
       body: file,
     },
-    "CSVを登録できませんでした。",
+    messages.csv.registerFailed,
   );
 
   return inputSourceUploadResponseSchema.parse(result).path;
@@ -56,7 +57,7 @@ export const savePythonSource = async (dashboardId: string, path: string, source
       headers: { "Content-Type": "text/x-python; charset=utf-8" },
       body: source,
     },
-    "Pythonを保存できませんでした。",
+    messages.logic.saveFailed,
   );
 };
 
@@ -68,7 +69,7 @@ export const createPythonLogic = async (dashboardId: string, definition: PythonL
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(definition),
     },
-    "ロジックを作成できませんでした。",
+    messages.logic.createFailed,
   );
 
   return dashboardResponseSchema.parse(result).dashboard;
@@ -76,10 +77,6 @@ export const createPythonLogic = async (dashboardId: string, definition: PythonL
 
 export const loadAssetCatalog = async (dashboardId: string) => {
   return dashboardAssetCatalogSchema.parse(
-    await requestJson(
-      dashboardAssetsEndpoint(dashboardId),
-      undefined,
-      "ファイル一覧を取得できませんでした。",
-    ),
+    await requestJson(dashboardAssetsEndpoint(dashboardId), undefined, messages.assets.loadFailed),
   );
 };

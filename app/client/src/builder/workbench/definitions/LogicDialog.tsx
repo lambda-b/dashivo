@@ -2,6 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { useCreatePythonLogic } from "@/builder/hooks/useCreatePythonLogic";
 import { createUniqueIndexedName } from "@dashlet/shared-utils/createUniqueIndexedName";
+import { messages } from "@/messages";
+
+const defaultSource = `from dashlet import plot
+
+def execute(inputs, params):
+    fig = plot.metric(0)
+    fig.title("新しい数値")
+    return fig
+`;
 
 export const LogicDialog = ({
   onClose,
@@ -35,31 +44,26 @@ export const LogicDialog = ({
     dialog.current?.showModal();
   }, []);
 
-  const create = async () => {
+  const create = () => {
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) {
-      setError("IDは英小文字・数字・ハイフンで指定してください。");
+      setError(messages.logic.invalidId);
       return;
     }
 
     setError("");
-    try {
-      await createLogic.mutateAsync({
+    createLogic.mutate(
+      {
         id,
         path: `logic/${dashboardId}/${id}.py`,
-        source: `from dashlet import plot
-
-
-def execute(inputs, params):
-    fig = plot.metric(0)
-    fig.title("新しい数値")
-    return fig
-`,
-      });
-      onCreated(id);
-      onClose();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "作成できませんでした。");
-    }
+        source: defaultSource,
+      },
+      {
+        onSuccess: () => {
+          onCreated(id);
+          onClose();
+        },
+      },
+    );
   };
 
   return (

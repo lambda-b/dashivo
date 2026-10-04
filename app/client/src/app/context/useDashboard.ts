@@ -15,8 +15,7 @@ const useEditorDashboard = () => {
   const id = useDashboardId();
   return useQuery({
     queryKey: [...dashboardQueryKey, id],
-    queryFn: async ({ signal }) =>
-      (await import("@/builder/api/dashboard")).loadDashboard(id, { signal }),
+    queryFn: async ({ signal }) => (await import("@/api/dashboard")).loadDashboard(id, { signal }),
     initialData: () => bundledDashboard,
     staleTime: Infinity,
   }).data;

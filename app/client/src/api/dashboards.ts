@@ -4,10 +4,15 @@ import {
   dashboardListResponseSchema,
   dashboardsEndpoint,
 } from "@shared/api";
-import { requestJson } from "@/builder/api/request";
+import { requestJson } from "@/api/request";
+import { messages } from "@/messages";
 
 export const loadDashboards = async ({ signal }: { signal: AbortSignal }) => {
-  const result = await requestJson(dashboardsEndpoint, { signal }, "一覧を読み込めませんでした。");
+  const result = await requestJson(
+    dashboardsEndpoint,
+    { signal },
+    messages.dashboard.listLoadFailed,
+  );
 
   return dashboardListResponseSchema.parse(result).dashboards;
 };
@@ -20,7 +25,7 @@ export const createDashboard = async (title: string) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(dashboardCreateSchema.parse({ title })),
     },
-    "作成できませんでした。",
+    messages.dashboard.createFailed,
   );
 
   return dashboardCreatedResponseSchema.parse(result).dashboard;

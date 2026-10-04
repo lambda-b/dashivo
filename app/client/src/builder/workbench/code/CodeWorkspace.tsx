@@ -3,7 +3,7 @@ import { LoaderCircle, Play, Save } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSavedDashboard } from "@/app/context/useDashboard";
 import { useDashboardId } from "@/app/context/useDashboard";
-import { savePythonSource } from "@/builder/api/python";
+import { savePythonSource } from "@/api/python";
 import { PythonCodeEditor } from "@/builder/workbench/code/PythonCodeEditor";
 import { Inspection } from "@/builder/workbench/inspection/Inspection";
 import { useUnsavedChanges } from "@/builder/hooks/useUnsavedChanges";

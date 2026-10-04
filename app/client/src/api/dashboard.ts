@@ -1,6 +1,7 @@
 import { dashboardItemEndpoint, dashboardResponseSchema } from "@shared/api";
 import type { DashboardDefinitionChange } from "@shared/dashboard";
-import { requestJson } from "@/builder/api/request";
+import { requestJson } from "@/api/request";
+import { messages } from "@/messages";
 
 export const saveDashboard = async (id: string, change: DashboardDefinitionChange) => {
   const result = await requestJson(
@@ -10,7 +11,7 @@ export const saveDashboard = async (id: string, change: DashboardDefinitionChang
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(change),
     },
-    "設定を保存できませんでした。",
+    messages.dashboard.saveFailed,
   );
 
   return dashboardResponseSchema.parse(result).dashboard;
@@ -20,7 +21,7 @@ export const loadDashboard = async (id: string, { signal }: { signal: AbortSigna
   const result = await requestJson(
     dashboardItemEndpoint(id),
     { signal },
-    "設定を読み込めませんでした。",
+    messages.dashboard.loadFailed,
   );
   return dashboardResponseSchema.parse(result).dashboard;
 };
