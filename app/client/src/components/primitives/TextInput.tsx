@@ -1,6 +1,5 @@
 import clsx from "clsx";
 import { twMerge } from "tailwind-merge";
-import { fieldClassName } from "@/components/primitives/field-styles";
 
 interface TextInputProps {
   className?: string;
@@ -27,7 +26,7 @@ export const TextInput = ({
 }: TextInputProps) => (
   <input
     aria-label={ariaLabel}
-    className={twMerge(clsx(fieldClassName, monospace && "font-mono"), className)}
+    className={twMerge(clsx("form-input", monospace && "font-mono"), className)}
     disabled={disabled}
     id={id}
     maxLength={maxLength}

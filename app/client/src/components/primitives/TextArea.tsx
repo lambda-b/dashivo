@@ -1,4 +1,3 @@
-import { fieldClassName } from "@/components/primitives/field-styles";
 import { twMerge } from "tailwind-merge";
 
 export const TextArea = ({
@@ -11,7 +10,7 @@ export const TextArea = ({
   value: string;
 }) => (
   <textarea
-    className={twMerge(fieldClassName, "min-h-20 resize-y", className)}
+    className={twMerge("form-input min-h-20 resize-y", className)}
     onChange={(event) => onChange(event.target.value)}
     value={value}
   />

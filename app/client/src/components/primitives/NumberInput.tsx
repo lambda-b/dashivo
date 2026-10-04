@@ -1,4 +1,3 @@
-import { fieldClassName } from "@/components/primitives/field-styles";
 import { twMerge } from "tailwind-merge";
 
 interface NumberInputProps {
@@ -22,7 +21,7 @@ export const NumberInput = ({
 }: NumberInputProps) => (
   <input
     aria-label={ariaLabel}
-    className={twMerge(fieldClassName, "font-mono", className)}
+    className={twMerge("form-input font-mono", className)}
     max={max}
     min={min}
     onChange={(event) => {

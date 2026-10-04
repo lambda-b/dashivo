@@ -1,5 +1,90 @@
 import { expect, test } from "@playwright/test";
 import source from "#dashboard/dashboard.json" with { type: "json" };
+import { TextInput } from "@/components/primitives/TextInput";
+import { NumberInput } from "@/components/primitives/NumberInput";
+import { DateInput } from "@/components/primitives/DateInput";
+import { SelectList } from "@/components/primitives/SelectList";
+import { TextArea } from "@/components/primitives/TextArea";
+
+test("component-layer field defaults can be overridden by caller utilities", async ({ page }) => {
+  await page.goto("http://127.0.0.1:3030/#/d/sales-overview/summary");
+  await expect(page.getByRole("button", { name: "パラメータを編集" })).toBeVisible();
+
+  const fields = [
+    TextInput({ value: "", onChange: () => {} }),
+    NumberInput({ value: 0, onChange: () => {} }),
+    DateInput({ value: "", onChange: () => {} }),
+    SelectList({ value: "", options: [], onChange: () => {} }),
+    TextArea({ value: "", onChange: () => {} }),
+  ].map((field) => ({ tag: field.type as string, className: field.props.className as string }));
+  const custom = TextInput({
+    value: "",
+    onChange: () => {},
+    className: "w-fit bg-stone-100 border-red-200 px-4",
+  });
+
+  const result = await page.evaluate(
+    ({ fields, customClassName }) => {
+      const container = document.createElement("div");
+      container.style.width = "320px";
+      document.body.append(container);
+
+      const readStyle = (element: HTMLElement) => {
+        const style = getComputedStyle(element);
+        return {
+          width: style.width,
+          padding: style.paddingLeft,
+          radius: style.borderRadius,
+          background: style.backgroundColor,
+          border: style.borderTopColor,
+          color: style.color,
+        };
+      };
+
+      try {
+        const defaults = fields.map(({ tag, className }) => {
+          const element = document.createElement(tag);
+          element.className = className;
+          container.append(element);
+          return readStyle(element);
+        });
+        const input = document.createElement("input");
+        input.className = customClassName;
+        container.append(input);
+        const override = readStyle(input);
+        input.focus();
+        const focused = readStyle(input);
+        input.disabled = true;
+        const disabled = readStyle(input);
+        input.className = "form-input bg-white text-stone-700";
+        const disabledOverride = readStyle(input);
+
+        return { defaults, override, focused, disabled, disabledOverride };
+      } finally {
+        container.remove();
+      }
+    },
+    { fields, customClassName: custom.props.className as string },
+  );
+
+  for (const field of result.defaults) {
+    expect(field.width).toBe("320px");
+    expect(field.padding).toBe("12px");
+    expect(field.radius).toBe("6px");
+    expect(field.background).toBe(result.defaults[0].background);
+    expect(field.border).toBe(result.defaults[0].border);
+  }
+
+  expect(result.override.width).not.toBe("320px");
+  expect(result.override.padding).toBe("16px");
+  expect(result.override.radius).toBe("6px");
+  expect(result.override.background).not.toBe(result.defaults[0].background);
+  expect(result.override.border).not.toBe(result.defaults[0].border);
+  expect(result.focused.border).toBe(result.override.border);
+  expect(result.disabled.background).toBe(result.override.background);
+  expect(result.disabledOverride.background).toBe(result.defaults[0].background);
+  expect(result.disabledOverride.color).not.toBe(result.disabled.color);
+});
 
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/dashboards/sales-overview", (route) =>

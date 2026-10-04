@@ -53,7 +53,7 @@ test("input defaults remain overridable through className", () => {
   const classes = input.props.className.split(" ");
 
   expect(classes).toEqual(
-    expect.arrayContaining(["w-40", "border-blue-500", "bg-blue-50", "rounded-md"]),
+    expect.arrayContaining(["form-input", "w-40", "border-blue-500", "bg-blue-50"]),
   );
   expect(classes).not.toContain("w-full");
   expect(classes).not.toContain("border-stone-300");

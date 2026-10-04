@@ -1,4 +1,3 @@
-import { fieldClassName } from "@/components/primitives/field-styles";
 import { twMerge } from "tailwind-merge";
 
 interface SelectListOption {
@@ -25,7 +24,7 @@ export const SelectList = ({
 }: SelectListProps) => (
   <select
     aria-label={ariaLabel}
-    className={twMerge(fieldClassName, className)}
+    className={twMerge("form-input", className)}
     disabled={disabled}
     onChange={(event) => onChange(event.target.value)}
     value={value}
