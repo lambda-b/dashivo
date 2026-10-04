@@ -1,5 +1,8 @@
 // UIのラベルとは分けて、利用者へ伝えるエラー・操作制限の文言を管理する。
 export const messages = {
+  loading: "読み込み中…",
+  retry: "再試行",
+  invalidResponse: "サーバーからの応答を読み取れませんでした。再試行してください。",
   connectionFailed: "サーバーに接続できませんでした。接続状態を確認してください。",
   clipboard: {
     copyFailed: "クリップボードへコピーできませんでした。参照式を選択してコピーしてください。",

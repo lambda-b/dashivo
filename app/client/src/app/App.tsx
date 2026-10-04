@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { DashboardIdContext, dashboardQueryKey } from "@/app/context/useDashboard";
 import { Dashboard } from "@/app/Dashboard";
@@ -9,34 +9,47 @@ import { useDashboardActions } from "@/app/hooks/useDashboardActions";
 import { loadDashboard } from "@/api/dashboard";
 import { DashboardSidebar } from "@/layouts/DashboardSidebar";
 import type { ParameterValue } from "@shared/dashboard";
+import { QueryBoundary } from "@/components/feedback/QueryBoundary";
+import { messages } from "@/messages";
+
+const DashboardList = () => {
+  const { dashboardId } = useParams();
+  const navigate = useNavigate();
+  const { data: dashboards } = useSuspenseQuery({
+    queryKey: ["dashboards"],
+    queryFn: loadDashboards,
+    meta: { errorMessage: messages.dashboard.listLoadFailed, errorBoundary: true },
+  });
+
+  useEffect(() => {
+    if (!dashboardId && dashboards[0]) navigate(`/d/${dashboards[0].id}`, { replace: true });
+  }, [dashboardId, dashboards, navigate]);
+
+  return dashboards.map((dashboard) => (
+    <button
+      aria-current={dashboardId === dashboard.id ? "page" : undefined}
+      className={`truncate rounded-md px-3 py-2.5 text-left text-sm ${dashboardId === dashboard.id ? "bg-red-50 font-semibold text-red-800" : "text-stone-700 hover:bg-stone-100"}`}
+      key={dashboard.id}
+      onClick={() => navigate(`/d/${dashboard.id}`)}
+      type="button"
+    >
+      {dashboard.title}
+    </button>
+  ));
+};
 
 const DashboardWorkspace = ({ dashboardId }: { dashboardId: string }) => {
   const [params, setParams] = useState<Record<string, ParameterValue>>({});
-  const selected = useQuery({
+  useSuspenseQuery({
     queryKey: [...dashboardQueryKey, dashboardId],
     queryFn: ({ signal }) => loadDashboard(dashboardId, { signal }),
     staleTime: Infinity,
     refetchOnMount: "always",
+    meta: { errorMessage: messages.dashboard.loadFailed, errorBoundary: true },
   });
 
   const onParameterChange = (key: string, value: ParameterValue) =>
     setParams((current) => ({ ...current, [key]: value }));
-
-  if (selected.isFetching) {
-    return (
-      <div className="grid min-h-screen place-items-center text-sm text-stone-500">
-        ダッシュボードを読み込み中…
-      </div>
-    );
-  }
-
-  if (selected.error) {
-    return (
-      <div role="alert" className="p-8 text-sm text-red-700">
-        {selected.error.message}
-      </div>
-    );
-  }
 
   return (
     <DashboardIdContext.Provider value={dashboardId}>
@@ -56,40 +69,28 @@ const DashboardWorkspace = ({ dashboardId }: { dashboardId: string }) => {
 
 const EditorApp = () => {
   const { dashboardId } = useParams();
-  const navigate = useNavigate();
   const { createDashboard, isPending } = useDashboardActions();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const dashboards = useQuery({
-    queryKey: ["dashboards"],
-    queryFn: loadDashboards,
-  });
-
-  useEffect(() => {
-    if (!dashboardId && dashboards.data?.[0])
-      navigate(`/d/${dashboards.data[0].id}`, { replace: true });
-  }, [dashboardId, dashboards.data, navigate]);
-
   return (
     <div className="min-h-screen bg-stone-100">
       <DashboardSidebar
-        activeId={dashboardId}
         open={sidebarOpen}
-        dashboards={dashboards.data}
-        error={dashboards.error?.message}
-        loading={dashboards.isLoading}
         creating={isPending}
         onCreate={createDashboard}
         onOpenChange={setSidebarOpen}
-        onSelect={(id) => navigate(`/d/${id}`)}
-      />
+      >
+        <QueryBoundary errorMessage={messages.dashboard.listLoadFailed}>
+          <DashboardList />
+        </QueryBoundary>
+      </DashboardSidebar>
       <div className={sidebarOpen ? "lg:ml-72" : "ml-12"}>
         {dashboardId ? (
-          <DashboardWorkspace key={dashboardId} dashboardId={dashboardId} />
+          <QueryBoundary key={dashboardId} errorMessage={messages.dashboard.loadFailed}>
+            <DashboardWorkspace dashboardId={dashboardId} />
+          </QueryBoundary>
         ) : (
           <div className="grid min-h-screen place-items-center text-sm text-stone-500">
-            {dashboards.isLoading
-              ? "ダッシュボードを読み込み中…"
-              : "ダッシュボードを作成してください。"}
+            ダッシュボードを作成してください。
           </div>
         )}
       </div>

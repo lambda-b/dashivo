@@ -43,7 +43,12 @@ export const requestJson = async (
   fallback: string,
 ): Promise<unknown> => {
   const response = await requestResponse(input, init, fallback);
-  return response.json();
+  try {
+    return await response.json();
+  } catch (cause) {
+    if (cause instanceof Error && cause.name === "AbortError") throw cause;
+    throw new ApiError(messages.invalidResponse, response.status, { cause });
+  }
 };
 
 export const requestBlob = async (

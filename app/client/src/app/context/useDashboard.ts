@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 import source from "#dashboard/dashboard.json";
 import { dashboardSchema, type DashboardSchema } from "@shared/dashboard";
+import { messages } from "@/messages";
 
 const bundledDashboard = dashboardSchema.parse(source);
 
@@ -18,6 +19,7 @@ const useEditorDashboard = () => {
     queryFn: async ({ signal }) => (await import("@/api/dashboard")).loadDashboard(id, { signal }),
     initialData: () => bundledDashboard,
     staleTime: Infinity,
+    meta: { errorMessage: messages.dashboard.loadFailed, errorBoundary: true },
   }).data;
 };
 

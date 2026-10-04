@@ -26,6 +26,7 @@
     "pyodide": "^314.0.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-error-boundary": "^6.1.6",
     "react-router-dom": "^7.18.3",
     "recharts": "^3.10.1",
     "sonner": "^2.0.8",

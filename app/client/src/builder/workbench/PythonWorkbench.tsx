@@ -1,10 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSavedDashboard } from "@/app/context/useDashboard";
 import { loadPythonSource } from "@/api/python";
 import { Definitions } from "@/builder/workbench/definitions/Definitions";
 import { CodeWorkspace } from "@/builder/workbench/code/CodeWorkspace";
 import { useDashboardId } from "@/app/context/useDashboard";
+import { QueryBoundary } from "@/components/feedback/QueryBoundary";
+import { messages } from "@/messages";
+
+const PythonSource = ({ logicId, path }: { logicId: string; path: string }) => {
+  const dashboardId = useDashboardId();
+  const { data } = useSuspenseQuery({
+    queryKey: ["python-source", dashboardId, path],
+    queryFn: () => loadPythonSource(dashboardId, path),
+    meta: { errorMessage: messages.logic.loadFailed, errorBoundary: true },
+  });
+
+  return <CodeWorkspace key={logicId} path={path} savedSource={data} />;
+};
 
 export const PythonWorkbench = ({ logicId }: { logicId?: string }) => {
   const dashboard = useSavedDashboard();
@@ -13,11 +26,6 @@ export const PythonWorkbench = ({ logicId }: { logicId?: string }) => {
   const location = useLocation();
 
   const logic = dashboard.analysis.logic.find((logic) => logic.id === logicId);
-  const source = useQuery({
-    queryKey: ["python-source", dashboardId, logic?.path],
-    enabled: !!logic,
-    queryFn: () => loadPythonSource(dashboardId, logic!.path),
-  });
 
   const back = (location.state as { returnTo?: string } | null)?.returnTo ?? `/d/${dashboardId}`;
 
@@ -47,12 +55,13 @@ export const PythonWorkbench = ({ logicId }: { logicId?: string }) => {
             navigate(`/d/${dashboardId}/builder/python/${id}`, { state: { returnTo: back } })
           }
         />
-        {logic && source.data !== undefined ? (
-          <CodeWorkspace key={logic.id} path={logic.path} savedSource={source.data} />
+        {logic ? (
+          <QueryBoundary key={logic.id} errorMessage={messages.logic.loadFailed}>
+            <PythonSource logicId={logic.id} path={logic.path} />
+          </QueryBoundary>
         ) : (
           <p className="grid h-full place-items-center p-5 text-sm text-stone-500">
-            {source.error?.message ??
-              (source.isFetching ? "読み込み中…" : "ロジックを選択または追加してください。")}
+            ロジックを選択または追加してください。
           </p>
         )}
       </div>

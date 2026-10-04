@@ -1,27 +1,18 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Menu, Plus, X } from "lucide-react";
-import type { DashboardListItem } from "@shared/api";
 
 export const DashboardSidebar = ({
-  activeId,
   open,
-  dashboards,
-  error,
-  loading,
+  children,
   creating,
   onCreate,
   onOpenChange,
-  onSelect,
 }: {
-  activeId?: string;
   open: boolean;
-  dashboards?: DashboardListItem[];
-  error?: string;
-  loading: boolean;
+  children: ReactNode;
   creating: boolean;
   onCreate: (title: string) => void;
   onOpenChange: (open: boolean) => void;
-  onSelect: (id: string) => void;
 }) => {
   const [title, setTitle] = useState("");
 
@@ -46,23 +37,7 @@ export const DashboardSidebar = ({
           マイダッシュボード
         </p>
         <nav aria-label="ダッシュボード一覧" className="grid gap-1">
-          {dashboards?.map((dashboard) => (
-            <button
-              aria-current={activeId === dashboard.id ? "page" : undefined}
-              className={`truncate rounded-md px-3 py-2.5 text-left text-sm ${activeId === dashboard.id ? "bg-red-50 font-semibold text-red-800" : "text-stone-700 hover:bg-stone-100"}`}
-              key={dashboard.id}
-              onClick={() => onSelect(dashboard.id)}
-              type="button"
-            >
-              {dashboard.title}
-            </button>
-          ))}
-          {loading && <p className="p-2 text-xs text-stone-500">読み込み中…</p>}
-          {error && (
-            <p role="alert" className="p-2 text-xs text-red-700">
-              {error}
-            </p>
-          )}
+          {children}
         </nav>
       </div>
       <form

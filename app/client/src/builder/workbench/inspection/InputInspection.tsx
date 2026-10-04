@@ -1,25 +1,62 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { analysisPort, loadInputs } from "@/ports/analysis";
 import { SelectList } from "@/components/primitives/SelectList";
 import { useCopyReference } from "@/builder/hooks/useCopyReference";
+import { QueryBoundary } from "@/components/feedback/QueryBoundary";
+import { messages } from "@/messages";
+
+const InputRows = ({ inputId }: { inputId?: string }) => {
+  const dashboard = useSavedDashboard();
+  const dashboardId = useDashboardId();
+  const { data } = useSuspenseQuery({
+    queryKey: ["input-preview", dashboardId, dashboard.analysis.inputs],
+    queryFn: async () => analysisPort.inspect(await loadInputs(dashboardId, dashboard.analysis)),
+    meta: { errorMessage: messages.csv.loadFailed, errorBoundary: true },
+  });
+  const rows = inputId ? (data[inputId] ?? []) : [];
+  const columns = Object.keys(rows[0] ?? {});
+
+  return (
+    <div className="overflow-auto rounded-md border border-stone-200">
+      <table className="w-full min-w-max border-collapse text-xs">
+        <thead className="bg-stone-50 text-stone-500">
+          <tr>
+            {columns.map((key) => (
+              <th className="border-b border-stone-200 px-3 py-2 text-left" key={key}>
+                {key}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={index}>
+              {columns.map((key) => (
+                <td
+                  className="border-b border-stone-100 px-3 py-2 font-mono text-stone-600"
+                  key={key}
+                >
+                  {String(row[key] ?? "")}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 export const InputInspection = () => {
   const dashboard = useSavedDashboard();
-  const dashboardId = useDashboardId();
   const inputs = dashboard.analysis.inputs;
 
   const [selected, setSelected] = useState(inputs[0]?.id ?? "");
   const { copyReference, copied, isPending } = useCopyReference();
 
   const current = inputs.find((input) => input.id === selected) ?? inputs[0];
-  const query = useQuery({
-    queryKey: ["input-preview", dashboardId, inputs],
-    queryFn: async () => analysisPort.inspect(await loadInputs(dashboardId, dashboard.analysis)),
-  });
-  const rows = current ? (query.data?.[current.id] ?? []) : [];
-  const columns = Object.keys(rows[0] ?? {});
 
   return (
     <div className="m-5 grid gap-4 rounded-xl border border-stone-200 bg-white p-4">
@@ -44,39 +81,9 @@ export const InputInspection = () => {
           </button>
         </>
       )}
-      {query.isError ? (
-        <p role="alert">{query.error.message}</p>
-      ) : query.isPending ? (
-        <p>CSVを読み込み中…</p>
-      ) : (
-        <div className="overflow-auto rounded-md border border-stone-200">
-          <table className="w-full min-w-max border-collapse text-xs">
-            <thead className="bg-stone-50 text-stone-500">
-              <tr>
-                {columns.map((key) => (
-                  <th className="border-b border-stone-200 px-3 py-2 text-left" key={key}>
-                    {key}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, index) => (
-                <tr key={index}>
-                  {columns.map((key) => (
-                    <td
-                      className="border-b border-stone-100 px-3 py-2 font-mono text-stone-600"
-                      key={key}
-                    >
-                      {String(row[key] ?? "")}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <QueryBoundary key={JSON.stringify(inputs)} errorMessage={messages.csv.loadFailed}>
+        <InputRows inputId={current?.id} />
+      </QueryBoundary>
       <h3 className="border-t border-stone-100 pt-4 text-sm font-bold text-stone-700">
         利用可能なParameters
       </h3>
