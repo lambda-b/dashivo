@@ -1,0 +1,13 @@
+{
+  "app": "node app.ts",
+  "versionReporting": false,
+  "context": {
+    "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": true
+  },
+  "deployment": {
+    "account": "154539905353",
+    "domainName": "dashivo.pisan-zapra.com",
+    "zoneName": "pisan-zapra.com",
+    "hostedZoneId": "Z01271562HEUJDE1YKHK5"
+  }
+}

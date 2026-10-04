@@ -43,6 +43,7 @@ playwright-report/
 tests/results/
 .cache/
 .pyodide-cache/
+cdk.out/
 .idea/
 *.swp
 

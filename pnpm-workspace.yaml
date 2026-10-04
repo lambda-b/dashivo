@@ -3,6 +3,7 @@ packages:
   - app/shared/*
   - app/server/packages/*
   - infra
+  - infra/cdk
   - tests
 
 minimumReleaseAgeExclude:
