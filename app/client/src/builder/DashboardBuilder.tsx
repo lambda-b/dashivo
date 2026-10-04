@@ -1,16 +1,12 @@
 import { useState, type ReactNode } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import {
-  dashboardQueryKey,
   DashboardPreviewContext,
   useSavedDashboard,
   useDashboardId,
 } from "@/app/context/useDashboard";
-import { loadDashboard } from "@/api/dashboard";
-import { useSaveDashboard } from "@/builder/hooks/useSaveDashboard";
 import { useDownloadDashboard } from "@/builder/hooks/useDownloadDashboard";
-import { useSettingsDraft, settingsOf } from "@/builder/settings/hooks/useSettingsDraft";
+import { useSettingsEditor } from "@/builder/settings/hooks/useSettingsEditor";
 import { useContentActions } from "@/builder/settings/hooks/useContentActions";
 import { useParameterActions } from "@/builder/settings/hooks/useParameterActions";
 import { HeaderSetting } from "@/builder/settings/HeaderSetting";
@@ -19,7 +15,6 @@ import { ContentSetting } from "@/builder/settings/ContentSetting";
 import { TabSetting } from "@/builder/settings/TabSetting";
 import { ContentPickerDialog } from "@/builder/settings/components/ContentPickerDialog";
 import { PythonWorkbench } from "@/builder/workbench/PythonWorkbench";
-import { dashboardSchema, type DashboardSettings } from "@shared/dashboard";
 
 export interface BuilderActions {
   addContent: (tabIndex: number) => void;
@@ -48,15 +43,23 @@ export const DashboardBuilder = ({
 }) => {
   const saved = useSavedDashboard();
   const dashboardId = useDashboardId();
-  const { draft, update, reset } = useSettingsDraft();
-
-  const [preview, setPreview] = useState<DashboardSettings>();
+  const {
+    draft,
+    update,
+    preview,
+    addContent,
+    applyPreview,
+    saveSettings,
+    resetSettings,
+    validationError,
+    isPending,
+    isSuccess,
+  } = useSettingsEditor();
   const [section, setSection] = useState<Section>();
   const [target, setTarget] = useState<{ tabIndex: number; contentIndex?: number }>({
     tabIndex: 0,
   });
   const [addingTab, setAddingTab] = useState<number>();
-  const [error, setError] = useState("");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -65,22 +68,7 @@ export const DashboardBuilder = ({
   const contentActions = useContentActions(draft, update);
   const parameterActions = useParameterActions(draft, update);
 
-  const save = useSaveDashboard();
   const download = useDownloadDashboard();
-  const loaded = useQuery({
-    queryKey: [...dashboardQueryKey, dashboardId],
-    queryFn: ({ signal }) => loadDashboard(dashboardId, { signal }),
-    staleTime: Infinity,
-  });
-
-  const apply = () => {
-    try {
-      setPreview(settingsOf(dashboardSchema.parse(draft)));
-      setError("");
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
-    }
-  };
 
   return (
     <div>
@@ -135,31 +123,19 @@ export const DashboardBuilder = ({
             ) : (
               <TabSetting dashboard={draft} onChange={update} />
             )}
-            {(error || loaded.error) && (
+            {validationError && (
               <pre role="alert" className="whitespace-pre-wrap text-xs text-red-700">
-                {error || loaded.error?.message}
+                {validationError}
               </pre>
             )}
           </div>
           <footer className="flex flex-wrap justify-between gap-3 border-t p-5">
-            <button
-              onClick={() => {
-                reset();
-                setPreview(undefined);
-                setError("");
-                save.reset();
-              }}
-            >
-              元に戻す
-            </button>
-            <button
-              disabled={save.isPending}
-              onClick={() => save.mutate({ settings: settingsOf(draft) })}
-            >
+            <button onClick={resetSettings}>元に戻す</button>
+            <button disabled={isPending} onClick={saveSettings}>
               dashboard.jsonを保存
             </button>
-            {save.isSuccess && <span>保存しました</span>}
-            <button className="rounded bg-red-700 p-2 text-white" onClick={apply}>
+            {isSuccess && <span>保存しました</span>}
+            <button className="rounded bg-red-700 p-2 text-white" onClick={applyPreview}>
               プレビューへ反映
             </button>
           </footer>
@@ -171,16 +147,8 @@ export const DashboardBuilder = ({
           open
           tabIndex={addingTab}
           onClose={() => setAddingTab(undefined)}
-          onComplete={async ({ content }) => {
-            const next = dashboardSchema.parse({
-              ...draft,
-              tabs: draft.tabs.map((tab, index) =>
-                index === addingTab ? { ...tab, contents: [...tab.contents, content] } : tab,
-              ),
-            });
-            update(next);
-            setPreview(settingsOf(next));
-          }}
+          error={validationError}
+          onComplete={(logicId) => addContent(addingTab, logicId)}
         />
       )}
     </div>

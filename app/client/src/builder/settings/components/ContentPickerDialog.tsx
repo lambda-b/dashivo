@@ -1,17 +1,13 @@
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { createContentPlacement } from "@/builder/settings/hooks/useContentActions";
 import { IconButton } from "@/components/primitives/IconButton";
-import type { ContentPlacementDefinition, DashboardSchema } from "@shared/dashboard";
-
-export interface ContentPickerResult {
-  content: ContentPlacementDefinition;
-}
+import type { DashboardSchema } from "@shared/dashboard";
 
 interface ContentPickerDialogProps {
   dashboard: DashboardSchema;
   onClose: () => void;
-  onComplete: (result: ContentPickerResult) => Promise<void>;
+  onComplete: (logicId: string) => boolean;
+  error?: string;
   open: boolean;
   tabIndex: number;
 }
@@ -20,13 +16,12 @@ export const ContentPickerDialog = ({
   dashboard,
   onClose,
   onComplete,
+  error,
   open,
   tabIndex,
 }: ContentPickerDialogProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [selectedLogicId, setSelectedLogicId] = useState(dashboard.analysis.logic[0]?.id);
-  const [error, setError] = useState<string>();
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -41,30 +36,15 @@ export const ContentPickerDialog = ({
     }
   }, [dashboard.analysis.logic, selectedLogicId]);
 
-  const close = () => {
-    setError(undefined);
-    setSaving(false);
-    onClose();
-  };
-
-  const finish = async () => {
-    if (!selectedLogicId) return;
-    setSaving(true);
-    setError(undefined);
-    try {
-      await onComplete({ content: createContentPlacement(dashboard, selectedLogicId) });
-      close();
-    } catch (cause) {
-      setSaving(false);
-      setError(cause instanceof Error ? cause.message : "コンテンツを追加できませんでした。");
-    }
+  const finish = () => {
+    if (selectedLogicId && onComplete(selectedLogicId)) onClose();
   };
 
   return (
     <dialog
       aria-labelledby="content-wizard-title"
       className="m-auto w-[min(48rem,calc(100%-2rem))] rounded-2xl border border-stone-200 bg-white p-0 text-stone-800 shadow-2xl backdrop:bg-stone-950/45"
-      onClose={close}
+      onClose={onClose}
       ref={dialogRef}
     >
       <header className="flex items-start justify-between gap-6 border-b border-stone-200 px-7 py-5">
@@ -77,7 +57,7 @@ export const ContentPickerDialog = ({
             Python画面で定義済みの出力を「{dashboard.tabs[tabIndex]?.label}」へ配置します。
           </p>
         </div>
-        <IconButton icon={X} label="コンテンツ追加を閉じる" onClick={close} />
+        <IconButton icon={X} label="コンテンツ追加を閉じる" onClick={onClose} />
       </header>
 
       <div className="max-h-[60vh] overflow-y-auto p-7">
@@ -117,14 +97,20 @@ export const ContentPickerDialog = ({
       </div>
 
       <footer className="flex items-center justify-between border-t border-stone-200 px-7 py-4">
-        {error ? <span className="text-xs text-red-700">{error}</span> : <span />}
+        {error ? (
+          <span role="alert" className="whitespace-pre-wrap text-xs text-red-700">
+            {error}
+          </span>
+        ) : (
+          <span />
+        )}
         <button
           className="bg-brand hover:bg-brand-dark cursor-pointer rounded-md px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-          disabled={!selectedLogicId || saving}
+          disabled={!selectedLogicId}
           onClick={finish}
           type="button"
         >
-          {saving ? "追加中…" : "コンテンツを追加"}
+          コンテンツを追加
         </button>
       </footer>
     </dialog>

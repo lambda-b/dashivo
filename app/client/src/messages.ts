@@ -14,6 +14,9 @@ export const messages = {
   assets: {
     loadFailed: "ファイル一覧を取得できませんでした。",
   },
+  settings: {
+    invalid: (details: string) => `設定を確認してください。\n${details}`,
+  },
   csv: {
     loadFailed: "入力データを読み込めませんでした。",
     registerFailed: "CSVを登録できませんでした。",
