@@ -1,3 +1,5 @@
+import { Button } from "@/components/primitives/Button";
+
 import clsx from "clsx";
 import { Download } from "lucide-react";
 import { useDashboard } from "@/app/context/useDashboard";
@@ -34,16 +36,14 @@ export const DashboardHeader = ({
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 max-sm:justify-start">
           {download && (
             <div className="text-right">
-              <button
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:cursor-wait disabled:opacity-50"
-                disabled={downloadPending}
+              <Button
+                icon={Download}
+                pending={downloadPending}
                 onClick={download}
                 title="保存済みの設定とPythonから生成します"
-                type="button"
               >
-                <Download aria-hidden="true" className="size-3.5" />
                 {downloadPending ? "HTMLを生成中…" : "HTMLをダウンロード"}
-              </button>
+              </Button>
             </div>
           )}
           {onEditHeader && <EditButton onClick={onEditHeader}>ヘッダーを編集</EditButton>}

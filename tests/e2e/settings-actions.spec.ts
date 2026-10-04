@@ -30,7 +30,9 @@ test("keeps settings drafts while using the latest saved analysis definition", a
     mimeType: "text/csv",
     buffer: Buffer.from("value\n1\n"),
   });
-  await expect(page.getByLabel("Input ID")).toHaveCount(source.analysis.inputs.length + 1);
+  await expect(page.getByRole("list", { name: "入力CSV一覧" }).getByRole("listitem")).toHaveCount(
+    source.analysis.inputs.length + 1,
+  );
   await page.getByRole("button", { name: "Dashboardへ戻る" }).click();
   await page.getByRole("button", { name: "ヘッダーを編集" }).click();
   await expect(page.getByLabel("タイトル")).toHaveValue("Keep settings draft");

@@ -1,9 +1,13 @@
+import { fieldClassName } from "@/components/primitives/field-styles";
+import { twMerge } from "tailwind-merge";
+
 interface SelectListOption {
   label: string;
   value: string;
 }
 
 interface SelectListProps {
+  className?: string;
   ariaLabel?: string;
   disabled?: boolean;
   onChange: (value: string) => void;
@@ -11,10 +15,17 @@ interface SelectListProps {
   value: string;
 }
 
-export const SelectList = ({ ariaLabel, disabled, onChange, options, value }: SelectListProps) => (
+export const SelectList = ({
+  ariaLabel,
+  className,
+  disabled,
+  onChange,
+  options,
+  value,
+}: SelectListProps) => (
   <select
     aria-label={ariaLabel}
-    className="focus:border-brand min-w-0 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none disabled:bg-stone-100 disabled:text-stone-400"
+    className={twMerge(fieldClassName, className)}
     disabled={disabled}
     onChange={(event) => onChange(event.target.value)}
     value={value}

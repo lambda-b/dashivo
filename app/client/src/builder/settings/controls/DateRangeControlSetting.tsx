@@ -1,6 +1,7 @@
 import { ControlSettingCard } from "@/builder/settings/components/ControlSettingCard";
 import { ControlIdentityFields } from "@/builder/settings/components/ControlIdentityFields";
 import { DateInput } from "@/components/primitives/DateInput";
+import { FormField } from "@/components/primitives/FormField";
 import type { DateRangeControlDefinition } from "@shared/dashboard";
 
 interface DateRangeControlSettingProps {
@@ -26,35 +27,29 @@ export const DateRangeControlSetting = ({
       />
 
       <div className="grid grid-cols-2 gap-3">
-        <label className="text-xs font-medium text-stone-600">
-          開始日のデフォルト
-          <div className="mt-1">
-            <DateInput
-              onChange={(from) =>
-                onChange({
-                  ...control,
-                  defaultValue: { ...control.defaultValue, from },
-                })
-              }
-              value={control.defaultValue.from}
-            />
-          </div>
-        </label>
+        <FormField label="開始日のデフォルト">
+          <DateInput
+            onChange={(from) =>
+              onChange({
+                ...control,
+                defaultValue: { ...control.defaultValue, from },
+              })
+            }
+            value={control.defaultValue.from}
+          />
+        </FormField>
 
-        <label className="text-xs font-medium text-stone-600">
-          終了日のデフォルト
-          <div className="mt-1">
-            <DateInput
-              onChange={(to) =>
-                onChange({
-                  ...control,
-                  defaultValue: { ...control.defaultValue, to },
-                })
-              }
-              value={control.defaultValue.to}
-            />
-          </div>
-        </label>
+        <FormField label="終了日のデフォルト">
+          <DateInput
+            onChange={(to) =>
+              onChange({
+                ...control,
+                defaultValue: { ...control.defaultValue, to },
+              })
+            }
+            value={control.defaultValue.to}
+          />
+        </FormField>
       </div>
     </div>
   </ControlSettingCard>

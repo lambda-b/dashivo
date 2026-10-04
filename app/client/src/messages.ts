@@ -24,7 +24,7 @@ export const messages = {
     loadFailed: "入力データを読み込めませんでした。",
     registerFailed: "CSVを登録できませんでした。",
     definitionSaveFailed:
-      "CSVのアップロードは完了しましたが、設定を保存できませんでした。入力CSVの一覧からアップロード済みファイルを選択できます。",
+      "CSVのアップロードは完了しましたが、設定を保存できませんでした。CSVをもう一度アップロードして登録してください。",
   },
   logic: {
     loadFailed: "Pythonを読み込めませんでした。",

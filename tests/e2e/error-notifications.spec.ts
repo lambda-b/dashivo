@@ -42,10 +42,12 @@ for (const failure of ["upload", "network", "definition"] as const) {
         ? "Upload failed"
         : failure === "network"
           ? "サーバーに接続できませんでした。接続状態を確認してください。"
-          : "CSVのアップロードは完了しましたが、設定を保存できませんでした。入力CSVの一覧からアップロード済みファイルを選択できます。";
+          : "CSVのアップロードは完了しましたが、設定を保存できませんでした。CSVをもう一度アップロードして登録してください。";
     await expect(page.getByText(message, { exact: true })).toHaveCount(1);
     await expect(page.getByRole("button", { name: "CSVをアップロード" })).toBeEnabled();
-    await expect(page.getByLabel("Input ID")).toHaveCount(source.analysis.inputs.length);
+    await expect(page.getByRole("list", { name: "入力CSV一覧" }).getByRole("listitem")).toHaveCount(
+      source.analysis.inputs.length,
+    );
     expect(uploads).toBe(1);
     expect(saves).toBe(failure === "definition" ? 1 : 0);
     expect(errors).toEqual([]);

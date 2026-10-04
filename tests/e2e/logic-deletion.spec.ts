@@ -34,8 +34,9 @@ for (const state of ["used", "saving", "available"] as const) {
           ),
         ).toBeVisible();
       } else if (state === "saving") {
-        await page.getByLabel("Input ID").fill("renamed-input");
-        await page.getByLabel("Input ID").press("Tab");
+        await page
+          .getByRole("button", { name: `${dashboard.analysis.inputs[0]!.id}を削除`, exact: true })
+          .click();
         await expect(deletion).toBeDisabled();
         await expect(
           page.getByText("設定を保存中のため削除できません。保存完了までお待ちください。", {

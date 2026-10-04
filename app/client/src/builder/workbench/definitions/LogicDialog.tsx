@@ -1,4 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { Dialog } from "@/components/primitives/Dialog";
+import { Button } from "@/components/primitives/Button";
+import { FormField } from "@/components/primitives/FormField";
+import { TextInput } from "@/components/primitives/TextInput";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { useCreatePythonLogic } from "@/builder/hooks/useCreatePythonLogic";
 import { createUniqueIndexedName } from "@dashlet/shared-utils/createUniqueIndexedName";
@@ -38,12 +42,6 @@ export const LogicDialog = ({
   const [error, setError] = useState("");
   const createLogic = useCreatePythonLogic();
   const saving = createLogic.isPending;
-  const dialog = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    dialog.current?.showModal();
-  }, []);
-
   const create = () => {
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) {
       setError(messages.logic.invalidId);
@@ -67,25 +65,28 @@ export const LogicDialog = ({
   };
 
   return (
-    <dialog
-      ref={dialog}
+    <Dialog
+      open
+      title="ロジックを追加"
+      closeLabel="ロジック追加を閉じる"
+      size="small"
+      dismissDisabled={saving}
       onClose={onClose}
-      onCancel={(event) => {
-        if (saving) event.preventDefault();
-      }}
-      aria-label="ロジックを追加"
-      className="m-auto w-[min(28rem,calc(100%-2rem))] rounded-2xl border border-stone-200 bg-white p-6 text-stone-800 shadow-2xl backdrop:bg-stone-950/45"
+      footer={
+        <>
+          <Button disabled={saving} onClick={onClose}>
+            キャンセル
+          </Button>
+          <Button pending={saving} onClick={create} variant="primary">
+            {saving ? "保存中…" : "作成"}
+          </Button>
+        </>
+      }
     >
-      <h2 className="mb-5 text-xl font-bold">ロジックを追加</h2>
-      <label className="text-xs font-medium text-stone-600">
-        Logic ID
-        <input
-          className="focus:border-brand my-2 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-          value={id}
-          onChange={(event) => setId(event.target.value)}
-        />
-      </label>
-      <p className="break-all font-mono text-xs text-stone-500">
+      <FormField label="Logic ID">
+        <TextInput monospace value={id} onChange={setId} />
+      </FormField>
+      <p className="mt-2 break-all font-mono text-xs text-stone-500">
         Pythonファイル: logic/{dashboardId}/{id}.py
       </p>
       {error && (
@@ -93,22 +94,6 @@ export const LogicDialog = ({
           {error}
         </p>
       )}
-      <div className="mt-5 flex justify-end gap-3 border-t border-stone-100 pt-4">
-        <button
-          className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
-          disabled={saving}
-          onClick={onClose}
-        >
-          キャンセル
-        </button>
-        <button
-          disabled={saving}
-          className="bg-brand hover:bg-brand-dark cursor-pointer rounded-md px-4 py-2 text-xs font-semibold text-white disabled:cursor-wait disabled:opacity-50"
-          onClick={create}
-        >
-          {saving ? "保存中…" : "作成"}
-        </button>
-      </div>
-    </dialog>
+    </Dialog>
   );
 };

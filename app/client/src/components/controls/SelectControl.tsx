@@ -1,4 +1,5 @@
 import { SelectList } from "@/components/primitives/SelectList";
+import { FormField } from "@/components/primitives/FormField";
 import type { SelectControlDefinition } from "@shared/dashboard";
 
 interface SelectControlProps {
@@ -8,10 +9,7 @@ interface SelectControlProps {
 }
 
 export const SelectControl = ({ control, onChange, value }: SelectControlProps) => (
-  <label className="text-xs font-medium text-stone-600">
-    {control.displayName}
-    <div className="mt-1">
-      <SelectList onChange={onChange} options={control.options} value={value} />
-    </div>
-  </label>
+  <FormField label={control.displayName}>
+    <SelectList onChange={onChange} options={control.options} value={value} />
+  </FormField>
 );

@@ -1,3 +1,5 @@
+import { Button } from "@/components/primitives/Button";
+
 import { useSuspenseQuery } from "@dashlet/shared-lib/query";
 import { useState } from "react";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
@@ -72,13 +74,13 @@ export const InputInspection = () => {
               label: input.id + " (" + input.path + ")",
             }))}
           />
-          <button
-            className="cursor-pointer break-all text-left font-mono text-xs text-indigo-700 hover:underline"
+          <Button
+            variant="link"
             disabled={isPending}
             onClick={() => copyReference(`inputs[${JSON.stringify(current.id)}]`)}
           >
-            {`inputs[${JSON.stringify(current.id)}]`} をコピー
-          </button>
+            <span className="font-mono">{`inputs[${JSON.stringify(current.id)}]`} をコピー</span>
+          </Button>
         </>
       )}
       <QueryBoundary key={JSON.stringify(inputs)} errorMessage={messages.csv.loadFailed}>
@@ -89,13 +91,13 @@ export const InputInspection = () => {
       </h3>
       {dashboard.controls.map((control) => (
         <div className="min-w-0 rounded-md bg-stone-50 px-3 py-2" key={control.key}>
-          <button
-            className="cursor-pointer break-all text-left font-mono text-xs text-indigo-700 hover:underline"
+          <Button
+            variant="link"
             disabled={isPending}
             onClick={() => copyReference(`params[${JSON.stringify(control.key)}]`)}
           >
-            {`params[${JSON.stringify(control.key)}]`} をコピー
-          </button>
+            <span className="font-mono">{`params[${JSON.stringify(control.key)}]`} をコピー</span>
+          </Button>
           <p className="mt-1 break-all text-[0.6875rem] leading-5 text-stone-500">
             {control.displayName} · {JSON.stringify(control.defaultValue)}
           </p>

@@ -1,11 +1,11 @@
-import clsx from "clsx";
+import { Button } from "@/components/primitives/Button";
 import { Pencil } from "lucide-react";
 import type { ReactNode } from "react";
 
 interface EditButtonProps {
   ariaLabel?: string;
   children: ReactNode;
-  fullWidth?: boolean;
+  className?: string;
   onClick: () => void;
   size?: "default" | "compact";
 }
@@ -13,21 +13,18 @@ interface EditButtonProps {
 export const EditButton = ({
   ariaLabel,
   children,
-  fullWidth,
+  className,
   onClick,
   size = "default",
 }: EditButtonProps) => (
-  <button
-    aria-label={ariaLabel}
-    className={clsx(
-      "inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 text-xs font-semibold text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-100",
-      size === "compact" ? "px-2 py-1" : "px-3 py-2",
-      fullWidth && "w-full",
-    )}
+  <Button
+    ariaLabel={ariaLabel}
+    className={className}
+    icon={Pencil}
     onClick={onClick}
-    type="button"
+    size={size}
+    variant="edit"
   >
-    <Pencil aria-hidden="true" className="size-3.5" />
     {children}
-  </button>
+  </Button>
 );

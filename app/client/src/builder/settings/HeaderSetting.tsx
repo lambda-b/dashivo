@@ -1,3 +1,7 @@
+import { FormField } from "@/components/primitives/FormField";
+import { TextInput } from "@/components/primitives/TextInput";
+import { TextArea } from "@/components/primitives/TextArea";
+
 import type { DashboardSchema } from "@shared/dashboard";
 
 interface HeaderSettingProps {
@@ -8,22 +12,18 @@ interface HeaderSettingProps {
 export const HeaderSetting = ({ dashboard, onChange }: HeaderSettingProps) => (
   <section>
     <div className="grid gap-3">
-      <label className="text-xs font-medium text-stone-600">
-        タイトル
-        <input
-          className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-          onChange={(event) => onChange({ ...dashboard, title: event.target.value })}
+      <FormField label="タイトル">
+        <TextInput
+          onChange={(title) => onChange({ ...dashboard, title })}
           value={dashboard.title}
         />
-      </label>
-      <label className="text-xs font-medium text-stone-600">
-        リード文
-        <textarea
-          className="focus:border-brand mt-1 min-h-20 w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-          onChange={(event) => onChange({ ...dashboard, description: event.target.value })}
+      </FormField>
+      <FormField label="リード文">
+        <TextArea
+          onChange={(description) => onChange({ ...dashboard, description })}
           value={dashboard.description}
         />
-      </label>
+      </FormField>
     </div>
   </section>
 );

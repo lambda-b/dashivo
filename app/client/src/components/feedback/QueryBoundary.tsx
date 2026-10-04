@@ -1,3 +1,5 @@
+import { Button } from "@/components/primitives/Button";
+
 import { Suspense, type ReactNode } from "react";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
@@ -22,13 +24,7 @@ export const QueryBoundary = ({
             <p role="alert" className="break-words text-red-700">
               {error instanceof ApiError ? error.message : errorMessage}
             </p>
-            <button
-              className="rounded-md border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
-              onClick={resetErrorBoundary}
-              type="button"
-            >
-              {messages.retry}
-            </button>
+            <Button onClick={resetErrorBoundary}>{messages.retry}</Button>
           </div>
         )}
       >

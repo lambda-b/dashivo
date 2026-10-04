@@ -1,3 +1,5 @@
+import { Button } from "@/components/primitives/Button";
+
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { ControlCatalogDialog } from "@/builder/settings/components/ControlCatalogDialog";
@@ -28,14 +30,9 @@ export const ControlSetting = ({ actions, dashboard }: ControlSettingProps) => {
           <h3 className="text-sm font-bold">Parameters</h3>
           <p className="mt-1 text-xs text-stone-500">画面表示ロジックへ渡す入力項目です。</p>
         </div>
-        <button
-          className="bg-brand hover:bg-brand-dark inline-flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold text-white"
-          onClick={() => setIsCatalogOpen(true)}
-          type="button"
-        >
-          <Plus aria-hidden="true" className="size-3.5" />
+        <Button icon={Plus} onClick={() => setIsCatalogOpen(true)} variant="primary">
           項目を追加
-        </button>
+        </Button>
       </div>
 
       <div className="grid gap-3">

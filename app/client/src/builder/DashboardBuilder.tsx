@@ -1,3 +1,7 @@
+import { Button } from "@/components/primitives/Button";
+import { IconButton } from "@/components/primitives/IconButton";
+import { X } from "lucide-react";
+
 import { useState, type ReactNode } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -103,9 +107,7 @@ export const DashboardBuilder = ({
         >
           <header className="flex justify-between border-b p-5">
             <h2 className="font-bold">{titles[section]}</h2>
-            <button aria-label="Builderを閉じる" onClick={() => setSection(undefined)}>
-              閉じる
-            </button>
+            <IconButton icon={X} label="Builderを閉じる" onClick={() => setSection(undefined)} />
           </header>
           <div className="min-h-0 flex-1 overflow-auto p-5">
             {section === "header" ? (
@@ -130,14 +132,14 @@ export const DashboardBuilder = ({
             )}
           </div>
           <footer className="flex flex-wrap justify-between gap-3 border-t p-5">
-            <button onClick={resetSettings}>元に戻す</button>
-            <button disabled={isPending} onClick={saveSettings}>
+            <Button onClick={resetSettings}>元に戻す</Button>
+            <Button pending={isPending} onClick={saveSettings}>
               dashboard.jsonを保存
-            </button>
+            </Button>
             {isSuccess && <span>保存しました</span>}
-            <button className="rounded bg-red-700 p-2 text-white" onClick={applyPreview}>
+            <Button variant="primary" onClick={applyPreview}>
               プレビューへ反映
-            </button>
+            </Button>
           </footer>
         </aside>
       )}

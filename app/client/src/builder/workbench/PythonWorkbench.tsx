@@ -1,3 +1,5 @@
+import { Button } from "@/components/primitives/Button";
+
 import { useSuspenseQuery } from "@dashlet/shared-lib/query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSavedDashboard } from "@/app/context/useDashboard";
@@ -41,12 +43,9 @@ export const PythonWorkbench = ({ logicId }: { logicId?: string }) => {
             Pythonコードと最終的な出力イメージを同じ画面で確認します。
           </p>
         </div>
-        <button
-          className="cursor-pointer rounded-md border border-stone-200 px-3 py-2 text-sm text-stone-600 hover:bg-stone-50"
-          onClick={() => navigate(back)}
-        >
+        <Button size="regular" onClick={() => navigate(back)}>
           Dashboardへ戻る
-        </button>
+        </Button>
       </header>
       <div className="grid min-h-0 flex-1 grid-cols-[15rem_minmax(0,1fr)_minmax(0,1fr)]">
         <Definitions

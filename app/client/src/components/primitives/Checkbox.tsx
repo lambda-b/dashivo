@@ -1,3 +1,5 @@
+import { twMerge } from "tailwind-merge";
+
 interface CheckboxOption {
   checked: boolean;
   label: string;
@@ -5,6 +7,7 @@ interface CheckboxOption {
 }
 
 interface CheckboxProps {
+  className?: string;
   ariaLabel?: string;
   labelVisibility?: "visible" | "hidden";
   layout: "horizontal" | "vertical";
@@ -41,6 +44,7 @@ const CheckboxItem = ({ option, labelVisibility, name, onChange }: CheckboxItemP
 );
 
 export const Checkbox = ({
+  className,
   ariaLabel,
   labelVisibility = "visible",
   layout,
@@ -53,7 +57,10 @@ export const Checkbox = ({
   return (
     <div
       aria-label={ariaLabel}
-      className={layout === "horizontal" ? "flex flex-wrap gap-x-4 gap-y-2" : "grid gap-2"}
+      className={twMerge(
+        layout === "horizontal" ? "flex flex-wrap gap-x-4 gap-y-2" : "grid gap-2",
+        className,
+      )}
       role="group"
     >
       {options.map((option, index) => (

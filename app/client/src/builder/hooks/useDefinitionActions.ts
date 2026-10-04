@@ -5,16 +5,6 @@ export const useDefinitionActions = () => {
   const save = useSaveDashboard();
   const csv = useRegisterCsv();
 
-  const updateInput = (index: number, change: { id?: string; path?: string }) =>
-    save.mutate((dashboard) => ({
-      analysis: {
-        ...dashboard.analysis,
-        inputs: dashboard.analysis.inputs.map((input, i) =>
-          i === index ? { ...input, ...change } : input,
-        ),
-      },
-    }));
-
   const removeInput = (index: number) =>
     save.mutate((dashboard) => ({
       analysis: {
@@ -32,7 +22,6 @@ export const useDefinitionActions = () => {
     }));
 
   return {
-    updateInput,
     removeInput,
     removeLogic,
     registerCsv: (file: File) => csv.mutate(file),

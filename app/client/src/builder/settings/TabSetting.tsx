@@ -1,3 +1,6 @@
+import { Button } from "@/components/primitives/Button";
+import { Plus } from "lucide-react";
+
 import type { DashboardSchema } from "@shared/dashboard";
 import { useTabActions } from "@/builder/settings/hooks/useTabActions";
 import { TabItemSetting } from "@/builder/settings/tabs/TabItemSetting";
@@ -15,7 +18,9 @@ export const TabSetting = ({
     <section>
       <div className="mb-3 flex justify-between">
         <h3 className="font-bold">Tabs</h3>
-        <button onClick={actions.add}>タブを追加</button>
+        <Button icon={Plus} onClick={actions.add} variant="primary">
+          タブを追加
+        </Button>
       </div>
       <div className="grid gap-3">
         {dashboard.tabs.map((tab, index) => (

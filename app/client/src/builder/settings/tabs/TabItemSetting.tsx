@@ -1,3 +1,6 @@
+import { FormField } from "@/components/primitives/FormField";
+import { TextInput } from "@/components/primitives/TextInput";
+
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { IconButton } from "@/components/primitives/IconButton";
 import type { TabDefinition } from "@shared/dashboard";
@@ -52,22 +55,12 @@ export const TabItemSetting = ({
     </div>
 
     <div className="grid grid-cols-2 gap-3">
-      <label className="text-xs font-medium text-stone-600">
-        Route ID
-        <input
-          className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-          onChange={(event) => onChange({ ...tab, id: event.target.value })}
-          value={tab.id}
-        />
-      </label>
-      <label className="text-xs font-medium text-stone-600">
-        表示名
-        <input
-          className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-          onChange={(event) => onChange({ ...tab, label: event.target.value })}
-          value={tab.label}
-        />
-      </label>
+      <FormField label="Route ID">
+        <TextInput monospace onChange={(id) => onChange({ ...tab, id })} value={tab.id} />
+      </FormField>
+      <FormField label="表示名">
+        <TextInput onChange={(label) => onChange({ ...tab, label })} value={tab.label} />
+      </FormField>
     </div>
 
     <p className="mt-3 text-xs text-stone-400">コンテンツ {tab.contents.length}件</p>

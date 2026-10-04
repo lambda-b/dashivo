@@ -1,5 +1,5 @@
-import { ChevronDown, Plus, X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { ChevronDown, Plus } from "lucide-react";
+import { Dialog } from "@/components/primitives/Dialog";
 import type { ControlDefinition } from "@shared/dashboard";
 
 type ControlType = ControlDefinition["type"];
@@ -118,42 +118,15 @@ const ControlPreview = ({ type }: { type: ControlType }) => {
 };
 
 export const ControlCatalogDialog = ({ open, onAdd, onClose }: ControlCatalogDialogProps) => {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
-
   return (
-    <dialog
-      aria-labelledby="control-catalog-title"
-      className="m-auto w-[min(44rem,calc(100%-2rem))] rounded-xl border border-stone-200 bg-white p-0 text-stone-800 shadow-2xl backdrop:bg-stone-950/40"
+    <Dialog
+      open={open}
+      title="入力項目を追加"
+      closeLabel="入力項目の選択を閉じる"
+      description="画面表示ロジックへ渡す値の入力方法を選びます。"
       onClose={onClose}
-      ref={dialogRef}
     >
-      <header className="flex items-start justify-between gap-6 border-b border-stone-200 px-6 py-5">
-        <div>
-          <h3 className="text-lg font-bold" id="control-catalog-title">
-            入力項目を追加
-          </h3>
-          <p className="mt-1 text-sm text-stone-500">
-            画面表示ロジックへ渡す値の入力方法を選びます。
-          </p>
-        </div>
-        <button
-          aria-label="入力項目の選択を閉じる"
-          className="grid cursor-pointer place-items-center rounded-md p-2 text-stone-500 hover:bg-stone-100"
-          onClick={onClose}
-          type="button"
-        >
-          <X aria-hidden="true" className="size-4" />
-        </button>
-      </header>
-
-      <div className="grid gap-3 p-6 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         {catalog.map((item) => (
           <button
             aria-label={`${item.label}を追加`}
@@ -184,6 +157,6 @@ export const ControlCatalogDialog = ({ open, onAdd, onClose }: ControlCatalogDia
           </button>
         ))}
       </div>
-    </dialog>
+    </Dialog>
   );
 };

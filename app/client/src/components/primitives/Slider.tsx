@@ -1,6 +1,8 @@
 import * as SliderPrimitive from "@radix-ui/react-slider";
+import { twMerge } from "tailwind-merge";
 
 interface SliderProps {
+  className?: string;
   ariaLabel: string;
   max: number;
   min: number;
@@ -10,9 +12,18 @@ interface SliderProps {
   value: number[];
 }
 
-export const Slider = ({ ariaLabel, max, min, name, onChange, step, value }: SliderProps) => (
+export const Slider = ({
+  ariaLabel,
+  className,
+  max,
+  min,
+  name,
+  onChange,
+  step,
+  value,
+}: SliderProps) => (
   <SliderPrimitive.Root
-    className="relative flex h-5 w-full touch-none select-none items-center"
+    className={twMerge("relative flex h-5 w-full touch-none select-none items-center", className)}
     max={max}
     min={min}
     name={name}

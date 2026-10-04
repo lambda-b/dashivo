@@ -5,7 +5,7 @@ import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { useDefinitionActions } from "@/builder/hooks/useDefinitionActions";
 import { loadAssetCatalog } from "@/api/python";
 import { LogicDialog } from "@/builder/workbench/definitions/LogicDialog";
-import { SelectList } from "@/components/primitives/SelectList";
+import { Button } from "@/components/primitives/Button";
 import { IconButton } from "@/components/primitives/IconButton";
 import { messages } from "@/messages";
 import type { DashboardSchema } from "@shared/dashboard";
@@ -34,7 +34,7 @@ export const Definitions = ({
   const dashboard = useSavedDashboard();
   const dashboardId = useDashboardId();
   const [adding, setAdding] = useState(false);
-  const { updateInput, removeInput, removeLogic, registerCsv, isPending, isRegisteringCsv } =
+  const { removeInput, removeLogic, registerCsv, isPending, isRegisteringCsv } =
     useDefinitionActions();
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -89,41 +89,33 @@ export const Definitions = ({
       <h3 className="mb-3 mt-5 border-t border-stone-200 px-1 pt-4 text-xs font-bold text-stone-600">
         入力CSV
       </h3>
-      {dashboard.analysis.inputs.map((input, index) => (
-        <div
-          className="mb-3 grid min-w-0 grid-cols-1 gap-2 rounded-lg border border-stone-200 bg-white p-3"
-          key={input.id}
-        >
-          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_2rem] items-center gap-2">
-            <input
-              disabled={isPending}
-              aria-label="Input ID"
-              className="focus:border-brand min-w-0 w-full rounded-md border border-stone-300 px-2 py-1.5 font-mono text-xs outline-none"
-              defaultValue={input.id}
-              onBlur={(event) => {
-                if (event.target.value !== input.id) updateInput(index, { id: event.target.value });
-              }}
-            />
-            <IconButton
-              icon={Trash2}
-              variant="danger"
-              label={`${input.id}を削除`}
-              disabled={isPending}
-              onClick={() => removeInput(index)}
-            />
-          </div>
-          <SelectList
-            disabled={isPending}
-            ariaLabel="CSVファイル"
-            value={input.path}
-            onChange={(path) => updateInput(index, { path })}
-            options={[...new Set([input.path, ...(catalog.data?.csv ?? [])])].map((path) => ({
-              label: path,
-              value: path,
-            }))}
-          />
-        </div>
-      ))}
+      <ul aria-label="入力CSV一覧" className="mb-3 grid min-w-0 gap-3">
+        {dashboard.analysis.inputs.map((input, index) => (
+          <li
+            className="grid min-w-0 gap-2 rounded-lg border border-stone-200 bg-white p-3"
+            key={input.id}
+          >
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_2rem] items-center gap-2">
+              <div className="min-w-0">
+                <span className="block text-[0.625rem] text-stone-500">CSV-ID</span>
+                <strong className="block break-all font-mono text-xs text-stone-700">
+                  {input.id}
+                </strong>
+              </div>
+              <IconButton
+                icon={Trash2}
+                variant="danger"
+                label={`${input.id}を削除`}
+                disabled={isPending}
+                onClick={() => removeInput(index)}
+              />
+            </div>
+            <p className="break-all font-mono text-[0.6875rem] leading-5 text-stone-500">
+              {input.path}
+            </p>
+          </li>
+        ))}
+      </ul>
       <input
         ref={fileInput}
         aria-label="アップロードするCSVファイル"
@@ -137,15 +129,16 @@ export const Definitions = ({
         }}
         type="file"
       />
-      <button
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-stone-300 px-2 py-2 text-xs font-semibold text-stone-600 hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+      <Button
         disabled={isPending}
+        className="w-full"
+        icon={Upload}
+        pending={isRegisteringCsv}
         onClick={() => fileInput.current?.click()}
-        type="button"
+        variant="dashed"
       >
-        <Upload aria-hidden="true" className="size-3.5" />
         {isRegisteringCsv ? "CSVを登録中…" : "CSVをアップロード"}
-      </button>
+      </Button>
       {adding && (
         <LogicDialog
           files={catalog.data?.python ?? []}

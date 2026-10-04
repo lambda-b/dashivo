@@ -1,3 +1,6 @@
+import { Button } from "@/components/primitives/Button";
+import { FormField } from "@/components/primitives/FormField";
+
 import { Plus, Trash2 } from "lucide-react";
 import { ControlSettingCard } from "@/builder/settings/components/ControlSettingCard";
 import { ControlIdentityFields } from "@/builder/settings/components/ControlIdentityFields";
@@ -55,39 +58,30 @@ export const SliderControlSetting = ({
         />
 
         <div className="grid grid-cols-3 gap-3">
-          <label className="text-xs font-medium text-stone-600">
-            最小値
-            <span className="mt-1 block">
-              <NumberInput
-                ariaLabel="最小値"
-                onChange={(min) => onChange({ ...control, min })}
-                step={control.step}
-                value={control.min}
-              />
-            </span>
-          </label>
-          <label className="text-xs font-medium text-stone-600">
-            最大値
-            <span className="mt-1 block">
-              <NumberInput
-                ariaLabel="最大値"
-                onChange={(max) => onChange({ ...control, max })}
-                step={control.step}
-                value={control.max}
-              />
-            </span>
-          </label>
-          <label className="text-xs font-medium text-stone-600">
-            刻み幅
-            <span className="mt-1 block">
-              <NumberInput
-                ariaLabel="刻み幅"
-                min={Number.MIN_VALUE}
-                onChange={(step) => onChange({ ...control, step })}
-                value={control.step}
-              />
-            </span>
-          </label>
+          <FormField label="最小値">
+            <NumberInput
+              ariaLabel="最小値"
+              onChange={(min) => onChange({ ...control, min })}
+              step={control.step}
+              value={control.min}
+            />
+          </FormField>
+          <FormField label="最大値">
+            <NumberInput
+              ariaLabel="最大値"
+              onChange={(max) => onChange({ ...control, max })}
+              step={control.step}
+              value={control.max}
+            />
+          </FormField>
+          <FormField label="刻み幅">
+            <NumberInput
+              ariaLabel="刻み幅"
+              min={Number.MIN_VALUE}
+              onChange={(step) => onChange({ ...control, step })}
+              value={control.step}
+            />
+          </FormField>
         </div>
 
         <div className="grid gap-2">
@@ -111,14 +105,9 @@ export const SliderControlSetting = ({
               />
             </div>
           ))}
-          <button
-            className="mt-1 inline-flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-stone-300 px-3 py-2 text-xs font-medium text-stone-600 hover:bg-stone-50"
-            onClick={addDefaultValue}
-            type="button"
-          >
-            <Plus aria-hidden="true" className="size-3.5" />
+          <Button icon={Plus} onClick={addDefaultValue} variant="dashed">
             値を追加
-          </button>
+          </Button>
         </div>
 
         {canPreview && (

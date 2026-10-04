@@ -1,3 +1,6 @@
+import { FormField } from "@/components/primitives/FormField";
+import { TextInput } from "@/components/primitives/TextInput";
+
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { IconButton } from "@/components/primitives/IconButton";
 import { SelectList } from "@/components/primitives/SelectList";
@@ -69,37 +72,33 @@ export const ContentSetting = ({
           </div>
 
           <div className="grid gap-4">
-            <label className="text-xs font-medium text-stone-600">
-              Content ID
-              <input
-                className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-                onChange={(event) =>
+            <FormField label="Content ID">
+              <TextInput
+                monospace
+                onChange={(id) =>
                   actions.update(tabIndex, selectedContentIndex, {
                     ...placement,
-                    id: event.target.value,
+                    id,
                   })
                 }
                 value={placement.id}
               />
-            </label>
-            <label className="text-xs font-medium text-stone-600">
-              Python出力
-              <div className="mt-1">
-                <SelectList
-                  onChange={(logicId) =>
-                    actions.update(tabIndex, selectedContentIndex, {
-                      ...placement,
-                      logic: logicId,
-                    })
-                  }
-                  options={dashboard.analysis.logic.map((definition) => ({
-                    label: definition.id,
-                    value: definition.id,
-                  }))}
-                  value={placement.logic}
-                />
-              </div>
-            </label>
+            </FormField>
+            <FormField label="Python出力">
+              <SelectList
+                onChange={(logicId) =>
+                  actions.update(tabIndex, selectedContentIndex, {
+                    ...placement,
+                    logic: logicId,
+                  })
+                }
+                options={dashboard.analysis.logic.map((definition) => ({
+                  label: definition.id,
+                  value: definition.id,
+                }))}
+                value={placement.logic}
+              />
+            </FormField>
             {logic && (
               <dl className="grid gap-2 rounded-md bg-stone-50 p-3 text-xs">
                 <div className="flex justify-between gap-4">

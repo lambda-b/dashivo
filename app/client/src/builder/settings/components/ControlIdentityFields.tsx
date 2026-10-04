@@ -1,3 +1,6 @@
+import { FormField } from "@/components/primitives/FormField";
+import { TextInput } from "@/components/primitives/TextInput";
+
 interface ControlIdentity {
   displayName: string;
   key: string;
@@ -10,23 +13,18 @@ interface ControlIdentityFieldsProps {
 
 export const ControlIdentityFields = ({ control, onChange }: ControlIdentityFieldsProps) => (
   <div className="grid grid-cols-2 gap-3">
-    <label className="text-xs font-medium text-stone-600">
-      キー
-      <input
-        className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm outline-none"
-        onChange={(event) =>
-          onChange({ displayName: control.displayName, key: event.target.value })
-        }
+    <FormField label="キー">
+      <TextInput
+        monospace
+        onChange={(key) => onChange({ displayName: control.displayName, key })}
         value={control.key}
       />
-    </label>
-    <label className="text-xs font-medium text-stone-600">
-      表示名
-      <input
-        className="focus:border-brand mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none"
-        onChange={(event) => onChange({ displayName: event.target.value, key: control.key })}
+    </FormField>
+    <FormField label="表示名">
+      <TextInput
+        onChange={(displayName) => onChange({ displayName, key: control.key })}
         value={control.displayName}
       />
-    </label>
+    </FormField>
   </div>
 );

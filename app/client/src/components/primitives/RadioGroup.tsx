@@ -1,9 +1,12 @@
+import { twMerge } from "tailwind-merge";
+
 interface RadioOption {
   label: string;
   value: string;
 }
 
 interface RadioGroupProps {
+  className?: string;
   ariaLabel?: string;
   labelVisibility?: "visible" | "hidden";
   layout: "horizontal" | "vertical";
@@ -14,6 +17,7 @@ interface RadioGroupProps {
 }
 
 export const RadioGroup = ({
+  className,
   ariaLabel,
   labelVisibility = "visible",
   layout,
@@ -24,7 +28,10 @@ export const RadioGroup = ({
 }: RadioGroupProps) => (
   <div
     aria-label={ariaLabel}
-    className={layout === "horizontal" ? "flex flex-wrap gap-x-4 gap-y-2" : "grid gap-2"}
+    className={twMerge(
+      layout === "horizontal" ? "flex flex-wrap gap-x-4 gap-y-2" : "grid gap-2",
+      className,
+    )}
     role="radiogroup"
   >
     {options.map((option) => (

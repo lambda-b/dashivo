@@ -95,7 +95,9 @@ for (const failFirstSave of [false, true]) {
     });
     await expect(page.getByRole("button", { name: "CSVを登録中…" })).toBeVisible();
     releaseFirst();
-    await expect(page.getByLabel("Input ID")).toHaveCount(2);
+    await expect(page.getByRole("list", { name: "入力CSV一覧" }).getByRole("listitem")).toHaveCount(
+      2,
+    );
     await expect.poll(() => requests).toBe(2);
 
     await page.getByRole("button", { name: "Dashboardへ戻る" }).click();
