@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@dashlet/shared-lib/query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSavedDashboard } from "@/app/context/useDashboard";
 import { loadPythonSource } from "@/api/python";

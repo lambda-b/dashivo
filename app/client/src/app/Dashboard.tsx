@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@dashlet/shared-lib/query";
 import { useDashboard, useDashboardId } from "@/app/context/useDashboard";
 import type { BuilderActions } from "@/builder/DashboardBuilder";
 import { DashboardHeader } from "@/layouts/DashboardHeader";
@@ -25,6 +25,7 @@ export const Dashboard = ({
   );
 
   const analysis = useQuery({
+    meta: { errorMessage: false },
     queryKey: ["analysis", dashboard.analysis, values],
     queryFn: () => analysisPort.execute(values, dashboard.analysis, dashboardId),
     select: (result) => validateContentBindings(dashboard, result),

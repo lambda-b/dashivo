@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@dashlet/shared-lib/query";
 import { dashboardQueryKey } from "@/app/context/useDashboard";
 import { createPythonLogic } from "@/api/python";
 import { useDashboardId } from "@/app/context/useDashboard";

@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@dashlet/shared-lib/query";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { savePythonSource } from "@/api/python";
 import { analysisPort, loadInputs } from "@/ports/analysis";
@@ -20,6 +21,7 @@ export const usePythonActions = (path: string) => {
   });
 
   const run = useMutation({
+    meta: { errorMessage: false },
     mutationFn: async ({
       source,
       params,

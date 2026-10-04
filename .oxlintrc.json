@@ -3,5 +3,32 @@
   "rules": {
     "func-style": ["error", "expression", { "overrides": { "namedExports": "expression" } }],
     "prefer-arrow-callback": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["app/client/src/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@tanstack/react-query",
+                "importNames": [
+                  "useQuery",
+                  "useSuspenseQuery",
+                  "useMutation",
+                  "useQueries",
+                  "useSuspenseQueries",
+                  "useInfiniteQuery",
+                  "useSuspenseInfiniteQuery"
+                ],
+                "message": "Use the hooks in @dashlet/shared-lib/query to require error notification settings."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

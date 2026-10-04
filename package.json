@@ -11,7 +11,7 @@
     "lint": "oxlint .",
     "format": "oxfmt --write package.json pnpm-workspace.yaml .oxlintrc.json tsconfig.json playwright.config.ts .devcontainer app infra dashboard tests",
     "format:check": "oxfmt --check package.json pnpm-workspace.yaml .oxlintrc.json tsconfig.json playwright.config.ts .devcontainer app infra dashboard tests",
-    "typecheck": "pnpm prepare:pyodide && tsc -p app/shared/schema && tsc -p app/shared/utils && tsc -p app/shared/vite && tsc -p app/client && tsc -p app/server/packages/exporter && tsc -p app/server && tsc -p infra && tsc -p tests",
+    "typecheck": "pnpm prepare:pyodide && tsc -p app/shared/schema && tsc -p app/shared/utils && tsc -p app/shared/lib && tsc -p app/shared/vite && tsc -p app/client && tsc -p app/server/packages/exporter && tsc -p app/server && tsc -p infra && tsc -p tests",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck",
     "test:bundle": "node tests/integration/verify-bundle.ts",
     "pretest:e2e": "pnpm build",

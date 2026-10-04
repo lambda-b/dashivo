@@ -1,0 +1,14 @@
+{
+  "name": "@dashlet/shared-lib",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./query": "./src/query.ts",
+    "./query-client": "./src/query-client.ts"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.102.8",
+    "react": "^19.2.8"
+  }
+}
