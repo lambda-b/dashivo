@@ -5,6 +5,8 @@
 ## 現在の実装範囲
 
 - `DashivoWeb`：Web配信用の非公開S3、CloudFront OAC、DNS検証付きACM証明書、A/AAAAレコード。
+- `DashivoIdentity`：東京リージョンのCognito User Pool、公開クライアント、認可コード方式のHosted UI。削除保護・10分のAccess/ID token・1日のRefresh token・ローテーションを設定する。
+- APIの認証境界を実装。`X-Dashivo-Token` のAccess tokenを `aws-jwt-verify` で検証し、検証済み `sub` ごとのRepositoryとサービスをリクエストに紐づける。ローカルAPIは従来どおり認証なしで使用できる。
 - TLS要件に合わせて配信スタックを `us-east-1` に配置。後続のAPI・ユーザーデータは `ap-northeast-1` に分離する。
 - バケットは暗号化・HTTPS必須・削除時保持。CloudFront/S3のアクセスログは14日で失効する。
 - HTTPSへのリダイレクトと共通セキュリティヘッダーを有効化。
@@ -36,18 +38,37 @@ pnpm cdk:diff
 
 ```bash
 pnpm --filter @dashivo/infra-cdk exec cdk bootstrap aws://154539905353/us-east-1
+pnpm --filter @dashivo/infra-cdk exec cdk bootstrap aws://154539905353/ap-northeast-1
 ```
 
 現在はCIにデプロイ権限を与えていない。後続でGitHub OIDCの信頼を `lambda-b/dashlet` の承認付きEnvironmentへ限定し、bootstrapロールを引き受けるデプロイロールを定義する。長期アクセスキーは使わない。
 
 ## 公開までの残作業
 
-1. Cognitoのauthorization-code + PKCE、Google連携、APIのJWT検証。
+1. クライアント側のログイン/ログアウト・PKCE・更新処理とAPIトークン送信。Cognito設定とAPIのJWT検証は実装済みだが、公開Lambdaへの接続は後続。
 2. 検証済みのCognito `sub` を保存キーに使用するDynamoDB/S3 Repository。Python登録とJSON更新はDynamoDBトランザクションで整合性を保証する。
 3. Lambda Function URL + CloudFront `/api/*`。OACを有効化し、書き込み時の `x-amz-content-sha256` とCognitoトークン用ヘッダーをクライアントでも対応する。
-4. 開発モード判定をオンラインEditor/View­erの用途判定へ変更する。公開ビルドへローカルの定義・CSV・Pythonを埋め込まない。
+4. 開発モード判定をオンラインEditor/Viewerの用途判定へ変更する。公開ビルドへローカルの定義・CSV・Pythonを埋め込まない。
 5. サーバー側HTML生成のLambda対応。Vite/Pyodideの実行・依存ファイル・生成サイズを検証し、大きいHTMLのダウンロードにはS3の期限付きURLを使用する。
 6. GitHub OIDCデプロイ、EditorのS3同期・CloudFront invalidation。HTMLは短いTTL、hash付きアセットは長いTTLを設定する。
 7. 本番公開前にCSPをWorker/WASM/Cognitoに合わせて設定し、WAFの費用・レート制限、ログ・アラーム、バックアップを決定する。Shield AdvancedやWAFをこの初期スタックで自動購入しない。
 
 Google連携にはGoogle OAuthのクライアントIDとSecretが必要。Secretはチャット・Git・CDK contextへ載せず、AWSのSecret管理に登録する。
+
+## Google連携の設定
+
+Google未設定時はセルフ登録を無効にし、管理者が作成したCognitoユーザーのみがログインできる。Googleを設定すると、Hosted UIのプロバイダーはGoogleだけになる。Googleの属性はemailへマッピングし、データ所有者はemailではなくCognito `sub` とする。メールが同じユーザー同士の自動リンクは行わない。
+
+東京リージョンのSecrets ManagerへGoogle Client Secretを**文字列そのもの**として保存し、公開クライアントIDとSecret ARNだけをCDK contextへ渡す。GoogleのOAuthクライアントには `GoogleRedirectUri` 出力のURLを登録する。
+
+```bash
+pnpm --filter @dashivo/infra-cdk exec cdk synth --strict --lookups false \
+  -c googleClientId=YOUR_CLIENT_ID.apps.googleusercontent.com \
+  -c googleSecretArn=arn:aws:secretsmanager:ap-northeast-1:YOUR_ACCOUNT:secret:YOUR_SECRET
+```
+
+デプロイ時も同じcontextを渡す。Secretの解決はCloudFormationが行い、synthやアプリケーションはSecretを取得・出力しない。設定は必ずIDとARNの両方を指定する。
+
+APIではID tokenや未検証のJWTを受け付けない。署名・期限・issuer・client_id・token_useを検証し、失敗は共通ハンドラーで401として返す。JWKS取得等の予期しない障害は認証失敗へ握り潰さない。JWTのローカル検証では既発行Access tokenの即時失効までは保証できないため、有効期限を短くしている。
+
+Classic hosted UIを使うのは費用優先でLiteプランを選ぶため。ブラウザーのPKCEとトークン保管は後続のクライアント実装でSDKに任せる。

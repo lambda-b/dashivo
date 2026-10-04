@@ -8,7 +8,7 @@ import type { DashboardAssetService } from "@dashivo/server/services/dashboard-a
 import type { DashboardDefinitionService } from "@dashivo/server/services/dashboard-definition-service";
 import type { DashboardDownloadService } from "@dashivo/server/services/dashboard-download-service";
 import type { PythonLogicService } from "@dashivo/server/services/python-logic-service";
-import type { MiddlewareHandler } from "hono";
+import type { Context, MiddlewareHandler } from "hono";
 
 export interface ServerDependencies {
   repository: DashboardRepository;
@@ -21,23 +21,34 @@ export type ServerEnv = {
     dashboardDefinitionService: DashboardDefinitionService;
     dashboardDownloadService: DashboardDownloadService;
     pythonLogicService: PythonLogicService;
+    userId?: string;
   };
 };
 
-export type ServerServices = ServerEnv["Variables"];
+export type ServerServices = Omit<ServerEnv["Variables"], "userId">;
+export type ServerDependencyProvider =
+  | ServerDependencies
+  | ((context: Context<ServerEnv>) => ServerDependencies);
 
-export const configureServerContext = ({
+const createServices = ({
   dashboardHtmlBuilder,
   repository,
-}: ServerDependencies) => {
-  const services: ServerServices = {
-    assetService: createDashboardAssetService(repository),
-    dashboardDefinitionService: createDashboardDefinitionService(repository),
-    dashboardDownloadService: createDashboardDownloadService(repository, dashboardHtmlBuilder),
-    pythonLogicService: createPythonLogicService(repository),
-  };
+}: ServerDependencies): ServerServices => ({
+  assetService: createDashboardAssetService(repository),
+  dashboardDefinitionService: createDashboardDefinitionService(repository),
+  dashboardDownloadService: createDashboardDownloadService(repository, dashboardHtmlBuilder),
+  pythonLogicService: createPythonLogicService(repository),
+});
+
+export const configureServerContext = (dependencies: ServerDependencyProvider) => {
+  const serviceProvider =
+    typeof dependencies === "function"
+      ? (context: Context<ServerEnv>) => createServices(dependencies(context))
+      : createServices(dependencies);
 
   const provideServices: MiddlewareHandler<ServerEnv> = async (context, next) => {
+    const services =
+      typeof serviceProvider === "function" ? serviceProvider(context) : serviceProvider;
     context.set("assetService", services.assetService);
     context.set("dashboardDefinitionService", services.dashboardDefinitionService);
     context.set("dashboardDownloadService", services.dashboardDownloadService);

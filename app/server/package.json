@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./app": "./src/app.ts",
+    "./authentication": "./src/authentication.ts",
     "./context": "./src/context.ts",
     "./controllers/*": "./src/controllers/*.ts",
     "./models/*": "./src/models/*.ts",

@@ -1,8 +1,8 @@
-import { Hono } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import {
   configureServerContext,
-  type ServerDependencies,
+  type ServerDependencyProvider,
   type ServerEnv,
 } from "@dashivo/server/context";
 import { configureServerRoutes } from "@dashivo/server/router";
@@ -11,9 +11,13 @@ import { DashboardNotFound } from "@dashivo/server/models/dashboard-not-found";
 import { InputSourceConflict } from "@dashivo/server/models/input-source-conflict";
 import { InputSourceAccessDenied } from "@dashivo/server/models/input-source-access-denied";
 
-export const createServerApp = (dependencies: ServerDependencies) => {
+export const createServerApp = (
+  dependencies: ServerDependencyProvider,
+  beforeServices?: MiddlewareHandler<ServerEnv>,
+) => {
   const app = new Hono<ServerEnv>();
 
+  if (beforeServices) app.use("*", beforeServices);
   app.use("*", configureServerContext(dependencies));
 
   app.onError((error, context) => {

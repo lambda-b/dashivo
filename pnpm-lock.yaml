@@ -228,9 +228,15 @@ importers:
       aws-cdk-lib:
         specifier: ^2.272.0
         version: 2.272.0(constructs@10.8.1)
+      aws-jwt-verify:
+        specifier: ^5.2.1
+        version: 5.2.1
       constructs:
         specifier: ^10.8.1
         version: 10.8.1
+      hono:
+        specifier: ^4.13.8
+        version: 4.13.8
     devDependencies:
       aws-cdk:
         specifier: ^2.1144.0
@@ -262,6 +268,9 @@ importers:
       aws-cdk-lib:
         specifier: ^2.272.0
         version: 2.272.0(constructs@10.8.1)
+      aws-jwt-verify:
+        specifier: ^5.2.1
+        version: 5.2.1
       pyodide:
         specifier: ^314.0.6
         version: 314.0.6
@@ -1192,6 +1201,10 @@ packages:
     resolution: {integrity: sha512-T3Kkke7c/vlGzrovtgxtb83u0ihF/Lq9z/R0hvOk+ncUZ734zrbG+0IWO/xZLd5tTQphwAO7OYufarg/wl5ZFA==}
     engines: {node: '>= 18.0.0'}
     hasBin: true
+
+  aws-jwt-verify@5.2.1:
+    resolution: {integrity: sha512-J+buA4M+qvQDk58WXFBLkDodkEX3DDL1ac5XFQPW3opxAsaLXYu5hYnlSHsaBRDBUXBAn695kE/cw/mdyJKwJg==}
+    engines: {node: '>=18.0.0'}
 
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
@@ -2437,6 +2450,8 @@ snapshots:
       constructs: 10.8.1
 
   aws-cdk@2.1144.0: {}
+
+  aws-jwt-verify@5.2.1: {}
 
   binary-extensions@2.3.0: {}
 

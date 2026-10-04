@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { App } from "aws-cdk-lib";
 import { Match, Template } from "aws-cdk-lib/assertions";
 import { createWebStack } from "@dashivo/infra-cdk/stacks/web";
+import { createIdentityStack } from "@dashivo/infra-cdk/stacks/identity";
 
 const template = Template.fromStack(
   createWebStack(new App(), "WebTest", {
@@ -11,6 +12,58 @@ const template = Template.fromStack(
     hostedZoneId: "ZEXAMPLE",
   }),
 );
+
+test("Cognito uses code flow without a browser secret and rotates short-lived sessions", () => {
+  const identity = Template.fromStack(
+    createIdentityStack(new App(), "IdentityTest", {
+      env: { account: "111111111111", region: "ap-northeast-1" },
+      domainName: "dashivo.example.com",
+    }),
+  );
+  identity.hasResourceProperties("AWS::Cognito::UserPool", {
+    UserPoolTier: "LITE",
+    DeletionProtection: "ACTIVE",
+    AdminCreateUserConfig: { AllowAdminCreateUserOnly: true },
+  });
+  identity.hasResourceProperties("AWS::Cognito::UserPoolClient", {
+    GenerateSecret: false,
+    AllowedOAuthFlows: ["code"],
+    CallbackURLs: ["https://dashivo.example.com/"],
+    LogoutURLs: ["https://dashivo.example.com/"],
+    EnableTokenRevocation: true,
+    RefreshTokenRotation: { Feature: "ENABLED", RetryGracePeriodSeconds: 10 },
+    AccessTokenValidity: 10,
+    ExplicitAuthFlows: ["ALLOW_USER_SRP_AUTH"],
+    SupportedIdentityProviders: ["COGNITO"],
+  });
+  identity.hasResourceProperties("AWS::Cognito::UserPoolDomain", { ManagedLoginVersion: 1 });
+  identity.resourceCountIs("AWS::Cognito::IdentityPool", 0);
+  identity.resourceCountIs("AWS::Cognito::UserPoolIdentityProvider", 0);
+});
+
+test("Google credentials are resolved at deployment and enable only the configured provider", () => {
+  const identity = Template.fromStack(
+    createIdentityStack(new App(), "GoogleTest", {
+      env: { account: "111111111111", region: "ap-northeast-1" },
+      domainName: "dashivo.example.com",
+      google: {
+        clientId: "example.apps.googleusercontent.com",
+        secretArn: "arn:aws:secretsmanager:ap-northeast-1:111111111111:secret:google-abcdef",
+      },
+    }),
+  );
+  identity.hasResourceProperties("AWS::Cognito::UserPoolIdentityProvider", {
+    ProviderType: "Google",
+    AttributeMapping: { email: "email" },
+    ProviderDetails: Match.objectLike({
+      client_id: "example.apps.googleusercontent.com",
+      client_secret: Match.stringLikeRegexp("\\{\\{resolve:secretsmanager:"),
+    }),
+  });
+  identity.hasResourceProperties("AWS::Cognito::UserPoolClient", {
+    SupportedIdentityProviders: ["Google"],
+  });
+});
 
 test("website storage stays private, encrypted and retained", () => {
   template.resourceCountIs("AWS::S3::Bucket", 2);

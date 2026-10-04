@@ -32,7 +32,7 @@ Pythonによるデータ分析とReactのUIを、ネットワーク接続なし�
 
 ## ビルド
 
-AWS向けの配信基盤・検証手順は [infra/cdk/README.md](infra/cdk/README.md) を参照してください。現在はCDK基盤までで、オンラインEditorの公開・認証・AWS保存先は後続の実装です。
+AWS向けの配信基盤・検証手順は [infra/cdk/README.md](infra/cdk/README.md) を参照してください。CDK基盤・Cognito設定・APIのJWT検証を実装済みです。オンラインEditorの公開・ブラウザー側の認証・AWS保存先は後続の実装です。
 
 ```bash
 pnpm build
