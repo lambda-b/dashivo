@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { analysisPort, loadInputs } from "@/ports/analysis";
 import { SelectList } from "@/components/primitives/SelectList";
+import { useCopyReference } from "@/builder/hooks/useCopyReference";
 
 export const InputInspection = () => {
   const dashboard = useSavedDashboard();
@@ -10,8 +11,7 @@ export const InputInspection = () => {
   const inputs = dashboard.analysis.inputs;
 
   const [selected, setSelected] = useState(inputs[0]?.id ?? "");
-  const [copied, setCopied] = useState("");
-  const [error, setError] = useState("");
+  const { copyReference, copied, isPending } = useCopyReference();
 
   const current = inputs.find((input) => input.id === selected) ?? inputs[0];
   const query = useQuery({
@@ -20,16 +20,6 @@ export const InputInspection = () => {
   });
   const rows = current ? (query.data?.[current.id] ?? []) : [];
   const columns = Object.keys(rows[0] ?? {});
-
-  const copy = async (reference: string) => {
-    try {
-      await navigator.clipboard.writeText(reference);
-      setCopied(reference);
-      setError("");
-    } catch {
-      setError("クリップボードへコピーできませんでした。参照式を選択してコピーしてください。");
-    }
-  };
 
   return (
     <div className="m-5 grid gap-4 rounded-xl border border-stone-200 bg-white p-4">
@@ -47,7 +37,8 @@ export const InputInspection = () => {
           />
           <button
             className="cursor-pointer break-all text-left font-mono text-xs text-indigo-700 hover:underline"
-            onClick={() => copy(`inputs[${JSON.stringify(current.id)}]`)}
+            disabled={isPending}
+            onClick={() => copyReference(`inputs[${JSON.stringify(current.id)}]`)}
           >
             {`inputs[${JSON.stringify(current.id)}]`} をコピー
           </button>
@@ -93,7 +84,8 @@ export const InputInspection = () => {
         <div className="min-w-0 rounded-md bg-stone-50 px-3 py-2" key={control.key}>
           <button
             className="cursor-pointer break-all text-left font-mono text-xs text-indigo-700 hover:underline"
-            onClick={() => copy(`params[${JSON.stringify(control.key)}]`)}
+            disabled={isPending}
+            onClick={() => copyReference(`params[${JSON.stringify(control.key)}]`)}
           >
             {`params[${JSON.stringify(control.key)}]`} をコピー
           </button>
@@ -107,7 +99,6 @@ export const InputInspection = () => {
           {copied} をコピーしました
         </p>
       )}
-      {error && <p role="alert">{error}</p>}
     </div>
   );
 };

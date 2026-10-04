@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { DashboardIdContext, dashboardQueryKey } from "@/app/context/useDashboard";
 import { Dashboard } from "@/app/Dashboard";
 import { DashboardBuilder } from "@/builder/DashboardBuilder";
-import { createDashboard, loadDashboards } from "@/api/dashboards";
+import { loadDashboards } from "@/api/dashboards";
+import { useDashboardActions } from "@/app/hooks/useDashboardActions";
 import { loadDashboard } from "@/api/dashboard";
 import { DashboardSidebar } from "@/layouts/DashboardSidebar";
 import type { ParameterValue } from "@shared/dashboard";
@@ -56,19 +57,11 @@ const DashboardWorkspace = ({ dashboardId }: { dashboardId: string }) => {
 const EditorApp = () => {
   const { dashboardId } = useParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { createDashboard, isPending } = useDashboardActions();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const dashboards = useQuery({
     queryKey: ["dashboards"],
     queryFn: loadDashboards,
-  });
-  const create = useMutation({
-    mutationFn: createDashboard,
-    onSuccess: async (dashboard) => {
-      await queryClient.invalidateQueries({ queryKey: ["dashboards"] });
-      await queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
-      navigate(`/d/${dashboard.id}`);
-    },
   });
 
   useEffect(() => {
@@ -84,9 +77,8 @@ const EditorApp = () => {
         dashboards={dashboards.data}
         error={dashboards.error?.message}
         loading={dashboards.isLoading}
-        createError={create.error?.message}
-        creating={create.isPending}
-        onCreate={(title) => create.mutate(title)}
+        creating={isPending}
+        onCreate={createDashboard}
         onOpenChange={setSidebarOpen}
         onSelect={(id) => navigate(`/d/${id}`)}
       />

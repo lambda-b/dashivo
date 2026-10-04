@@ -1,19 +1,15 @@
 import { useState } from "react";
 import { LoaderCircle, Play, Save } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSavedDashboard } from "@/app/context/useDashboard";
-import { useDashboardId } from "@/app/context/useDashboard";
-import { savePythonSource } from "@/api/python";
 import { PythonCodeEditor } from "@/builder/workbench/code/PythonCodeEditor";
 import { Inspection } from "@/builder/workbench/inspection/Inspection";
 import { useUnsavedChanges } from "@/builder/hooks/useUnsavedChanges";
-import { analysisPort, loadInputs } from "@/ports/analysis";
+import { usePythonActions } from "@/builder/hooks/usePythonActions";
 import type { ParameterValue } from "@shared/dashboard";
 
 export const CodeWorkspace = ({ path, savedSource }: { path: string; savedSource: string }) => {
   const dashboard = useSavedDashboard();
-  const dashboardId = useDashboardId();
-  const client = useQueryClient();
+  const { saveSource, preview, isSaving, isPreviewing, output, error } = usePythonActions(path);
 
   const [source, setSource] = useState(savedSource);
   const [params, setParams] = useState<Record<string, ParameterValue>>(() =>
@@ -21,27 +17,9 @@ export const CodeWorkspace = ({ path, savedSource }: { path: string; savedSource
   );
   useUnsavedChanges(source !== savedSource);
 
-  const save = useMutation({
-    mutationFn: (code: string) => savePythonSource(dashboardId, path, code),
-    onSuccess: (_, code) => {
-      client.setQueryData(["python-source", dashboardId, path], code);
-      void client.invalidateQueries({ queryKey: ["analysis"] });
-    },
-  });
-
-  const run = useMutation({
-    mutationFn: async () =>
-      analysisPort.preview({
-        analysisSource: source,
-        params: Object.fromEntries(
-          dashboard.controls.map((control) => [
-            control.key,
-            params[control.key] ?? control.defaultValue,
-          ]),
-        ),
-        sources: await loadInputs(dashboardId, dashboard.analysis),
-      }),
-  });
+  const values = Object.fromEntries(
+    dashboard.controls.map((control) => [control.key, params[control.key] ?? control.defaultValue]),
+  );
 
   return (
     <>
@@ -57,45 +35,35 @@ export const CodeWorkspace = ({ path, savedSource }: { path: string; savedSource
             )}
             <button
               className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-stone-300 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:cursor-wait disabled:opacity-50"
-              disabled={run.isPending}
-              onClick={() => run.mutate()}
+              disabled={isPreviewing}
+              onClick={() => preview(source, values)}
             >
-              {run.isPending ? (
+              {isPreviewing ? (
                 <LoaderCircle aria-hidden="true" className="size-3.5 animate-spin" />
               ) : (
                 <Play aria-hidden="true" className="size-3.5" />
               )}
-              {run.isPending ? "実行中…" : "実行"}
+              {isPreviewing ? "実行中…" : "実行"}
             </button>
             <button
               className="bg-brand hover:bg-brand-dark inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={save.isPending || source === savedSource}
-              onClick={() => save.mutate(source)}
+              disabled={isSaving || source === savedSource}
+              onClick={() => saveSource(source)}
             >
               <Save aria-hidden="true" className="size-3.5" />
-              {save.isPending ? "保存中…" : "Pythonを保存"}
+              {isSaving ? "保存中…" : "Pythonを保存"}
             </button>
           </div>
         </div>
-        {save.error && (
-          <p role="alert" className="mb-3 rounded-lg bg-red-50 p-3 text-xs text-red-700">
-            {save.error.message}
-          </p>
-        )}
         <div className="min-h-0 flex-1 overflow-hidden rounded-lg border border-stone-200">
           <PythonCodeEditor source={source} onChange={setSource} />
         </div>
       </section>
       <Inspection
-        output={run.data?.output}
-        error={run.error}
-        pending={run.isPending}
-        params={Object.fromEntries(
-          dashboard.controls.map((control) => [
-            control.key,
-            params[control.key] ?? control.defaultValue,
-          ]),
-        )}
+        output={output}
+        error={error}
+        pending={isPreviewing}
+        params={values}
         onParams={(key, value) => setParams((current) => ({ ...current, [key]: value }))}
       />
     </>

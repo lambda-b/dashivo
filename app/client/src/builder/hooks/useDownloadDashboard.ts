@@ -1,11 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import { downloadDashboardFile } from "@/api/download";
 import { useDashboardId } from "@/app/context/useDashboard";
+import { messages } from "@/messages";
 
 export const useDownloadDashboard = () => {
   const dashboardId = useDashboardId();
 
-  return useMutation({
+  const download = useMutation({
+    meta: { errorMessage: messages.dashboard.downloadFailed },
     mutationFn: () => downloadDashboardFile(dashboardId),
     onSuccess: (dashboard) => {
       const url = URL.createObjectURL(dashboard);
@@ -19,4 +21,9 @@ export const useDownloadDashboard = () => {
       window.setTimeout(() => URL.revokeObjectURL(url), 0);
     },
   });
+
+  return {
+    download: () => download.mutate(),
+    isPending: download.isPending,
+  };
 };

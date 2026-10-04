@@ -24,7 +24,6 @@ import { dashboardSchema, type DashboardSettings } from "@shared/dashboard";
 export interface BuilderActions {
   addContent: (tabIndex: number) => void;
   download: () => void;
-  downloadError?: string;
   downloadPending: boolean;
   editContent: (tabIndex: number, contentIndex: number) => void;
   openAnalysis: () => void;
@@ -93,8 +92,7 @@ export const DashboardBuilder = ({
         >
           {children({
             addContent: setAddingTab,
-            download: () => download.mutate(),
-            downloadError: download.error?.message,
+            download: download.download,
             downloadPending: download.isPending,
             editContent: (tabIndex, contentIndex) => {
               setTarget({ tabIndex, contentIndex });

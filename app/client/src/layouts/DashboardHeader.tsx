@@ -7,13 +7,11 @@ export const DashboardHeader = ({
   onEditHeader,
   analysis,
   download,
-  downloadError,
   downloadPending,
 }: {
   onEditHeader?: () => void;
   analysis: { isPending: boolean; isError: boolean };
   download?: () => void;
-  downloadError?: string;
   downloadPending?: boolean;
 }) => {
   const dashboard = useDashboard();
@@ -46,11 +44,6 @@ export const DashboardHeader = ({
                 <Download aria-hidden="true" className="size-3.5" />
                 {downloadPending ? "HTMLを生成中…" : "HTMLをダウンロード"}
               </button>
-              {downloadError && (
-                <p className="mt-1 max-w-64 text-xs text-red-700" role="alert">
-                  {downloadError}
-                </p>
-              )}
             </div>
           )}
           {onEditHeader && <EditButton onClick={onEditHeader}>ヘッダーを編集</EditButton>}

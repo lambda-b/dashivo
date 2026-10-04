@@ -36,7 +36,6 @@ export const Dashboard = ({
       <DashboardHeader
         analysis={analysis}
         download={actions?.download}
-        downloadError={actions?.downloadError}
         downloadPending={actions?.downloadPending}
         onEditHeader={actions?.openHeader}
       />

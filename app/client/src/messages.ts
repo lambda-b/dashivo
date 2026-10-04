@@ -1,6 +1,9 @@
 // UIのラベルとは分けて、利用者へ伝えるエラー・操作制限の文言を管理する。
 export const messages = {
   connectionFailed: "サーバーに接続できませんでした。接続状態を確認してください。",
+  clipboard: {
+    copyFailed: "クリップボードへコピーできませんでした。参照式を選択してコピーしてください。",
+  },
   dashboard: {
     listLoadFailed: "一覧を読み込めませんでした。",
     loadFailed: "設定を読み込めませんでした。",

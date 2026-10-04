@@ -8,7 +8,6 @@ export const DashboardSidebar = ({
   dashboards,
   error,
   loading,
-  createError,
   creating,
   onCreate,
   onOpenChange,
@@ -19,7 +18,6 @@ export const DashboardSidebar = ({
   dashboards?: DashboardListItem[];
   error?: string;
   loading: boolean;
-  createError?: string;
   creating: boolean;
   onCreate: (title: string) => void;
   onOpenChange: (open: boolean) => void;
@@ -93,11 +91,6 @@ export const DashboardSidebar = ({
           <Plus aria-hidden="true" className="size-4" />
           {creating ? "作成中…" : "作成"}
         </button>
-        {createError && (
-          <p role="alert" className="text-xs text-red-700">
-            {createError}
-          </p>
-        )}
       </form>
     </aside>
   ) : (
