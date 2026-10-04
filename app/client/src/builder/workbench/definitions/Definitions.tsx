@@ -91,18 +91,27 @@ export const Definitions = ({
       </h3>
       {dashboard.analysis.inputs.map((input, index) => (
         <div
-          className="mb-3 grid gap-2 rounded-lg border border-stone-200 bg-white p-3"
+          className="mb-3 grid min-w-0 grid-cols-1 gap-2 rounded-lg border border-stone-200 bg-white p-3"
           key={input.id}
         >
-          <input
-            disabled={isPending}
-            aria-label="Input ID"
-            className="focus:border-brand min-w-0 rounded-md border border-stone-300 px-2 py-1.5 font-mono text-xs outline-none"
-            defaultValue={input.id}
-            onBlur={(event) => {
-              if (event.target.value !== input.id) updateInput(index, { id: event.target.value });
-            }}
-          />
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_2rem] items-center gap-2">
+            <input
+              disabled={isPending}
+              aria-label="Input ID"
+              className="focus:border-brand min-w-0 w-full rounded-md border border-stone-300 px-2 py-1.5 font-mono text-xs outline-none"
+              defaultValue={input.id}
+              onBlur={(event) => {
+                if (event.target.value !== input.id) updateInput(index, { id: event.target.value });
+              }}
+            />
+            <IconButton
+              icon={Trash2}
+              variant="danger"
+              label={`${input.id}を削除`}
+              disabled={isPending}
+              onClick={() => removeInput(index)}
+            />
+          </div>
           <SelectList
             disabled={isPending}
             ariaLabel="CSVファイル"
@@ -112,13 +121,6 @@ export const Definitions = ({
               label: path,
               value: path,
             }))}
-          />
-          <IconButton
-            icon={Trash2}
-            variant="danger"
-            label={`${input.id}を削除`}
-            disabled={isPending}
-            onClick={() => removeInput(index)}
           />
         </div>
       ))}
