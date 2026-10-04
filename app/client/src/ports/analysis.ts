@@ -44,7 +44,7 @@ export const analysisPort = {
           sources,
           params,
         });
-        results[logic.id] = result.output;
+        results[logic.id] = result;
       }
 
       return analysisResultsSchema.parse(results);
@@ -58,6 +58,6 @@ export const analysisPort = {
   },
 
   async preview(input: AnalysisPreviewInput) {
-    return z.object({ output: analysisOutputSchema }).parse(await api.preview(input));
+    return analysisOutputSchema.parse(await api.preview(input));
   },
 };

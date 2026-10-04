@@ -6,6 +6,16 @@ export const dashboardOutput = (): Plugin => {
   return {
     name: "dashivo-dashboard-output",
     apply: "build",
+    transformIndexHtml: {
+      order: "pre",
+      handler: (html, { filename }) => {
+        const icon = fs.readFileSync(path.join(path.dirname(filename), "public", "favicon.svg"));
+        return html.replace(
+          'href="/favicon.svg"',
+          `href="data:image/svg+xml;base64,${icon.toString("base64")}"`,
+        );
+      },
+    },
     writeBundle: (options) => {
       const outDir = options.dir ?? "";
       const indexPath = path.join(outDir, "index.html");

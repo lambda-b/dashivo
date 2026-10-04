@@ -9,11 +9,13 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "virtual:dashivo/analysis-assets": ["../shared/vite/src/common/virtual/analysis-assets.d.ts"],
-      "virtual:dashivo/pyodide-runtime": ["../shared/vite/src/editor/virtual/pyodide-runtime.ts"],
+      "virtual:dashivo/*": [
+        "../shared/vite/src/common/virtual/*",
+        "../shared/vite/src/editor/virtual/*"
+      ],
       "@/*": ["./src/*"],
       "@shared/*": ["../shared/schema/src/*"],
-      "#dashboard/*": ["../../dashboard/*"]
+      "#dashboard/dashboard.json": ["../../dashboard/definitions/sales-overview.json"]
     },
     "types": ["vite/client", "node"],
     "isolatedModules": true,

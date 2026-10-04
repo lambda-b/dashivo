@@ -16,14 +16,13 @@ const resolveDashboardAsset = (dashboardRoot: string, assetPath: string) => {
   return normalizePath(resolvedPath);
 };
 
-export const analysisAssets = (dashboardPath: string): Plugin => ({
+export const analysisAssets = (dashboardPath: string, dashboardRoot: string): Plugin => ({
   name: "dashivo-analysis-assets",
   enforce: "pre",
   resolveId: (id) => (id === analysisAssetsModuleId ? resolvedModuleId : undefined),
   async load(id) {
     if (id !== resolvedModuleId) return undefined;
 
-    const dashboardRoot = path.dirname(dashboardPath);
     this.addWatchFile(dashboardPath);
     const dashboard = dashboardSchema.parse(JSON.parse(await fs.readFile(dashboardPath, "utf8")));
     const imports: string[] = [];

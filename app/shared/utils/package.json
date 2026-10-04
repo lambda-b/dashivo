@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./createUniqueIndexedName": "./src/createUniqueIndexedName.ts"
+    "./createUniqueIndexedName": "./src/createUniqueIndexedName.ts",
+    "./moveItem": "./src/moveItem.ts"
   }
 }

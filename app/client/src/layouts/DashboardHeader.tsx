@@ -1,4 +1,5 @@
 import { Button } from "@/components/primitives/Button";
+import { AppBrand } from "@/components/AppBrand";
 
 import clsx from "clsx";
 import { Download } from "lucide-react";
@@ -22,14 +23,10 @@ export const DashboardHeader = ({
     <header className="border-b border-stone-200 bg-white/85 px-5 py-6 backdrop-blur-sm sm:px-8 lg:px-10">
       <div className="mx-auto flex max-w-7xl items-start justify-between gap-6 max-sm:flex-col">
         <div>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="bg-brand grid size-7 place-items-center rounded-md text-[0.625rem] font-black text-white">
-              D
-            </span>
-            <p className="text-brand text-[0.6875rem] font-bold tracking-[0.16em]">
-              DASHIVO{import.meta.env.MODE !== "viewer" && " · BUILDER PREVIEW"}
-            </p>
-          </div>
+          <AppBrand
+            caption={import.meta.env.MODE !== "viewer" ? "BUILDER PREVIEW" : undefined}
+            className="mb-2"
+          />
           <h1 className="text-3xl font-bold tracking-[-0.035em] sm:text-4xl">{dashboard.title}</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-500">{dashboard.description}</p>
         </div>

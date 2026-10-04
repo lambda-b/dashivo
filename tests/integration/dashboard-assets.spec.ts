@@ -9,8 +9,11 @@ test("reads and writes Python only under dashboard/logic", async () => {
   const repository = createFilesystemDashboardRepository(projectRoot);
 
   try {
-    await fs.mkdir(path.join(projectRoot, "dashboard"));
-    await fs.writeFile(path.join(projectRoot, "dashboard/dashboard.json"), '{"title":"Test"}');
+    await fs.mkdir(path.join(projectRoot, "dashboard/definitions"), { recursive: true });
+    await fs.writeFile(
+      path.join(projectRoot, "dashboard/definitions/sales-overview.json"),
+      '{"title":"Test"}',
+    );
     const uploadedPath = await repository.createInput(
       "sales-overview",
       "orders.csv",

@@ -39,7 +39,6 @@ export const ContentArea = ({
               <Route
                 element={
                   <DashboardContent
-                    analysis={dashboard.analysis}
                     onAddContent={onAddContent && (() => onAddContent(tabIndex))}
                     onEditContent={
                       onEditContent && ((contentIndex) => onEditContent(tabIndex, contentIndex))

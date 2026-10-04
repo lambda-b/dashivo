@@ -1,12 +1,5 @@
-import { useMemo } from "react";
+import { createUniqueIndexedName } from "@dashivo/shared-utils/createUniqueIndexedName";
 import type { ControlDefinition, DashboardSchema } from "@shared/dashboard";
-
-const createParameterKey = (dashboard: DashboardSchema) => {
-  const keys = new Set(dashboard.controls.map((control) => control.key));
-  let index = dashboard.controls.length + 1;
-  while (keys.has(`control_${index}`)) index += 1;
-  return `control_${index}`;
-};
 
 const createControl = (type: ControlDefinition["type"], key: string): ControlDefinition => {
   switch (type) {
@@ -54,23 +47,23 @@ const createControl = (type: ControlDefinition["type"], key: string): ControlDef
 export const useParameterActions = (
   draft: DashboardSchema,
   editDashboard: (dashboard: DashboardSchema) => void,
-) =>
-  useMemo(() => {
-    const editControls = (controls: DashboardSchema["controls"]) =>
-      editDashboard({ ...draft, controls });
+) => {
+  const editControls = (controls: DashboardSchema["controls"]) =>
+    editDashboard({ ...draft, controls });
 
-    return {
-      add: (type: ControlDefinition["type"]) => {
-        const key = createParameterKey(draft);
-        editControls([...draft.controls, createControl(type, key)]);
-      },
-      update: (index: number, control: ControlDefinition) =>
-        editControls(
-          draft.controls.map((current, controlIndex) =>
-            controlIndex === index ? control : current,
-          ),
-        ),
-      remove: (index: number) =>
-        editControls(draft.controls.filter((_, controlIndex) => controlIndex !== index)),
-    };
-  }, [draft, editDashboard]);
+  return {
+    add: (type: ControlDefinition["type"]) => {
+      const key = createUniqueIndexedName(
+        draft.controls.map((control) => control.key),
+        "control_",
+      );
+      editControls([...draft.controls, createControl(type, key)]);
+    },
+    update: (index: number, control: ControlDefinition) =>
+      editControls(
+        draft.controls.map((current, controlIndex) => (controlIndex === index ? control : current)),
+      ),
+    remove: (index: number) =>
+      editControls(draft.controls.filter((_, controlIndex) => controlIndex !== index)),
+  };
+};

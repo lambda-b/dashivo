@@ -33,13 +33,14 @@ export const createDashboardHtmlBuilder = (
     try {
       await fs.writeFile(dashboardPath, JSON.stringify(dashboard), "utf8");
       await Promise.all(sources.map((source) => writeSource(dashboardRoot, source)));
-      await preparePyodide(sourceRoot, dashboardPath, dashboardCacheRoot);
+      await preparePyodide(sourceRoot, dashboardPath, dashboardCacheRoot, dashboardRoot);
       await build({
         configFile: false,
         ...createViewerViteConfiguration(
           sourceRoot,
           dashboardPath,
           path.join(dashboardCacheRoot, "assets.ts"),
+          dashboardRoot,
         ),
         mode: "viewer",
         logLevel: "error",

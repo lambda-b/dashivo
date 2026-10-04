@@ -6,13 +6,14 @@ import { analysisAssets } from "@dashivo/shared-vite/common/plugins/analysis-ass
 
 export const createEditorViteConfiguration = (projectRoot: string): UserConfig => {
   const clientRoot = path.join(projectRoot, "app/client");
-  const dashboardPath = path.join(projectRoot, "dashboard", "dashboard.json");
+  const dashboardRoot = path.join(projectRoot, "dashboard");
+  const dashboardPath = path.join(dashboardRoot, "definitions", "sales-overview.json");
   const pyodideRuntimePath = fileURLToPath(
     new URL("./editor/virtual/pyodide-runtime.ts", import.meta.url),
   );
 
   return mergeConfig(
-    createDashboardViteConfiguration(clientRoot, dashboardPath, pyodideRuntimePath),
+    createDashboardViteConfiguration(clientRoot, dashboardPath, pyodideRuntimePath, dashboardRoot),
     {
       optimizeDeps: {
         entries: ["index.html", "src/ports/workers/python/analysis.worker.ts"],
@@ -24,7 +25,7 @@ export const createEditorViteConfiguration = (projectRoot: string): UserConfig =
         strictPort: true,
         fs: { allow: [projectRoot] },
       },
-      worker: { plugins: () => [analysisAssets(dashboardPath)] },
+      worker: { plugins: () => [analysisAssets(dashboardPath, dashboardRoot)] },
     },
   );
 };

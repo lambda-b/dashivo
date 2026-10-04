@@ -26,7 +26,7 @@ Pythonによるデータ分析とReactのUIを、ネットワーク接続なし�
 
    Viteは `0.0.0.0:3030` で待ち受けます。Dev Container外からは `http://localhost:3030` を開いてください。
 
-   各エリアの編集ボタンから右側の設定パネルを開きます。設定のプレビューと保存は独立しており、現在の保存先は `dashboard/dashboard.json` です。「Pythonロジックを管理」ではロジック定義・コード・確認の3領域を持つWorkbenchへ切り替わります。ロジックとCSV定義は自動保存、Pythonコードは明示的に保存します。
+   各エリアの編集ボタンから右側の設定パネルを開きます。設定のプレビューと保存は独立しており、現在の保存先は `dashboard/definitions/sales-overview.json` です。「Pythonロジックを管理」ではロジック定義・コード・確認の3領域を持つWorkbenchへ切り替わります。ロジックとCSV定義は自動保存、Pythonコードは明示的に保存します。
 
    「HTMLをダウンロード」は保存済みの設定とPythonから閲覧専用の単一HTMLを生成します。EditorとViewerは明示的なビルド対象として分離されており、ViewerにはBuilderと保存APIが含まれません。開発時のAPIもHonoで動作し、ViteプラグインはHonoを開発サーバーへ接続するだけのアダプターです。現在はファイルシステムへ保存しますが、Repository実装を交換してDashboard JSONとPythonコードをDB管理へ移行できます。
 

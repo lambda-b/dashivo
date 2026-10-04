@@ -10,6 +10,39 @@ const table = {
   columns: [{ key: "amount", label: "金額", format: "currency" }],
 };
 
+for (const type of ["radio", "select", "checkbox"] as const) {
+  test(`${type} rejects duplicate options and invalid defaults at the field path`, () => {
+    const control = {
+      type,
+      key: "region",
+      displayName: "地域",
+      defaultValue: type === "checkbox" ? ["all"] : "all",
+      options: [{ label: "All", value: "all" }],
+    };
+    expect(dashboardSchema.safeParse({ ...source, controls: [control] }).success).toBe(true);
+
+    const duplicate = dashboardSchema.safeParse({
+      ...source,
+      controls: [
+        { ...control, options: [...control.options, { label: "Duplicate", value: "all" }] },
+      ],
+    });
+    expect(duplicate.success).toBe(false);
+    if (!duplicate.success) {
+      expect(duplicate.error.issues[0].path).toEqual(["controls", 0, "options"]);
+    }
+
+    const invalid = dashboardSchema.safeParse({
+      ...source,
+      controls: [{ ...control, defaultValue: type === "checkbox" ? ["missing"] : "missing" }],
+    });
+    expect(invalid.success).toBe(false);
+    if (!invalid.success) {
+      expect(invalid.error.issues[0].path).toEqual(["controls", 0, "defaultValue"]);
+    }
+  });
+}
+
 test("dashboard only stores logic references and requires one path per logic", () => {
   const dashboard = dashboardSchema.parse(source);
 

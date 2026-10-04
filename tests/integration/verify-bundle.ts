@@ -9,7 +9,7 @@ if (files.length !== 1 || files[0] !== "dashboard.html") {
 }
 
 const html = fs.readFileSync(path.join(outputDirectory, files[0]), "utf8");
-const externalReferences = [/<script[^>]+src=/i, /<link[^>]+href=/i, /@import\s+url/i];
+const externalReferences = [/<script[^>]+src=/i, /<link[^>]+href=["'](?!data:)/i, /@import\s+url/i];
 for (const pattern of externalReferences) {
   if (pattern.test(html)) {
     throw new Error(`External asset reference remains: ${pattern}`);

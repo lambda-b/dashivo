@@ -41,9 +41,8 @@ export const usePythonActions = (path: string) => {
     preview: (source: string, params: Record<string, ParameterValue>) =>
       run.mutate({ source, params }),
     isSaving: save.isPending,
-    isPending: save.isPending || run.isPending,
     isPreviewing: run.isPending,
-    output: run.data?.output,
+    output: run.data,
     error: run.error,
   };
 };

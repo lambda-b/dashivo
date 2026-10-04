@@ -4,7 +4,6 @@ import { MetricCard } from "@/components/contents/MetricCard";
 import { ChartPanel } from "@/components/contents/chart/ChartPanel";
 import { DataTable } from "@/components/contents/table/DataTable";
 import type {
-  AnalysisDefinition,
   AnalysisOutput,
   AnalysisResults,
   ContentDefinition,
@@ -13,7 +12,6 @@ import type {
 } from "@shared/dashboard";
 
 interface DashboardContentProps {
-  analysis: AnalysisDefinition;
   onAddContent?: () => void;
   onEditContent?: (contentIndex: number) => void;
   tab: TabDefinition;
@@ -37,7 +35,6 @@ export const Content = ({ content, result }: ContentProps) => {
 };
 
 export const DashboardContent = ({
-  analysis,
   onAddContent,
   onEditContent,
   tab,
@@ -46,10 +43,7 @@ export const DashboardContent = ({
   <section className="grid grid-cols-1 gap-5">
     {tab.contents.length > 0 ? (
       tab.contents.map((placement, contentIndex) => {
-        const logic = analysis.logic.find((definition) => definition.id === placement.logic);
-        if (!logic) return null;
         const output = results[placement.logic];
-        if (!output) return null;
         const content = output.view;
         return (
           <div className="relative min-w-0" key={placement.id}>

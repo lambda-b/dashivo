@@ -52,7 +52,7 @@ export const Checkbox = ({
   onChange,
   options: optionsSource,
 }: CheckboxProps) => {
-  const options = Array.isArray(optionsSource) ? [...optionsSource] : [optionsSource];
+  const options = Array.isArray(optionsSource) ? optionsSource : [optionsSource];
 
   return (
     <div

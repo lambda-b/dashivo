@@ -7,6 +7,7 @@ export const createDashboardViteConfiguration = (
   clientRoot: string,
   dashboardPath: string,
   pyodideRuntimePath: string,
+  dashboardRoot: string,
 ): UserConfig => ({
   root: clientRoot,
   resolve: {
@@ -16,7 +17,7 @@ export const createDashboardViteConfiguration = (
       "virtual:dashivo/pyodide-runtime": pyodideRuntimePath,
     },
   },
-  plugins: [react(), tailwindcss(), analysisAssets(dashboardPath)],
+  plugins: [react(), tailwindcss(), analysisAssets(dashboardPath, dashboardRoot)],
   worker: {
     format: "iife",
     rollupOptions: {

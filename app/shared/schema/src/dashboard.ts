@@ -24,40 +24,36 @@ export const inputSourcePathSchema = dashboardFilePathSchema("data", ".csv");
 
 const optionSchema = z.object({ label: z.string().min(1), value: z.string().min(1) });
 
-const selectControlSchema = z
-  .object({
-    type: z.literal("select"),
-    key: z.string().min(1),
-    displayName: z.string().min(1),
-    defaultValue: z.string(),
-    options: z.array(optionSchema).min(1),
-  })
-  .refine(
-    (control) =>
-      new Set(control.options.map((option) => option.value)).size === control.options.length,
-    { message: "option values must be unique", path: ["options"] },
-  )
+const choiceFields = {
+  key: z.string().min(1),
+  displayName: z.string().min(1),
+  options: z
+    .array(optionSchema)
+    .min(1)
+    .refine(
+      (options) => new Set(options.map((option) => option.value)).size === options.length,
+      "option values must be unique",
+    ),
+};
+
+const choiceControlSchema = z
+  .object({ ...choiceFields, defaultValue: z.string() })
   .refine((control) => control.options.some((option) => option.value === control.defaultValue), {
     message: "defaultValue must match one of the control options",
     path: ["defaultValue"],
   });
 
+const selectControlSchema = choiceControlSchema.safeExtend({ type: z.literal("select") });
+
 const checkboxControlSchema = z
   .object({
+    ...choiceFields,
     type: z.literal("checkbox"),
-    key: z.string().min(1),
-    displayName: z.string().min(1),
     defaultValue: z
       .array(z.string())
       .refine((values) => new Set(values).size === values.length, "values must be unique"),
-    options: z.array(optionSchema).min(1),
     layout: z.enum(["horizontal", "vertical"]).default("horizontal"),
   })
-  .refine(
-    (control) =>
-      new Set(control.options.map((option) => option.value)).size === control.options.length,
-    { message: "option values must be unique", path: ["options"] },
-  )
   .refine(
     (control) =>
       control.defaultValue.every((value) =>
@@ -116,24 +112,10 @@ const sliderControlSchema = z
     }
   });
 
-const radioControlSchema = z
-  .object({
-    type: z.literal("radio"),
-    key: z.string().min(1),
-    displayName: z.string().min(1),
-    defaultValue: z.string(),
-    options: z.array(optionSchema).min(1),
-    layout: z.enum(["horizontal", "vertical"]).default("horizontal"),
-  })
-  .refine(
-    (control) =>
-      new Set(control.options.map((option) => option.value)).size === control.options.length,
-    { message: "option values must be unique", path: ["options"] },
-  )
-  .refine((control) => control.options.some((option) => option.value === control.defaultValue), {
-    message: "defaultValue must match one of the control options",
-    path: ["defaultValue"],
-  });
+const radioControlSchema = choiceControlSchema.safeExtend({
+  type: z.literal("radio"),
+  layout: z.enum(["horizontal", "vertical"]).default("horizontal"),
+});
 
 const metricContentSchema = z.object({
   type: z.literal("metric"),

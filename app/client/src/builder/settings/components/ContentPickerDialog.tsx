@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Dialog } from "@/components/primitives/Dialog";
 import { Button } from "@/components/primitives/Button";
 import type { DashboardSchema } from "@shared/dashboard";
@@ -20,13 +20,10 @@ export const ContentPickerDialog = ({
   open,
   tabIndex,
 }: ContentPickerDialogProps) => {
-  const [selectedLogicId, setSelectedLogicId] = useState(dashboard.analysis.logic[0]?.id);
-
-  useEffect(() => {
-    if (!dashboard.analysis.logic.some((logic) => logic.id === selectedLogicId)) {
-      setSelectedLogicId(dashboard.analysis.logic[0]?.id);
-    }
-  }, [dashboard.analysis.logic, selectedLogicId]);
+  const [selection, setSelectedLogicId] = useState(dashboard.analysis.logic[0]?.id);
+  const selectedLogicId =
+    dashboard.analysis.logic.find((logic) => logic.id === selection)?.id ??
+    dashboard.analysis.logic[0]?.id;
 
   const finish = () => {
     if (selectedLogicId && onComplete(selectedLogicId)) onClose();

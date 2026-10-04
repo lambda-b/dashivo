@@ -1,3 +1,4 @@
+import { createUniqueIndexedName } from "@dashivo/shared-utils/createUniqueIndexedName";
 import { Button } from "@/components/primitives/Button";
 import { TextInput } from "@/components/primitives/TextInput";
 
@@ -14,13 +15,6 @@ interface ChoiceControlSettingProps {
   onChange: (control: ChoiceControlDefinition) => void;
   onRemove: () => void;
 }
-
-const createOptionValue = (control: ChoiceControlDefinition) => {
-  const values = new Set(control.options.map((option) => option.value));
-  let index = control.options.length + 1;
-  while (values.has(`option-${index}`)) index += 1;
-  return `option-${index}`;
-};
 
 export const ChoiceControlSetting = ({
   control,
@@ -52,7 +46,10 @@ export const ChoiceControlSetting = ({
   };
 
   const addOption = () => {
-    const value = createOptionValue(control);
+    const value = createUniqueIndexedName(
+      control.options.map((option) => option.value),
+      "option-",
+    );
     onChange({ ...control, options: [...control.options, { label: "新しい選択肢", value }] });
   };
 

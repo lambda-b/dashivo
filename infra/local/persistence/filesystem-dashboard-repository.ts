@@ -13,9 +13,6 @@ import type {
 
 const dashboardDirectory = (projectRoot: string) =>
   path.join(projectRoot, "dashboard", "definitions");
-const legacyDashboardId = "sales-overview";
-const legacyDashboardPath = (projectRoot: string) =>
-  path.join(projectRoot, "dashboard", "dashboard.json");
 const dashboardPath = (projectRoot: string, id: string) => {
   const dashboardId = dashboardIdSchema.parse(id);
   return path.join(dashboardDirectory(projectRoot), `${dashboardId}.json`);
@@ -118,15 +115,9 @@ const createInput = async (projectRoot: string, id: string, fileName: string, so
 
 const readDashboardById = async (projectRoot: string, id: string) => {
   const filePath = dashboardPath(projectRoot, id);
-  const source = await fs.readFile(filePath, "utf8").catch(async (error: NodeJS.ErrnoException) => {
+  const source = await fs.readFile(filePath, "utf8").catch((error: NodeJS.ErrnoException) => {
     if (error.code !== "ENOENT") throw error;
-    if (id !== legacyDashboardId) throw new DashboardNotFound(id);
-    return fs
-      .readFile(legacyDashboardPath(projectRoot), "utf8")
-      .catch((legacyError: NodeJS.ErrnoException) => {
-        if (legacyError.code === "ENOENT") throw new DashboardNotFound(id);
-        throw legacyError;
-      });
+    throw new DashboardNotFound(id);
   });
 
   return {
@@ -144,20 +135,10 @@ const writeDashboard = async (
   const destination = dashboardPath(projectRoot, id);
   const serialized = `${JSON.stringify(dashboard, null, 2)}\n`;
   await fs.mkdir(path.dirname(destination), { recursive: true });
-  const current = await fs
-    .readFile(destination, "utf8")
-    .catch(async (error: NodeJS.ErrnoException) => {
-      if (error.code !== "ENOENT") throw error;
-      if (id === legacyDashboardId) {
-        return fs
-          .readFile(legacyDashboardPath(projectRoot), "utf8")
-          .catch((legacyError: NodeJS.ErrnoException) => {
-            if (legacyError.code === "ENOENT") return undefined;
-            throw legacyError;
-          });
-      }
-      return undefined;
-    });
+  const current = await fs.readFile(destination, "utf8").catch((error: NodeJS.ErrnoException) => {
+    if (error.code !== "ENOENT") throw error;
+    return undefined;
+  });
 
   const currentVersion = current && createHash("sha256").update(current).digest("hex");
   if (currentVersion !== expectedVersion) throw new DashboardRevisionConflict();
@@ -184,16 +165,6 @@ const listDashboards = async (projectRoot: string) => {
       }),
   );
 
-  if (!dashboards.some((dashboard) => dashboard.id === legacyDashboardId)) {
-    const info = await fs.stat(legacyDashboardPath(projectRoot));
-    const snapshot = await readDashboardById(projectRoot, legacyDashboardId);
-    dashboards.push({
-      id: legacyDashboardId,
-      title: (snapshot.dashboard as DashboardSchema).title,
-      updatedAt: info.mtime.toISOString(),
-    });
-  }
-
   return dashboards.toSorted((left, right) => right.updatedAt.localeCompare(left.updatedAt));
 };
 
@@ -208,16 +179,6 @@ const createDashboard = async (
   let id = baseId;
   let suffix = 2;
   while (true) {
-    if (id === legacyDashboardId) {
-      try {
-        await fs.access(legacyDashboardPath(projectRoot));
-        id = `${baseId}-${suffix++}`;
-        continue;
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-      }
-    }
-
     try {
       await fs.writeFile(
         dashboardPath(projectRoot, id),

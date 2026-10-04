@@ -206,6 +206,7 @@ test("Workbench runs Figure code with explicit parameters and independent CSV pr
   page,
 }) => {
   await page.goto("http://127.0.0.1:3030");
+  const dashboardTitle = await page.getByRole("heading", { level: 1 }).innerText();
   await page.getByRole("radio", { name: "East", exact: true }).check();
   await page.getByRole("button", { name: "Pythonロジックを管理" }).click();
   await expect(page.getByText("ロジック定義", { exact: true })).toBeVisible();
@@ -234,7 +235,7 @@ test("Workbench runs Figure code with explicit parameters and independent CSV pr
   const accept = page.waitForEvent("dialog").then((dialog) => dialog.accept());
   await page.getByRole("button", { name: "Dashboardへ戻る" }).click();
   await accept;
-  await expect(page.getByRole("heading", { level: 1, name: "Sales pulse" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: dashboardTitle })).toBeVisible();
   await expect(page.getByRole("radio", { name: "East", exact: true })).toBeChecked();
 });
 

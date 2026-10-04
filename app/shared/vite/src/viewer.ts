@@ -13,6 +13,7 @@ const viewerRuntimePath = fileURLToPath(
 export interface ViewerVitePaths {
   clientRoot: string;
   dashboardPath: string;
+  dashboardRoot: string;
   generatedAssetsPath: string;
   outputRoot: string;
   viewerEntryPath: string;
@@ -21,27 +22,32 @@ export interface ViewerVitePaths {
 export const createViewerViteConfiguration = ({
   clientRoot,
   dashboardPath,
+  dashboardRoot,
   generatedAssetsPath,
   outputRoot,
   viewerEntryPath,
 }: ViewerVitePaths): UserConfig =>
-  mergeConfig(createDashboardViteConfiguration(clientRoot, dashboardPath, viewerRuntimePath), {
-    resolve: {
-      alias: {
-        "#generated/assets": generatedAssetsPath,
-        "@/app/App": viewerEntryPath,
+  mergeConfig(
+    createDashboardViteConfiguration(clientRoot, dashboardPath, viewerRuntimePath, dashboardRoot),
+    {
+      resolve: {
+        alias: {
+          "#generated/assets": generatedAssetsPath,
+          "@/app/App": viewerEntryPath,
+        },
+      },
+      plugins: [pyodideWasm(), viteSingleFile(), dashboardOutput()],
+      worker: { plugins: () => [analysisAssets(dashboardPath, dashboardRoot), pyodideWasm()] },
+      build: {
+        outDir: outputRoot,
+        emptyOutDir: true,
+        copyPublicDir: false,
+        target: "es2022",
+        assetsInlineLimit: Number.POSITIVE_INFINITY,
+        chunkSizeWarningLimit: 100_000,
+        rollupOptions: {
+          output: { entryFileNames: "dashboard.js", assetFileNames: "dashboard.[ext]" },
+        },
       },
     },
-    plugins: [pyodideWasm(), viteSingleFile(), dashboardOutput()],
-    worker: { plugins: () => [analysisAssets(dashboardPath), pyodideWasm()] },
-    build: {
-      outDir: outputRoot,
-      emptyOutDir: true,
-      target: "es2022",
-      assetsInlineLimit: Number.POSITIVE_INFINITY,
-      chunkSizeWarningLimit: 100_000,
-      rollupOptions: {
-        output: { entryFileNames: "dashboard.js", assetFileNames: "dashboard.[ext]" },
-      },
-    },
-  });
+  );

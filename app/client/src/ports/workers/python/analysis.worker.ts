@@ -79,7 +79,7 @@ const api: PythonAnalysisWorkerApi = {
   },
 
   async preview(input) {
-    return { output: await run(input) };
+    return run(input);
   },
 
   async inspect(sources) {

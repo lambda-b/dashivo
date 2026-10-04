@@ -18,6 +18,18 @@ test("runs pandas and NumPy from a standalone file", async ({ page }) => {
   });
   await expect(page.getByText("￥754,000")).toBeVisible();
 
+  await expect(page.locator("header img")).toHaveAttribute("src", /^data:image\/svg\+xml/);
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", /^data:image\/svg\+xml/);
+  await expect
+    .poll(() =>
+      page
+        .locator("header img")
+        .evaluate(
+          (image) => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0,
+        ),
+    )
+    .toBe(true);
+
   await page.getByRole("link", { name: "グラフ" }).click();
   await expect(page).toHaveURL(/#\/charts$/);
   await expect(page.getByRole("heading", { name: "月次売上" })).toBeVisible();
