@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { lazy, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster, toast } from "sonner";
@@ -7,6 +7,8 @@ import { ApiError } from "@/api/request";
 import { ZodError } from "zod";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import App from "@/app/App";
+import { QueryBoundary } from "@/components/feedback/QueryBoundary";
+import { messages } from "@/messages";
 import "@/styles.css";
 
 const root = document.getElementById("root");
@@ -24,13 +26,23 @@ const queryClient = createQueryClient({
     !(error instanceof ApiError && error.status && error.status >= 400 && error.status < 500),
 });
 
+const Application = import.meta.env.MODE === "editor" ? lazy(() => import("@/auth/AuthGate")) : App;
+const application =
+  import.meta.env.MODE === "editor" ? (
+    <QueryBoundary errorMessage={messages.auth.loadFailed}>
+      <Application />
+    </QueryBoundary>
+  ) : (
+    <Application />
+  );
+
 const routes =
   import.meta.env.MODE !== "viewer"
     ? [
-        { path: "/", element: <App /> },
-        { path: "/d/:dashboardId/*", element: <App /> },
+        { path: "/", element: application },
+        { path: "/d/:dashboardId/*", element: application },
       ]
-    : [{ path: "*", element: <App /> }];
+    : [{ path: "*", element: application }];
 
 createRoot(root).render(
   <StrictMode>

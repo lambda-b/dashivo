@@ -22,6 +22,19 @@ const requestResponse = async (
   init: RequestInit | undefined,
   fallback: string,
 ) => {
+  if (import.meta.env.MODE === "editor") {
+    const { getAccessToken } = await import("@/auth/cognito");
+    const { prepareAuthenticatedRequest } = await import("@/api/authenticated-request");
+    const target =
+      input instanceof Request ? input : new URL(String(input), window.location.origin);
+    input = await prepareAuthenticatedRequest(
+      new Request(target, init),
+      await getAccessToken(),
+      window.location.origin,
+    );
+    init = undefined;
+  }
+
   let response: Response;
 
   try {

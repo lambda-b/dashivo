@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { mergeConfig, type UserConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import { createDashboardViteConfiguration } from "@dashivo/shared-vite/common";
-import { analysisAssets } from "@dashivo/shared-vite/common/plugins/analysis-assets";
+import { analysisAssets } from "@dashivo/shared-vite/viewer/plugins/analysis-assets";
 import { dashboardOutput } from "@dashivo/shared-vite/viewer/plugins/dashboard-output";
 import { pyodideWasm } from "@dashivo/shared-vite/viewer/plugins/pyodide-wasm";
 
@@ -27,27 +27,33 @@ export const createViewerViteConfiguration = ({
   outputRoot,
   viewerEntryPath,
 }: ViewerVitePaths): UserConfig =>
-  mergeConfig(
-    createDashboardViteConfiguration(clientRoot, dashboardPath, viewerRuntimePath, dashboardRoot),
-    {
-      resolve: {
-        alias: {
-          "#generated/assets": generatedAssetsPath,
-          "@/app/App": viewerEntryPath,
-        },
-      },
-      plugins: [pyodideWasm(), viteSingleFile(), dashboardOutput()],
-      worker: { plugins: () => [analysisAssets(dashboardPath, dashboardRoot), pyodideWasm()] },
-      build: {
-        outDir: outputRoot,
-        emptyOutDir: true,
-        copyPublicDir: false,
-        target: "es2022",
-        assetsInlineLimit: Number.POSITIVE_INFINITY,
-        chunkSizeWarningLimit: 100_000,
-        rollupOptions: {
-          output: { entryFileNames: "dashboard.js", assetFileNames: "dashboard.[ext]" },
-        },
+  mergeConfig(createDashboardViteConfiguration(clientRoot, viewerRuntimePath), {
+    resolve: {
+      alias: {
+        "#generated/assets": generatedAssetsPath,
+        "@/app/App": viewerEntryPath,
+        "#dashboard/dashboard.json": dashboardPath,
+        "virtual:dashivo/dashboard": fileURLToPath(
+          new URL("./viewer/virtual/dashboard.ts", import.meta.url),
+        ),
       },
     },
-  );
+    plugins: [
+      analysisAssets(dashboardPath, dashboardRoot),
+      pyodideWasm(),
+      viteSingleFile(),
+      dashboardOutput(),
+    ],
+    worker: { plugins: () => [analysisAssets(dashboardPath, dashboardRoot), pyodideWasm()] },
+    build: {
+      outDir: outputRoot,
+      emptyOutDir: true,
+      copyPublicDir: false,
+      target: "es2022",
+      assetsInlineLimit: Number.POSITIVE_INFINITY,
+      chunkSizeWarningLimit: 100_000,
+      rollupOptions: {
+        output: { entryFileNames: "dashboard.js", assetFileNames: "dashboard.[ext]" },
+      },
+    },
+  });

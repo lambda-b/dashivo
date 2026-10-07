@@ -32,7 +32,7 @@ Pythonによるデータ分析とReactのUIを、ネットワーク接続なし�
 
 ## ビルド
 
-AWS向けの配信基盤・検証手順は [infra/cdk/README.md](infra/cdk/README.md) を参照してください。CDK基盤・Cognito設定・APIのJWT検証を実装済みです。オンラインEditorの公開・ブラウザー側の認証・AWS保存先は後続の実装です。
+AWS向けの配信基盤・検証手順は [infra/cdk/README.md](infra/cdk/README.md) を参照してください。CDK基盤・Cognito設定・ブラウザーの認証・APIのJWT検証を実装済みです。AWS保存先・Lambdaへの接続とサービス公開は後続の実装です。
 
 ```bash
 pnpm build
@@ -43,6 +43,8 @@ pnpm build
 ```bash
 open dist/dashboard.html
 ```
+
+公開用Editorは `pnpm build:editor` で `dist/editor/` へ生成します。Cognitoの公開設定3項目が必須です。設定方法は [AWS配信基盤の文書](infra/cdk/README.md#公開用editorのビルド) を参照してください。Editorにはローカルの定義・CSV・Pythonを埋め込まず、認証済みAPIから取得します。ローカル開発の `pnpm dev` と、ダウンロード用Viewerの `pnpm build` は認証を必要としません。
 
 検査は以下で実行します。
 
@@ -71,7 +73,8 @@ pnpm test:e2e
 │     ├─ utils/       # 環境に依存しない共通関数
 │     └─ vite/        # editor/viewerのVite設定・仮想モジュール・plugin
 ├─ infra/
-│  └─ local/          # ファイル永続化と開発サーバー連携
+│  ├─ local/          # ファイル永続化と開発サーバー連携
+│  └─ cdk/            # AWS基盤・CognitoのJWT検証アダプター
 ├─ tests/             # unit・integration・e2e（resultsは実行結果）
 └─ work/              # プロジェクト計画（Git管理外）
 ```

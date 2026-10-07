@@ -4,7 +4,7 @@ import type { Plugin } from "vite";
 import { normalizePath } from "vite";
 import { dashboardSchema } from "@dashivo/shared-schema/dashboard";
 
-export const analysisAssetsModuleId = "virtual:dashivo/analysis-assets";
+const analysisAssetsModuleId = "virtual:dashivo/analysis-assets";
 const resolvedModuleId = `\0${analysisAssetsModuleId}`;
 
 const resolveDashboardAsset = (dashboardRoot: string, assetPath: string) => {

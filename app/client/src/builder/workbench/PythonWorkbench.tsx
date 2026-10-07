@@ -36,7 +36,7 @@ export const PythonWorkbench = ({ logicId }: { logicId?: string }) => {
     <div className="animate-workbench-in fixed inset-0 z-50 flex flex-col overflow-hidden bg-white text-stone-800 shadow-2xl motion-reduce:animate-none">
       <header className="flex items-start justify-between gap-6 border-b border-stone-200 p-5">
         <div>
-          <AppBrand caption="DEVELOPMENT ONLY" />
+          <AppBrand caption="PYTHON WORKBENCH" />
           <h1 className="mt-1 text-xl font-bold">Python Workbench</h1>
           <p className="mt-1 text-xs leading-5 text-stone-500">
             Pythonコードと最終的な出力イメージを同じ画面で確認します。

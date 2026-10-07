@@ -2,30 +2,36 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mergeConfig, type UserConfig } from "vite";
 import { createDashboardViteConfiguration } from "@dashivo/shared-vite/common";
-import { analysisAssets } from "@dashivo/shared-vite/common/plugins/analysis-assets";
+import { pyodideAssets } from "@dashivo/shared-vite/editor/plugins/pyodide-assets";
 
 export const createEditorViteConfiguration = (projectRoot: string): UserConfig => {
   const clientRoot = path.join(projectRoot, "app/client");
-  const dashboardRoot = path.join(projectRoot, "dashboard");
-  const dashboardPath = path.join(dashboardRoot, "definitions", "sales-overview.json");
   const pyodideRuntimePath = fileURLToPath(
     new URL("./editor/virtual/pyodide-runtime.ts", import.meta.url),
   );
 
-  return mergeConfig(
-    createDashboardViteConfiguration(clientRoot, dashboardPath, pyodideRuntimePath, dashboardRoot),
-    {
-      optimizeDeps: {
-        entries: ["index.html", "src/ports/workers/python/analysis.worker.ts"],
-        include: ["comlink", "pyodide"],
+  return mergeConfig(createDashboardViteConfiguration(clientRoot, pyodideRuntimePath), {
+    resolve: {
+      alias: {
+        "virtual:dashivo/dashboard": fileURLToPath(
+          new URL("./editor/virtual/dashboard.ts", import.meta.url),
+        ),
+        "virtual:dashivo/analysis-assets": fileURLToPath(
+          new URL("./editor/virtual/analysis-assets.ts", import.meta.url),
+        ),
       },
-      server: {
-        host: "0.0.0.0",
-        port: 3030,
-        strictPort: true,
-        fs: { allow: [projectRoot] },
-      },
-      worker: { plugins: () => [analysisAssets(dashboardPath, dashboardRoot)] },
     },
-  );
+    plugins: [pyodideAssets(projectRoot)],
+    optimizeDeps: {
+      entries: ["index.html", "src/ports/workers/python/analysis.worker.ts"],
+      include: ["comlink", "pyodide"],
+    },
+    server: {
+      host: "0.0.0.0",
+      port: 3030,
+      strictPort: true,
+      fs: { allow: [projectRoot] },
+    },
+    build: { outDir: path.join(projectRoot, "dist/editor"), emptyOutDir: true },
+  });
 };

@@ -7,7 +7,7 @@
     "./common": "./src/common.ts",
     "./editor": "./src/editor.ts",
     "./viewer": "./src/viewer.ts",
-    "./common/plugins/*": "./src/common/plugins/*.ts",
+    "./editor/plugins/*": "./src/editor/plugins/*.ts",
     "./viewer/plugins/*": "./src/viewer/plugins/*.ts"
   },
   "dependencies": {
@@ -16,6 +16,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "pyodide": "^314.0.6",
     "vite": "^8.2.2",
-    "vite-plugin-singlefile": "^2.3.3"
+    "vite-plugin-singlefile": "^2.3.3",
+    "vite-plugin-static-copy": "^4.1.1"
   }
 }

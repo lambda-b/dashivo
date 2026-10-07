@@ -4,6 +4,12 @@ export const messages = {
   retry: "再試行",
   invalidResponse: "サーバーからの応答を読み取れませんでした。再試行してください。",
   connectionFailed: "サーバーに接続できませんでした。接続状態を確認してください。",
+  auth: {
+    loadFailed: "ログイン状態を確認できませんでした。",
+    signInFailed: "ログインできませんでした。もう一度お試しください。",
+    signOutFailed: "ログアウトできませんでした。もう一度お試しください。",
+    sessionExpired: "ログインの有効期限が切れました。ログインし直してください。",
+  },
   clipboard: {
     copyFailed: "クリップボードへコピーできませんでした。参照式を選択してコピーしてください。",
   },

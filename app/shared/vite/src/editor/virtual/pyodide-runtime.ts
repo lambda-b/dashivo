@@ -1,9 +1,9 @@
 import { loadPyodide, type PyodideAPI } from "pyodide";
 
-const developmentAssetUrl = new URL("/pyodide/", globalThis.location.href).href;
+const assetUrl = new URL("/pyodide/", globalThis.location.origin).href;
 
 export const initializePyodide = (): Promise<PyodideAPI> =>
   loadPyodide({
-    indexURL: developmentAssetUrl,
-    packageBaseUrl: developmentAssetUrl,
+    indexURL: assetUrl,
+    packageBaseUrl: assetUrl,
   });

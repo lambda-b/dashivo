@@ -1,5 +1,6 @@
 import { expose } from "comlink";
 import type { PyProxy } from "pyodide/ffi";
+import type { PyodideAPI } from "pyodide";
 import { analysisDefinitions } from "virtual:dashivo/analysis-assets";
 import { initializePyodide } from "virtual:dashivo/pyodide-runtime";
 import dashivoSource from "@/ports/workers/python/dashivo.py?raw";
@@ -21,17 +22,20 @@ export interface PythonAnalysisWorkerApi {
   inspect(sources: Source[]): Promise<unknown>;
 }
 
-const runtime = initializePyodide().then(async (python) => {
-  await python.loadPackage("pandas");
-  python.FS.writeFile("/home/pyodide/dashivo.py", dashivoSource);
-  python.runPython("import dashivo, pandas as pd, io, json");
-  return python;
-});
+let runtime: Promise<PyodideAPI> | undefined;
+
+const getRuntime = () =>
+  (runtime ??= initializePyodide().then(async (python) => {
+    await python.loadPackage("pandas");
+    python.FS.writeFile("/home/pyodide/dashivo.py", dashivoSource);
+    python.runPython("import dashivo, pandas as pd, io, json");
+    return python;
+  }));
 
 const frames = new Map<string, { source: string; data: PyProxy }>();
 
 const getFrame = async (source: Source) => {
-  const python = await runtime;
+  const python = await getRuntime();
   const cached = frames.get(source.id);
   if (cached?.source === source.sourceData) return cached.data;
 
@@ -43,7 +47,7 @@ const getFrame = async (source: Source) => {
 };
 
 const run = async ({ analysisSource, params, sources }: PreviewInput) => {
-  const python = await runtime;
+  const python = await getRuntime();
   await python.loadPackagesFromImports(analysisSource);
 
   using inputs = python.toPy({});
@@ -83,7 +87,7 @@ const api: PythonAnalysisWorkerApi = {
   },
 
   async inspect(sources) {
-    const python = await runtime;
+    const python = await getRuntime();
     using head = python.runPython(
       "lambda frame: json.dumps(dashivo._rows(frame.head(5)), allow_nan=False)",
     );

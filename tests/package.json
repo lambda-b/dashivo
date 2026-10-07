@@ -10,9 +10,11 @@
     "@dashivo/shared-lib": "workspace:*",
     "@dashivo/shared-schema": "workspace:*",
     "@dashivo/shared-utils": "workspace:*",
+    "@dashivo/shared-vite": "workspace:*",
     "@playwright/test": "^1.63.0",
     "aws-cdk-lib": "^2.272.0",
     "aws-jwt-verify": "^5.2.1",
-    "pyodide": "^314.0.6"
+    "pyodide": "^314.0.6",
+    "vite": "^8.2.2"
   }
 }

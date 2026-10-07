@@ -14,7 +14,6 @@
     "@hono/node-server": "^2.1.1",
     "hono": "^4.13.8",
     "pyodide": "^314.0.6",
-    "vite": "^8.2.2",
-    "vite-plugin-static-copy": "^4.1.1"
+    "vite": "^8.2.2"
   }
 }

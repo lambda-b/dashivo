@@ -1,10 +1,8 @@
 import { createContext, useContext } from "react";
 import { useQuery } from "@dashivo/shared-lib/query";
-import source from "#dashboard/dashboard.json";
-import { dashboardSchema, type DashboardSchema } from "@shared/dashboard";
+import { dashboard as bundledDashboard } from "virtual:dashivo/dashboard";
+import type { DashboardSchema } from "@shared/dashboard";
 import { messages } from "@/messages";
-
-const bundledDashboard = dashboardSchema.parse(source);
 
 export const dashboardQueryKey = ["dashboard"] as const;
 export const DashboardIdContext = createContext("");

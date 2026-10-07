@@ -29,4 +29,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm exec playwright test tests/unit tests/integration
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test tests/e2e/online-auth.spec.ts
       - run: pnpm cdk:synth

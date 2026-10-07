@@ -6,7 +6,6 @@ import { createDashboardHtmlBuilder } from "@dashivo/server-exporter/build-dashb
 import { createEditorViteConfiguration } from "@dashivo/shared-vite/editor";
 import { createFilesystemDashboardRepository } from "@dashivo/infra/local/persistence/filesystem-dashboard-repository";
 import { appServer } from "@dashivo/infra/local/vite/editor/plugins/app-server";
-import { pyodideAssets } from "@dashivo/infra/local/vite/editor/plugins/pyodide-assets";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const editorViteConfig = createEditorViteConfiguration(projectRoot);
@@ -20,6 +19,6 @@ export default defineConfig((env) => {
   });
 
   return mergeConfig(editorViteConfig, {
-    plugins: [appServer(serverApp), pyodideAssets(projectRoot)],
+    plugins: [appServer(serverApp)],
   });
 });

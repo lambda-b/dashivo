@@ -8,6 +8,7 @@
     "predev": "pnpm prepare:pyodide",
     "prepare:pyodide": "node app/server/packages/exporter/src/prepare/pyodide.ts",
     "build": "pnpm typecheck && vite build --mode viewer --config app/server/packages/exporter/src/configuration.ts",
+    "build:editor": "pnpm typecheck && vite build --mode editor --config app/client/vite.config.ts",
     "lint": "oxlint .",
     "format": "oxfmt --write package.json pnpm-workspace.yaml .oxlintrc.json tsconfig.json playwright.config.ts .devcontainer .github app infra dashboard tests",
     "format:check": "oxfmt --check package.json pnpm-workspace.yaml .oxlintrc.json tsconfig.json playwright.config.ts .devcontainer .github app infra dashboard tests",

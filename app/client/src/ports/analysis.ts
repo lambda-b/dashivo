@@ -33,7 +33,7 @@ export const analysisPort = {
     analysis: AnalysisDefinition,
     dashboardId: string,
   ) {
-    if (import.meta.env.DEV) {
+    if (import.meta.env.MODE !== "viewer") {
       const sources = await loadInputs(dashboardId, analysis);
       const { loadPythonSource } = await import("@/api/python");
       const results: Record<string, unknown> = {};
