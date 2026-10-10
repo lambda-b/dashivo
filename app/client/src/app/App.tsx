@@ -1,29 +1,42 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSuspenseQuery } from "@dashivo/shared-lib/query";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { DashboardIdContext, dashboardQueryKey } from "@/app/context/useDashboard";
 import { Dashboard } from "@/app/Dashboard";
 import { DashboardBuilder } from "@/builder/DashboardBuilder";
-import { loadDashboards } from "@/api/dashboards";
 import { useDashboardActions } from "@/app/hooks/useDashboardActions";
-import { loadDashboard } from "@/api/dashboard";
+import { useWorkspace } from "@/storage/context";
 import { DashboardSidebar } from "@/layouts/DashboardSidebar";
 import type { ParameterValue } from "@shared/dashboard";
 import { QueryBoundary } from "@/components/feedback/QueryBoundary";
 import { messages } from "@/messages";
+import clsx from "clsx";
+
+const useDashboards = () => {
+  const { storage, queryKey } = useWorkspace();
+  return useSuspenseQuery({
+    queryKey: queryKey("dashboards"),
+    queryFn: storage.loadDashboards,
+    meta: { errorMessage: messages.dashboard.listLoadFailed, errorBoundary: true },
+  }).data;
+};
+
+const DefaultDashboard = () => {
+  const dashboards = useDashboards();
+
+  return dashboards[0] ? (
+    <Navigate to={`/d/${dashboards[0].id}`} replace />
+  ) : (
+    <div className="grid min-h-screen place-items-center text-sm text-stone-500">
+      ダッシュボードを作成してください。
+    </div>
+  );
+};
 
 const DashboardList = () => {
   const { dashboardId } = useParams();
   const navigate = useNavigate();
-  const { data: dashboards } = useSuspenseQuery({
-    queryKey: ["dashboards"],
-    queryFn: loadDashboards,
-    meta: { errorMessage: messages.dashboard.listLoadFailed, errorBoundary: true },
-  });
-
-  useEffect(() => {
-    if (!dashboardId && dashboards[0]) navigate(`/d/${dashboards[0].id}`, { replace: true });
-  }, [dashboardId, dashboards, navigate]);
+  const dashboards = useDashboards();
 
   return dashboards.map((dashboard) => (
     <button
@@ -34,15 +47,17 @@ const DashboardList = () => {
       type="button"
     >
       {dashboard.title}
+      {dashboard.sample && <span className="ml-2 text-xs text-stone-500">サンプル</span>}
     </button>
   ));
 };
 
 const DashboardWorkspace = ({ dashboardId }: { dashboardId: string }) => {
   const [params, setParams] = useState<Record<string, ParameterValue>>({});
+  const { storage, queryKey } = useWorkspace();
   useSuspenseQuery({
-    queryKey: [...dashboardQueryKey, dashboardId],
-    queryFn: ({ signal }) => loadDashboard(dashboardId, { signal }),
+    queryKey: queryKey(...dashboardQueryKey, dashboardId),
+    queryFn: ({ signal }) => storage.loadDashboard(dashboardId, { signal }),
     staleTime: Infinity,
     refetchOnMount: "always",
     meta: { errorMessage: messages.dashboard.loadFailed, errorBoundary: true },
@@ -69,29 +84,32 @@ const DashboardWorkspace = ({ dashboardId }: { dashboardId: string }) => {
 
 const EditorApp = () => {
   const { dashboardId } = useParams();
+  const { authenticated } = useWorkspace();
   const { createDashboard, isPending } = useDashboardActions();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   return (
     <div className="min-h-screen bg-stone-100">
-      <DashboardSidebar
-        open={sidebarOpen}
-        creating={isPending}
-        onCreate={createDashboard}
-        onOpenChange={setSidebarOpen}
-      >
-        <QueryBoundary errorMessage={messages.dashboard.listLoadFailed}>
-          <DashboardList />
-        </QueryBoundary>
-      </DashboardSidebar>
-      <div className={sidebarOpen ? "lg:ml-72" : "ml-12"}>
+      {authenticated && (
+        <DashboardSidebar
+          open={sidebarOpen}
+          creating={isPending}
+          onCreate={createDashboard}
+          onOpenChange={setSidebarOpen}
+        >
+          <QueryBoundary errorMessage={messages.dashboard.listLoadFailed}>
+            <DashboardList />
+          </QueryBoundary>
+        </DashboardSidebar>
+      )}
+      <div className={clsx(authenticated && (sidebarOpen ? "lg:ml-72" : "ml-12"))}>
         {dashboardId ? (
           <QueryBoundary key={dashboardId} errorMessage={messages.dashboard.loadFailed}>
             <DashboardWorkspace dashboardId={dashboardId} />
           </QueryBoundary>
         ) : (
-          <div className="grid min-h-screen place-items-center text-sm text-stone-500">
-            ダッシュボードを作成してください。
-          </div>
+          <QueryBoundary errorMessage={messages.dashboard.listLoadFailed}>
+            <DefaultDashboard />
+          </QueryBoundary>
         )}
       </div>
     </div>

@@ -7,6 +7,82 @@ import { createFilesystemDashboardRepository } from "@dashivo/infra/local/persis
 import { createDashboardDefinitionService } from "@dashivo/server/services/dashboard-definition-service";
 import { createPythonLogicService } from "@dashivo/server/services/python-logic-service";
 import dashboardSource from "#dashboard/dashboard.json" with { type: "json" };
+import sample from "@/sample/dashboard.json" with { type: "json" };
+import { randomUUID } from "node:crypto";
+
+test("trial registration atomically publishes all files and repeated revisions preserve server edits", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-registration-"));
+  const { repository, dashboardDefinitionService, pythonLogicService } = createService(root);
+  const registration = {
+    revisionId: randomUUID(),
+    dashboard: dashboardSchema.parse(sample.dashboard),
+    sources: sample.sources,
+  };
+
+  try {
+    const [first, retry] = await Promise.all([
+      dashboardDefinitionService.register(registration),
+      dashboardDefinitionService.register(registration),
+    ]);
+    expect(first.id).toBe(`draft-${registration.revisionId}`);
+    expect(retry.id).toBe(first.id);
+    expect(await repository.listDashboards()).toHaveLength(1);
+    const collision = await repository.createDashboard(first.id, registration.dashboard);
+    expect(collision.id).toBe(`${first.id}-2`);
+    const imported = await dashboardDefinitionService.read(first.id);
+    for (const input of imported.analysis.inputs) {
+      const original = input.path.replace(`/${first.id}/`, "/");
+      expect(await repository.readInput(first.id, input.path)).toBe(
+        registration.sources[original as keyof typeof registration.sources],
+      );
+    }
+    for (const logic of imported.analysis.logic) {
+      const original = logic.path.replace(`/${first.id}/`, "/");
+      expect(await repository.readPython(first.id, logic.path)).toBe(
+        registration.sources[original as keyof typeof registration.sources],
+      );
+    }
+    const { analysis: _, ...settings } = imported;
+    await dashboardDefinitionService.update(first.id, {
+      settings: { ...settings, title: "Server edit" },
+    });
+    await pythonLogicService.create(first.id, {
+      id: "extra",
+      path: `logic/${first.id}/extra.py`,
+      source: "# new logic",
+    });
+    const sourcePath = imported.analysis.logic[0].path;
+    await repository.writePython(first.id, sourcePath, "# server edit");
+    await repository.createInput(first.id, "extra.csv", "value\n1\n");
+    expect((await repository.listAssets(first.id)).csv).toContain(`data/${first.id}/extra.csv`);
+    expect((await dashboardDefinitionService.register(registration)).title).toBe("Server edit");
+    expect(await repository.readPython(first.id, sourcePath)).toBe("# server edit");
+    expect((await dashboardDefinitionService.read(first.id)).analysis.logic.at(-1)?.id).toBe(
+      "extra",
+    );
+    const changed = await dashboardDefinitionService.register({
+      ...registration,
+      revisionId: randomUUID(),
+    });
+    expect(changed.id).not.toBe(first.id);
+    expect(await repository.listDashboards()).toHaveLength(3);
+    await expect(
+      dashboardDefinitionService.register({
+        ...registration,
+        revisionId: randomUUID(),
+        sources: {},
+      }),
+    ).rejects.toThrow();
+    expect(await repository.listDashboards()).toHaveLength(3);
+    expect(
+      (await fs.readdir(path.join(root, "dashboard/registrations"))).some((name) =>
+        name.startsWith(".pending-"),
+      ),
+    ).toBe(false);
+  } finally {
+    await fs.rm(root, { recursive: true });
+  }
+});
 
 const createService = (projectRoot: string) => {
   const repository = createFilesystemDashboardRepository(projectRoot);

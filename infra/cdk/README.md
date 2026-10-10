@@ -8,7 +8,8 @@
 - `DashivoIdentity`：東京リージョンのCognito User Pool、公開クライアント、認可コード方式のHosted UI。削除保護・10分のAccess/ID token・1日のRefresh token・ローテーションを設定する。
 - APIの認証境界を実装。`X-Dashivo-Token` のAccess tokenを `aws-jwt-verify` で検証し、検証済み `sub` ごとのRepositoryとサービスをリクエストに紐づける。ローカルAPIは従来どおり認証なしで使用できる。
 - 公開用Editorのログイン/ログアウト・認可コード+PKCE・セッション更新をAmplify SDKで実装。トークンはタブ単位の `sessionStorage` に保存し、APIへAccess tokenだけを送信する。ログアウト時はQuery cacheも破棄する。
-- Editorのビルドではローカルの定義・CSV・Pythonを取り込まない。Python用の配布ファイルとwheelを `pyodide/` に配置し、分析が必要になるまで初期化しない。
+- 未認証では1件の試用ダッシュボードをIndexedDBへ保存する。初回は固定サンプルを表示し、その既知の版は登録対象外とする。ログイン時に編集済みの版をCSV・Pythonとまとめて自動登録し、登録済みのユーザー・revisionIdは重複登録しない。ログイン後はサーバーAPIへ切り替え、複数作成・HTMLダウンロードが可能になる。
+- Editorのビルドでは固定サンプルだけを同梱し、ローカル保存先の定義・CSV・Pythonは取り込まない。Python用の配布ファイルとwheelを `pyodide/` に配置し、分析が必要になるまで初期化しない。
 - TLS要件に合わせて配信スタックを `us-east-1` に配置。後続のAPI・ユーザーデータは `ap-northeast-1` に分離する。
 - バケットは暗号化・HTTPS必須・削除時保持。CloudFront/S3のアクセスログは14日で失効する。
 - HTTPSへのリダイレクトと共通セキュリティヘッダーを有効化。
@@ -54,6 +55,7 @@ pnpm --filter @dashivo/infra-cdk exec cdk bootstrap aws://154539905353/ap-northe
 5. サーバー側HTML生成のLambda対応。Vite/Pyodideの実行・依存ファイル・生成サイズを検証し、大きいHTMLのダウンロードにはS3の期限付きURLを使用する。
 6. GitHub OIDCデプロイ、EditorのS3同期・CloudFront invalidation。HTMLは短いTTL、hash付きアセットは長いTTLを設定する。
 7. 本番公開前にCSPをWorker/WASM/Cognitoに合わせて設定し、WAFの費用・レート制限、ログ・アラーム、バックアップを決定する。Shield AdvancedやWAFをこの初期スタックで自動購入しない。
+8. 試用版の自動登録APIを本番Repositoryへ接続する。同じユーザー・revisionIdの再送は既存登録を返し、サーバー側の編集内容を上書きしない。定義・CSV・Pythonの原子的な保存を保証する。
 
 Google連携にはGoogle OAuthのクライアントIDとSecretが必要。Secretはチャット・Git・CDK contextへ載せず、AWSのSecret管理に登録する。
 

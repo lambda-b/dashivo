@@ -4,6 +4,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { build, preview, type PreviewServer } from "vite";
 import { createEditorViteConfiguration } from "@dashivo/shared-vite/editor";
 import { createEmptyDashboard } from "@dashivo/shared-schema/dashboard";
+import sample from "@/sample/dashboard.json" with { type: "json" };
+import type { DashboardRegistration } from "@dashivo/shared-schema/api";
 
 const origin = "http://127.0.0.1:3130";
 const loginOrigin = "https://dashivo-test.auth.ap-northeast-1.amazoncognito.com";
@@ -113,6 +115,159 @@ const mockLogin = async (page: Page, invalidState = false) => {
   });
   return { exchanges, authorizations, accessToken, refreshes };
 };
+
+test("guest editing persists JSON, CSV and Python without API access or HTML download", async ({
+  page,
+}) => {
+  const requests: string[] = [];
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.route(`${origin}/api/**`, (route) => {
+    requests.push(route.request().url());
+    return route.abort();
+  });
+  await page.goto(origin);
+  await expect(page.getByLabel("新しいダッシュボード")).toHaveCount(0);
+  await expect(page.getByLabel("開発用: 認証済み")).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: sample.dashboard.title, exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("header").getByText("サンプル", { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/#\/d\/trial\/summary$/);
+  await expect(page.getByRole("navigation", { name: "ダッシュボード一覧" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "ダッシュボード一覧を開く" })).toHaveCount(0);
+  await expect
+    .poll(() => page.locator("main").evaluate((element) => element.getBoundingClientRect().left))
+    .toBe(0);
+  const dashboardUrl = page.url();
+  await expect(page.getByText("￥754,000", { exact: true })).toBeVisible();
+  await page.getByLabel("開始日", { exact: true }).fill("2026-02-01");
+  await page.getByLabel("終了日", { exact: true }).fill("2026-02-01");
+  await expect(page.getByText("￥251,000", { exact: true })).toBeVisible();
+  await page.getByRole("radio", { name: "East", exact: true }).check();
+  await expect(page.getByText("￥141,000", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "HTMLをダウンロード" })).toHaveCount(0);
+  await expect(page.getByText(/ログインが必要です|オフライン実行中/)).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Pythonロジックを管理" }).click();
+  await page.getByLabel("アップロードするCSVファイル").setInputFiles({
+    name: "values.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from("value\n12\n17\n"),
+  });
+  await expect(page.getByRole("list", { name: "入力CSV一覧" })).toContainText("input-2");
+  await page.getByRole("button", { name: "ロジックを追加", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "作成", exact: true }).click();
+  const editor = page.locator(".cm-content");
+  await expect(page).toHaveURL(/\/builder\/python\/logic-1$/);
+  await expect(editor).toContainText("新しい数値");
+  await editor.fill(`from dashivo import plot
+
+def execute(inputs, params):
+    fig = plot.metric(inputs["input-2"]["value"].sum())
+    fig.title("Guest result")
+    return fig
+`);
+  await page.getByRole("button", { name: "Pythonを保存" }).click();
+  await expect(page.getByRole("button", { name: "Pythonを保存" })).toBeDisabled();
+  await page.getByRole("button", { name: "実行", exact: true }).click();
+  await expect(page.getByRole("article").getByText("Guest result", { exact: true })).toBeVisible();
+  await expect(page.getByRole("article").getByText("29", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Dashboardへ戻る" }).click();
+
+  await page.getByRole("button", { name: "サマリーにコンテンツを追加" }).click();
+  await page.getByRole("dialog").getByText("logic-1", { exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "コンテンツを追加" }).click();
+  await page.getByRole("button", { name: "ヘッダーを編集" }).click();
+  await page.getByLabel("タイトル").fill("Saved guest dashboard");
+  await page.getByRole("button", { name: "dashboard.jsonを保存" }).click();
+  await expect(page.getByText("保存しました", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Saved guest dashboard", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("article").getByText("29", { exact: true })).toBeVisible();
+  expect(page.url()).toBe(dashboardUrl);
+  expect(requests).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test("login registers edited trial revisions once and logout restores the trial", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await mockLogin(page);
+  const dashboard = createEmptyDashboard("Account dashboard");
+  const registrations: DashboardRegistration[] = [];
+  await page.route(`${origin}/api/dashboards**`, (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === "/api/dashboards/registrations") {
+      const registration = route.request().postDataJSON() as DashboardRegistration;
+      registrations.push(registration);
+      return route.fulfill({
+        json: {
+          dashboard: {
+            id: `draft-${registration.revisionId}`,
+            title: registration.dashboard.title,
+            updatedAt: "2026-10-10",
+          },
+        },
+      });
+    }
+    const registered = registrations.at(-1);
+    if (path.endsWith("/sources/python") || path.endsWith("/sources/csv")) {
+      const sourcePath = new URL(route.request().url()).searchParams.get("path")!;
+      return route.fulfill({ json: { source: registered?.sources[sourcePath] } });
+    }
+    return route.fulfill({
+      json:
+        path === "/api/dashboards"
+          ? {
+              dashboards: [
+                ...registrations.map((entry) => ({
+                  id: `draft-${entry.revisionId}`,
+                  title: entry.dashboard.title,
+                  updatedAt: "2026-10-10",
+                })),
+                { id: "account", title: dashboard.title, updatedAt: "2026-10-08" },
+              ],
+            }
+          : { dashboard: registered?.dashboard ?? dashboard },
+    });
+  });
+  await page.goto(origin);
+  const editTitle = async (title: string) => {
+    await page.getByRole("button", { name: "ヘッダーを編集" }).click();
+    await page.getByLabel("タイトル").fill(title);
+    await page.getByRole("button", { name: "dashboard.jsonを保存" }).click();
+    await expect(page.getByText("保存しました", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Builderを閉じる" }).click();
+  };
+  await editTitle("Browser draft");
+  await expect(page.getByRole("heading", { name: "Browser draft", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "ログイン", exact: true }).click();
+  await expect(page.getByLabel("新しいダッシュボード")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Browser draft", exact: true })).toBeVisible();
+  expect(registrations).toHaveLength(1);
+  await expect(page.getByRole("button", { name: "HTMLをダウンロード" })).toBeEnabled();
+  await page.getByRole("button", { name: "ログアウト", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Browser draft", exact: true })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "ダッシュボード一覧" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "HTMLをダウンロード" })).toHaveCount(0);
+  await expect(page.getByText("試用", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "ログイン", exact: true }).click();
+  await expect(page.getByLabel("新しいダッシュボード")).toBeVisible();
+  expect(registrations).toHaveLength(1);
+  await page.getByRole("button", { name: "ログアウト", exact: true }).click();
+  await expect(page.getByRole("button", { name: "ログイン", exact: true })).toBeVisible();
+  await editTitle("Another revision");
+  await page.getByRole("button", { name: "ログイン", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Another revision", exact: true })).toBeVisible();
+  expect(registrations).toHaveLength(2);
+  expect(registrations[0].revisionId).not.toBe(registrations[1].revisionId);
+  expect(errors).toEqual([]);
+});
 
 test("login uses PKCE, gates API access and clears session tokens on logout", async ({ page }) => {
   const { exchanges, authorizations, accessToken } = await mockLogin(page);
@@ -241,7 +396,7 @@ test("expired tokens refresh and rotate before saving a dashboard", async ({ pag
   );
   await page.goto(origin);
   await page.getByRole("button", { name: "ログイン", exact: true }).click();
-  await expect(page.getByLabel("新しいダッシュボード")).toBeVisible();
+  await expect(page.getByRole("button", { name: "ログアウト", exact: true })).toBeVisible();
 
   await expireSession(page);
   await page.getByLabel("新しいダッシュボード").fill("Created");
@@ -268,7 +423,7 @@ for (const { name, signedOut } of [
     );
     await page.goto(origin);
     await page.getByRole("button", { name: "ログイン", exact: true }).click();
-    await expect(page.getByLabel("新しいダッシュボード")).toBeVisible();
+    await expect(page.getByRole("button", { name: "ログアウト", exact: true })).toBeVisible();
 
     await page.route("https://cognito-idp.ap-northeast-1.amazonaws.com/**", (route) =>
       route.fulfill({

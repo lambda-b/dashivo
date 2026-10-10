@@ -17,6 +17,12 @@ export interface DashboardDefinitionRepository {
   createDashboard(preferredId: string, dashboard: DashboardSchema): Promise<DashboardListItem>;
   readDashboard(id: string): Promise<DashboardSnapshot>;
   writeDashboard(id: string, dashboard: DashboardSchema, expectedVersion: string): Promise<void>;
+  /** Publish definition and sources together; an existing ID is returned without overwriting it. */
+  registerDashboardAtomically(
+    id: string,
+    dashboard: DashboardSchema,
+    sources: Record<string, string>,
+  ): Promise<DashboardListItem>;
 }
 
 export interface DashboardAssetRepository {

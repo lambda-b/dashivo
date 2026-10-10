@@ -13,10 +13,10 @@ test("runs pandas and NumPy from a standalone file", async ({ page }) => {
   const dashboardUrl = pathToFileURL(path.resolve("dist/dashboard.html")).toString();
   await page.goto(dashboardUrl);
 
-  await expect(page.getByText("オフライン実行中")).toBeVisible({
+  await expect(page.getByText("￥754,000")).toBeVisible({
     timeout: 120_000,
   });
-  await expect(page.getByText("￥754,000")).toBeVisible();
+  await expect(page.getByText("オフライン実行中")).toHaveCount(0);
 
   await expect(page.locator("header img")).toHaveAttribute("src", /^data:image\/svg\+xml/);
   await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", /^data:image\/svg\+xml/);
@@ -42,6 +42,9 @@ test("runs pandas and NumPy from a standalone file", async ({ page }) => {
   await page.getByRole("radio", { name: "West" }).check();
   await page.getByRole("link", { name: "サマリー" }).click();
   await expect(page.getByText("￥335,000")).toBeVisible({ timeout: 120_000 });
+  await page.getByLabel("開始日", { exact: true }).fill("2026-02-01");
+  await page.getByLabel("終了日", { exact: true }).fill("2026-02-01");
+  await expect(page.getByText("￥110,000", { exact: true })).toBeVisible();
   expect(networkRequests).toEqual([]);
   expect(runtimeErrors).toEqual([]);
 });

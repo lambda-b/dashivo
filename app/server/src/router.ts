@@ -2,6 +2,7 @@ import {
   assetsEndpoint,
   dashboardEndpoint,
   dashboardsEndpoint,
+  dashboardRegistrationEndpoint,
   downloadEndpoint,
   inputSourceEndpoint,
   pythonLogicEndpoint,
@@ -17,6 +18,7 @@ import {
 import { downloadDashboard } from "@dashivo/server/controllers/dashboard-download";
 import {
   createDashboard,
+  registerDashboard,
   getDashboard,
   listDashboards,
   updateDashboard,
@@ -30,6 +32,7 @@ import {
 export const configureServerRoutes = (app: Hono<ServerEnv>) => {
   app.get(dashboardsEndpoint, listDashboards);
   app.post(dashboardsEndpoint, createDashboard);
+  app.post(dashboardRegistrationEndpoint, registerDashboard);
   app.get(dashboardEndpoint, getDashboard);
   app.put(dashboardEndpoint, updateDashboard);
   app.get(assetsEndpoint, getDashboardAssets);

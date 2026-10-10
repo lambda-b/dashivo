@@ -7,6 +7,10 @@ import {
   type DashboardSchema,
 } from "@dashivo/shared-schema/dashboard";
 import type { DashboardDefinitionRepository } from "@dashivo/server/models/dashboard-repository";
+import {
+  dashboardRegistrationSchema,
+  type DashboardRegistration,
+} from "@dashivo/shared-schema/api";
 
 export const createDashboardDefinitionService = (repository: DashboardDefinitionRepository) => {
   const list = () => repository.listDashboards();
@@ -52,7 +56,35 @@ export const createDashboardDefinitionService = (repository: DashboardDefinition
     return write(dashboardId, { ...current, analysis: validChange.analysis }, snapshot.version);
   };
 
-  return { list, create, read, update };
+  const register = async (registration: DashboardRegistration) => {
+    const { revisionId, dashboard, sources } = dashboardRegistrationSchema.parse(registration);
+    // Repositoryは認証済みユーザーに紐づく。同じユーザー・版の再送は同じIDへ収束する。
+    const id = `draft-${revisionId}`;
+    const sourcePath = (path: string) => path.replace(/^(data|logic)\//, `$1/${id}/`);
+    const next = dashboardSchema.parse({
+      ...dashboard,
+      analysis: {
+        inputs: dashboard.analysis.inputs.map((input) => ({
+          ...input,
+          path: sourcePath(input.path),
+        })),
+        logic: dashboard.analysis.logic.map((logic) => ({
+          ...logic,
+          path: sourcePath(logic.path),
+        })),
+      },
+    });
+
+    return repository.registerDashboardAtomically(
+      id,
+      next,
+      Object.fromEntries(
+        Object.entries(sources).map(([path, source]) => [sourcePath(path), source]),
+      ),
+    );
+  };
+
+  return { list, create, read, update, register };
 };
 
 export type DashboardDefinitionService = ReturnType<typeof createDashboardDefinitionService>;

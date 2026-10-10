@@ -61,7 +61,7 @@
     },
     {
       "type": "date-range",
-      "key": "date_1",
+      "key": "sales_period",
       "displayName": "対象期間",
       "defaultValue": {
         "from": "2026-01-01",

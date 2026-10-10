@@ -26,9 +26,16 @@ const queryClient = createQueryClient({
     !(error instanceof ApiError && error.status && error.status >= 400 && error.status < 500),
 });
 
-const Application = import.meta.env.MODE === "editor" ? lazy(() => import("@/auth/AuthGate")) : App;
+const Application =
+  import.meta.env.MODE === "viewer"
+    ? App
+    : lazy(() =>
+        import.meta.env.MODE === "editor"
+          ? import("@/auth/OnlineSession")
+          : import("@/auth/EditorSession"),
+      );
 const application =
-  import.meta.env.MODE === "editor" ? (
+  import.meta.env.MODE !== "viewer" ? (
     <QueryBoundary errorMessage={messages.auth.loadFailed}>
       <Application />
     </QueryBoundary>

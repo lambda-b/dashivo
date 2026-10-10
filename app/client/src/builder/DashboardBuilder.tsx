@@ -22,7 +22,7 @@ import { PythonWorkbench } from "@/builder/workbench/PythonWorkbench";
 
 export interface BuilderActions {
   addContent: (tabIndex: number) => void;
-  download: () => void;
+  download?: () => void;
   downloadPending: boolean;
   editContent: (tabIndex: number, contentIndex: number) => void;
   openAnalysis: () => void;

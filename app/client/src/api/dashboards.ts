@@ -3,6 +3,9 @@ import {
   dashboardCreatedResponseSchema,
   dashboardListResponseSchema,
   dashboardsEndpoint,
+  dashboardRegistrationEndpoint,
+  dashboardRegistrationSchema,
+  type DashboardRegistration,
 } from "@shared/api";
 import { requestJson } from "@/api/request";
 import { messages } from "@/messages";
@@ -28,5 +31,18 @@ export const createDashboard = async (title: string) => {
     messages.dashboard.createFailed,
   );
 
+  return dashboardCreatedResponseSchema.parse(result).dashboard;
+};
+
+export const registerDashboard = async (registration: DashboardRegistration) => {
+  const result = await requestJson(
+    dashboardRegistrationEndpoint,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dashboardRegistrationSchema.parse(registration)),
+    },
+    messages.dashboard.registerFailed,
+  );
   return dashboardCreatedResponseSchema.parse(result).dashboard;
 };

@@ -2,6 +2,7 @@ import { wrap } from "comlink";
 import { z } from "zod";
 import type { PythonAnalysisWorkerApi } from "@/ports/workers/python/analysis.worker";
 import PythonAnalysisWorker from "@/ports/workers/python/analysis.worker?worker&inline";
+import type { DashboardStorage } from "@/storage/server";
 import {
   analysisOutputSchema,
   analysisResultsSchema,
@@ -17,12 +18,15 @@ export interface AnalysisPreviewInput {
 
 const api = wrap<PythonAnalysisWorkerApi>(new PythonAnalysisWorker());
 
-export const loadInputs = async (dashboardId: string, analysis: AnalysisDefinition) => {
-  const { loadInputSource } = await import("@/api/python");
+export const loadInputs = async (
+  dashboardId: string,
+  analysis: AnalysisDefinition,
+  storage: Pick<DashboardStorage, "loadInputSource">,
+) => {
   return Promise.all(
     analysis.inputs.map(async (input) => ({
       id: input.id,
-      sourceData: await loadInputSource(dashboardId, input.path),
+      sourceData: await storage.loadInputSource(dashboardId, input.path),
     })),
   );
 };
@@ -32,15 +36,17 @@ export const analysisPort = {
     params: Record<string, unknown>,
     analysis: AnalysisDefinition,
     dashboardId: string,
+    storage?: Pick<DashboardStorage, "loadInputSource" | "loadPythonSource">,
   ) {
     if (import.meta.env.MODE !== "viewer") {
-      const sources = await loadInputs(dashboardId, analysis);
-      const { loadPythonSource } = await import("@/api/python");
+      if (!storage) throw new Error("Analysis storage is not available.");
+
+      const sources = await loadInputs(dashboardId, analysis, storage);
       const results: Record<string, unknown> = {};
 
       for (const logic of analysis.logic) {
         const result = await this.preview({
-          analysisSource: await loadPythonSource(dashboardId, logic.path),
+          analysisSource: await storage.loadPythonSource(dashboardId, logic.path),
           sources,
           params,
         });

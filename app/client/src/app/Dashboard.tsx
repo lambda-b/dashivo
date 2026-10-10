@@ -8,6 +8,8 @@ import { ContentArea } from "@/layouts/ContentArea";
 import { analysisPort } from "@/ports/analysis";
 import type { ParameterValue } from "@shared/dashboard";
 import { validateContentBindings } from "@/schema/validation";
+import { useContext } from "react";
+import { WorkspaceContext } from "@/storage/context";
 
 export const Dashboard = ({
   actions,
@@ -20,14 +22,23 @@ export const Dashboard = ({
 }) => {
   const dashboard = useDashboard();
   const dashboardId = useDashboardId();
+  const workspace = useContext(WorkspaceContext);
   const values = Object.fromEntries(
     dashboard.controls.map((control) => [control.key, params[control.key] ?? control.defaultValue]),
   );
 
   const analysis = useQuery({
     meta: { errorMessage: false },
-    queryKey: ["analysis", dashboard.analysis, values],
-    queryFn: () => analysisPort.execute(values, dashboard.analysis, dashboardId),
+    queryKey: [
+      "workspace",
+      workspace?.scope ?? "viewer",
+      "analysis",
+      dashboardId,
+      dashboard.analysis,
+      values,
+    ],
+    queryFn: () =>
+      analysisPort.execute(values, dashboard.analysis, dashboardId, workspace?.storage),
     select: (result) => validateContentBindings(dashboard, result),
     retry: false,
   });
@@ -35,7 +46,6 @@ export const Dashboard = ({
   return (
     <main className="min-h-screen bg-stone-100">
       <DashboardHeader
-        analysis={analysis}
         download={actions?.download}
         downloadPending={actions?.downloadPending}
         onEditHeader={actions?.openHeader}

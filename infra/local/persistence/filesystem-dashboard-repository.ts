@@ -18,9 +18,27 @@ const dashboardPath = (projectRoot: string, id: string) => {
   return path.join(dashboardDirectory(projectRoot), `${dashboardId}.json`);
 };
 
-const resolvePythonPath = (projectRoot: string, sourcePath: string) => {
-  const logicRoot = path.join(projectRoot, "dashboard", "logic");
-  const destination = path.resolve(projectRoot, "dashboard", sourcePath);
+const registeredRoot = (projectRoot: string, id: string) =>
+  path.join(projectRoot, "dashboard", "registrations", dashboardIdSchema.parse(id));
+
+const locateDashboard = async (projectRoot: string, id: string) => {
+  const sourceRoot = registeredRoot(projectRoot, id);
+  const filePath = path.join(sourceRoot, "dashboard.json");
+  try {
+    await fs.access(filePath);
+    return { sourceRoot, filePath };
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    return {
+      sourceRoot: path.join(projectRoot, "dashboard"),
+      filePath: dashboardPath(projectRoot, id),
+    };
+  }
+};
+
+const resolvePythonPath = (sourceRoot: string, sourcePath: string) => {
+  const logicRoot = path.join(sourceRoot, "logic");
+  const destination = path.resolve(sourceRoot, sourcePath);
   const relativePath = path.relative(logicRoot, destination);
 
   if (
@@ -35,9 +53,9 @@ const resolvePythonPath = (projectRoot: string, sourcePath: string) => {
   return destination;
 };
 
-const resolveInputPath = (projectRoot: string, sourcePath: string) => {
-  const dataRoot = path.join(projectRoot, "dashboard", "data");
-  const destination = path.resolve(projectRoot, "dashboard", sourcePath);
+const resolveInputPath = (sourceRoot: string, sourcePath: string) => {
+  const dataRoot = path.join(sourceRoot, "data");
+  const destination = path.resolve(sourceRoot, sourcePath);
   const relativePath = path.relative(dataRoot, destination);
 
   if (
@@ -61,13 +79,13 @@ const listFiles = async (dashboardRoot: string, pattern: string) => {
 };
 
 const readPython = async (projectRoot: string, id: string, sourcePath: string) => {
-  await readDashboardById(projectRoot, id);
-  return fs.readFile(resolvePythonPath(projectRoot, sourcePath), "utf8");
+  const { sourceRoot } = await readDashboardById(projectRoot, id);
+  return fs.readFile(resolvePythonPath(sourceRoot, sourcePath), "utf8");
 };
 
 const writePython = async (projectRoot: string, id: string, sourcePath: string, source: string) => {
-  await readDashboardById(projectRoot, id);
-  const destination = resolvePythonPath(projectRoot, sourcePath);
+  const { sourceRoot } = await readDashboardById(projectRoot, id);
+  const destination = resolvePythonPath(sourceRoot, sourcePath);
 
   await fs.mkdir(path.dirname(destination), { recursive: true });
   await fs.writeFile(destination, source, "utf8");
@@ -79,30 +97,30 @@ const createPython = async (
   sourcePath: string,
   source: string,
 ) => {
-  await readDashboardById(projectRoot, id);
-  const destination = resolvePythonPath(projectRoot, sourcePath);
+  const { sourceRoot } = await readDashboardById(projectRoot, id);
+  const destination = resolvePythonPath(sourceRoot, sourcePath);
 
   await fs.mkdir(path.dirname(destination), { recursive: true });
   await fs.writeFile(destination, source, { encoding: "utf8", flag: "wx" });
 };
 
 const deletePython = async (projectRoot: string, id: string, sourcePath: string) => {
-  await readDashboardById(projectRoot, id);
-  await fs.unlink(resolvePythonPath(projectRoot, sourcePath));
+  const { sourceRoot } = await readDashboardById(projectRoot, id);
+  await fs.unlink(resolvePythonPath(sourceRoot, sourcePath));
 };
 
 const readInput = async (projectRoot: string, id: string, sourcePath: string) => {
-  await readDashboardById(projectRoot, id);
+  const { sourceRoot } = await readDashboardById(projectRoot, id);
   if (!sourcePath.startsWith(`data/${id}/`)) {
     throw new Error("Input source must belong to the requested dashboard");
   }
-  return fs.readFile(resolveInputPath(projectRoot, sourcePath), "utf8");
+  return fs.readFile(resolveInputPath(sourceRoot, sourcePath), "utf8");
 };
 
 const createInput = async (projectRoot: string, id: string, fileName: string, source: string) => {
-  await readDashboardById(projectRoot, id);
+  const { sourceRoot } = await readDashboardById(projectRoot, id);
   const sourcePath = `data/${id}/${fileName}`;
-  const destination = resolveInputPath(projectRoot, sourcePath);
+  const destination = resolveInputPath(sourceRoot, sourcePath);
 
   await fs.mkdir(path.dirname(destination), { recursive: true });
   await fs.writeFile(destination, source, { encoding: "utf8", flag: "wx" }).catch((error) => {
@@ -114,13 +132,15 @@ const createInput = async (projectRoot: string, id: string, fileName: string, so
 };
 
 const readDashboardById = async (projectRoot: string, id: string) => {
-  const filePath = dashboardPath(projectRoot, id);
+  const { filePath, sourceRoot } = await locateDashboard(projectRoot, id);
   const source = await fs.readFile(filePath, "utf8").catch((error: NodeJS.ErrnoException) => {
     if (error.code !== "ENOENT") throw error;
     throw new DashboardNotFound(id);
   });
 
   return {
+    filePath,
+    sourceRoot,
     dashboard: JSON.parse(source) as unknown,
     version: createHash("sha256").update(source).digest("hex"),
   };
@@ -132,7 +152,7 @@ const writeDashboard = async (
   dashboard: DashboardSchema,
   expectedVersion: string,
 ) => {
-  const destination = dashboardPath(projectRoot, id);
+  const { filePath: destination } = await locateDashboard(projectRoot, id);
   const serialized = `${JSON.stringify(dashboard, null, 2)}\n`;
   await fs.mkdir(path.dirname(destination), { recursive: true });
   const current = await fs.readFile(destination, "utf8").catch((error: NodeJS.ErrnoException) => {
@@ -151,18 +171,23 @@ const listDashboards = async (projectRoot: string) => {
   const directory = dashboardDirectory(projectRoot);
   await fs.mkdir(directory, { recursive: true });
   const entries = await fs.readdir(directory, { withFileTypes: true });
-  const dashboards = await Promise.all(
-    entries
+  const registered = await listFiles(
+    path.join(projectRoot, "dashboard"),
+    "registrations/draft-*/dashboard.json",
+  );
+  const ids = [
+    ...entries
       .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-      .map(async (entry) => {
-        const id = path.basename(entry.name, ".json");
-        const [snapshot, info] = await Promise.all([
-          readDashboardById(projectRoot, id),
-          fs.stat(path.join(directory, entry.name)),
-        ]);
-        const definition = snapshot.dashboard as DashboardSchema;
-        return { id, title: definition.title, updatedAt: info.mtime.toISOString() };
-      }),
+      .map((entry) => path.basename(entry.name, ".json")),
+    ...registered.map((file) => path.basename(path.dirname(file))),
+  ];
+  const dashboards = await Promise.all(
+    [...new Set(ids)].map(async (id) => {
+      const snapshot = await readDashboardById(projectRoot, id);
+      const info = await fs.stat(snapshot.filePath);
+      const definition = snapshot.dashboard as DashboardSchema;
+      return { id, title: definition.title, updatedAt: info.mtime.toISOString() };
+    }),
   );
 
   return dashboards.toSorted((left, right) => right.updatedAt.localeCompare(left.updatedAt));
@@ -181,7 +206,7 @@ const createDashboard = async (
   while (true) {
     try {
       await fs.writeFile(
-        dashboardPath(projectRoot, id),
+        (await locateDashboard(projectRoot, id)).filePath,
         `${JSON.stringify(dashboard, null, 2)}\n`,
         { encoding: "utf8", flag: "wx" },
       );
@@ -212,14 +237,47 @@ const registerPythonLogic = async (
 };
 
 const listAssets = async (projectRoot: string, id: string): Promise<DashboardAssetCatalog> => {
-  await readDashboardById(projectRoot, id);
-  const dashboardRoot = path.join(projectRoot, "dashboard");
+  const { sourceRoot: dashboardRoot } = await readDashboardById(projectRoot, id);
   const [csv, python] = await Promise.all([
     listFiles(dashboardRoot, `data/${id}/**/*.csv`),
     listFiles(dashboardRoot, "logic/**/*.py"),
   ]);
 
   return { csv, python };
+};
+
+const registerDashboard = async (
+  projectRoot: string,
+  id: string,
+  dashboard: DashboardSchema,
+  sources: Record<string, string>,
+) => {
+  const destination = registeredRoot(projectRoot, id);
+  await fs.mkdir(path.dirname(destination), { recursive: true });
+  const staging = await fs.mkdtemp(path.join(path.dirname(destination), ".pending-"));
+  try {
+    for (const [sourcePath, source] of Object.entries(sources)) {
+      const filePath = sourcePath.startsWith("data/")
+        ? resolveInputPath(staging, sourcePath)
+        : resolvePythonPath(staging, sourcePath);
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
+      await fs.writeFile(filePath, source, "utf8");
+    }
+    await fs.writeFile(path.join(staging, "dashboard.json"), JSON.stringify(dashboard), "utf8");
+    // 全ファイルが揃ったディレクトリを一度に公開する。同時登録は先に成功した版を返す。
+    await fs.rename(staging, destination).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "EEXIST" && error.code !== "ENOTEMPTY") throw error;
+    });
+    const snapshot = await readDashboardById(projectRoot, id);
+    const info = await fs.stat(snapshot.filePath);
+    return {
+      id,
+      title: (snapshot.dashboard as DashboardSchema).title,
+      updatedAt: info.mtime.toISOString(),
+    };
+  } finally {
+    await fs.rm(staging, { recursive: true, force: true });
+  }
 };
 
 export const createFilesystemDashboardRepository = (projectRoot: string): DashboardRepository => ({
@@ -237,4 +295,6 @@ export const createFilesystemDashboardRepository = (projectRoot: string): Dashbo
   deletePython: (id, sourcePath) => deletePython(projectRoot, id, sourcePath),
   registerPythonLogicAtomically: (id, registration) =>
     registerPythonLogic(projectRoot, id, registration),
+  registerDashboardAtomically: (id, dashboard, sources) =>
+    registerDashboard(projectRoot, id, dashboard, sources),
 });

@@ -7,6 +7,7 @@ import {
 } from "@dashivo/shared-schema/dashboard";
 
 export const dashboardsEndpoint = "/api/dashboards";
+export const dashboardRegistrationEndpoint = `${dashboardsEndpoint}/registrations`;
 export const dashboardEndpoint = `${dashboardsEndpoint}/:id`;
 export const dashboardItemEndpoint = (id: string) =>
   `${dashboardsEndpoint}/${encodeURIComponent(id)}`;
@@ -28,9 +29,33 @@ export const dashboardListItemSchema = z.object({
   id: dashboardIdSchema,
   title: z.string().min(1),
   updatedAt: z.string(),
+  sample: z.boolean().optional(),
 });
 export const dashboardListSchema = z.array(dashboardListItemSchema);
 export const dashboardCreateSchema = z.object({ title: z.string().trim().min(1).max(120) });
+
+export const dashboardRegistrationSchema = z
+  .object({
+    revisionId: z.uuid(),
+    dashboard: dashboardSchema,
+    sources: z.record(z.string(), z.string()),
+  })
+  .superRefine(({ dashboard, sources }, context) => {
+    const paths = new Set(
+      [...dashboard.analysis.inputs, ...dashboard.analysis.logic].map((item) => item.path),
+    );
+    if (
+      Object.keys(sources).length !== paths.size ||
+      [...paths].some((path) => !Object.hasOwn(sources, path))
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Sources must contain exactly the files referenced by the dashboard",
+      });
+    }
+  });
+
+export type DashboardRegistration = z.infer<typeof dashboardRegistrationSchema>;
 
 export const apiErrorSchema = z.object({ error: z.string() });
 export const dashboardResponseSchema = z.object({ dashboard: dashboardSchema });

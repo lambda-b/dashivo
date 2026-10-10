@@ -3,6 +3,7 @@ import { useQuery } from "@dashivo/shared-lib/query";
 import { dashboard as bundledDashboard } from "virtual:dashivo/dashboard";
 import type { DashboardSchema } from "@shared/dashboard";
 import { messages } from "@/messages";
+import { useWorkspace } from "@/storage/context";
 
 export const dashboardQueryKey = ["dashboard"] as const;
 export const DashboardIdContext = createContext("");
@@ -12,9 +13,10 @@ export const DashboardPreviewContext = createContext<DashboardSchema | null>(nul
 
 const useEditorDashboard = () => {
   const id = useDashboardId();
+  const { storage, queryKey } = useWorkspace();
   return useQuery({
-    queryKey: [...dashboardQueryKey, id],
-    queryFn: async ({ signal }) => (await import("@/api/dashboard")).loadDashboard(id, { signal }),
+    queryKey: queryKey(...dashboardQueryKey, id),
+    queryFn: ({ signal }) => storage.loadDashboard(id, { signal }),
     initialData: () => bundledDashboard,
     staleTime: Infinity,
     meta: { errorMessage: messages.dashboard.loadFailed, errorBoundary: true },

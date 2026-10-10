@@ -1,5 +1,9 @@
 // UIのラベルとは分けて、利用者へ伝えるエラー・操作制限の文言を管理する。
 export const messages = {
+  storage: {
+    notFound: "ブラウザー内のデータが見つかりません。ダッシュボード一覧から選び直してください。",
+    fileExists: "同じ名前のファイルが登録されています。ファイル名を変更してください。",
+  },
   loading: "読み込み中…",
   retry: "再試行",
   invalidResponse: "サーバーからの応答を読み取れませんでした。再試行してください。",
@@ -9,6 +13,8 @@ export const messages = {
     signInFailed: "ログインできませんでした。もう一度お試しください。",
     signOutFailed: "ログアウトできませんでした。もう一度お試しください。",
     sessionExpired: "ログインの有効期限が切れました。ログインし直してください。",
+    downloadRequiresLogin: "HTMLのダウンロードにはログインが必要です。",
+    creationRequiresLogin: "ダッシュボードの追加にはログインが必要です。",
   },
   clipboard: {
     copyFailed: "クリップボードへコピーできませんでした。参照式を選択してコピーしてください。",
@@ -18,6 +24,7 @@ export const messages = {
     loadFailed: "設定を読み込めませんでした。",
     saveFailed: "設定を保存できませんでした。",
     createFailed: "作成できませんでした。",
+    registerFailed: "ダッシュボードを登録できませんでした。再試行してください。",
     downloadFailed: "HTMLを生成できませんでした。",
   },
   assets: {

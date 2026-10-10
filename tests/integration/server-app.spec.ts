@@ -16,6 +16,11 @@ const createTestApp = () =>
     dashboardHtmlBuilder: async () =>
       Uint8Array.from(new TextEncoder().encode("<html>viewer</html>")).buffer,
     repository: {
+      registerDashboardAtomically: async (id, createdDashboard) => ({
+        id,
+        title: createdDashboard.title,
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      }),
       listDashboards: async () => [
         { id: "sales-overview", title: dashboard.title, updatedAt: "2026-01-01T00:00:00.000Z" },
       ],

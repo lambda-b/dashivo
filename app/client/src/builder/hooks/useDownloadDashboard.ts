@@ -1,14 +1,20 @@
 import { useMutation } from "@dashivo/shared-lib/query";
-import { downloadDashboardFile } from "@/api/download";
+import { useWorkspace } from "@/storage/context";
+import { ApiError } from "@/api/request";
 import { useDashboardId } from "@/app/context/useDashboard";
 import { messages } from "@/messages";
 
 export const useDownloadDashboard = () => {
   const dashboardId = useDashboardId();
+  const { authenticated, storage } = useWorkspace();
 
   const download = useMutation({
+    mutationKey: ["workspace"],
     meta: { errorMessage: messages.dashboard.downloadFailed },
-    mutationFn: () => downloadDashboardFile(dashboardId),
+    mutationFn: () => {
+      if (!authenticated) throw new ApiError(messages.auth.downloadRequiresLogin, 401);
+      return storage.downloadDashboardFile(dashboardId);
+    },
     onSuccess: (dashboard) => {
       const url = URL.createObjectURL(dashboard);
       const link = document.createElement("a");
@@ -23,7 +29,7 @@ export const useDownloadDashboard = () => {
   });
 
   return {
-    download: () => download.mutate(),
+    download: authenticated ? () => download.mutate() : undefined,
     isPending: download.isPending,
   };
 };

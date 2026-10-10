@@ -2,6 +2,7 @@ import {
   dashboardCreateSchema,
   dashboardCreatedResponseSchema,
   dashboardListResponseSchema,
+  dashboardRegistrationSchema,
 } from "@dashivo/shared-schema/api";
 import { dashboardDefinitionChangeSchema } from "@dashivo/shared-schema/dashboard";
 import type { Handler } from "hono";
@@ -22,6 +23,13 @@ export const createDashboard: Handler<ServerEnv> = async (context) => {
   const dashboard = await context.get("dashboardDefinitionService").create(title);
 
   return context.json(dashboardCreatedResponseSchema.parse({ dashboard }), 201);
+};
+
+/** 未認証で編集した版を、ソースを含めて重複なく登録する。 */
+export const registerDashboard: Handler<ServerEnv> = async (context) => {
+  const registration = await parseJsonBody(context.req.raw, dashboardRegistrationSchema);
+  const dashboard = await context.get("dashboardDefinitionService").register(registration);
+  return context.json(dashboardCreatedResponseSchema.parse({ dashboard }));
 };
 
 /**

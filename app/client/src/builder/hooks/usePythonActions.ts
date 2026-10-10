@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@dashivo/shared-lib/query";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
-import { savePythonSource } from "@/api/python";
+import { useWorkspace } from "@/storage/context";
 import { analysisPort, loadInputs } from "@/ports/analysis";
 import { messages } from "@/messages";
 import type { ParameterValue } from "@shared/dashboard";
@@ -10,13 +10,16 @@ export const usePythonActions = (path: string) => {
   const client = useQueryClient();
   const dashboardId = useDashboardId();
   const dashboard = useSavedDashboard();
+  const { storage, queryKey } = useWorkspace();
 
   const save = useMutation({
+    mutationKey: ["workspace"],
     meta: { errorMessage: messages.logic.saveFailed },
-    mutationFn: (source: string) => savePythonSource(dashboardId, path, source),
+    mutationFn: (source: string) => storage.savePythonSource(dashboardId, path, source),
     onSuccess: (_, source) => {
-      client.setQueryData(["python-source", dashboardId, path], source);
-      void client.invalidateQueries({ queryKey: ["analysis"] });
+      client.setQueryData(queryKey("python-source", dashboardId, path), source);
+      void client.invalidateQueries({ queryKey: queryKey("dashboards") });
+      void client.invalidateQueries({ queryKey: queryKey("analysis") });
     },
   });
 
@@ -32,7 +35,7 @@ export const usePythonActions = (path: string) => {
       analysisPort.preview({
         analysisSource: source,
         params,
-        sources: await loadInputs(dashboardId, dashboard.analysis),
+        sources: await loadInputs(dashboardId, dashboard.analysis, storage),
       }),
   });
 

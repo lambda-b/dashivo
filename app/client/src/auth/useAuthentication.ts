@@ -4,11 +4,13 @@ import { useMutation, useSuspenseQuery } from "@dashivo/shared-lib/query";
 import { Hub } from "aws-amplify/utils";
 import { loadSession, logOut, signIn } from "@/auth/cognito";
 import { messages } from "@/messages";
+import { useNavigate } from "react-router-dom";
 
 const sessionQueryKey = ["auth", "session"] as const;
 
 export const useAuthentication = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { data: user } = useSuspenseQuery({
     queryKey: sessionQueryKey,
     queryFn: loadSession,
@@ -36,12 +38,13 @@ export const useAuthentication = () => {
           void queryClient.cancelQueries();
           queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== "auth" });
           queryClient.getMutationCache().clear();
+          navigate("/", { replace: true });
           queryClient.setQueryData(sessionQueryKey, null);
         } else if (payload.event === "signedIn") {
           void queryClient.invalidateQueries({ queryKey: sessionQueryKey });
         }
       }),
-    [queryClient],
+    [queryClient, navigate],
   );
 
   const login = useMutation({

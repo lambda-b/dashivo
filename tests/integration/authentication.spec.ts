@@ -5,8 +5,12 @@ import { SimpleJwksCache } from "aws-jwt-verify/jwk";
 import { createCognitoAccessTokenVerifier } from "@dashivo/infra-cdk/auth/cognito";
 import { createAuthenticatedServerApp } from "@dashivo/server/authentication";
 import type { DashboardRepository } from "@dashivo/server/models/dashboard-repository";
-import { dashboardItemEndpoint, dashboardsEndpoint } from "@dashivo/shared-schema/api";
-import { dashboardSchema } from "@dashivo/shared-schema/dashboard";
+import {
+  dashboardItemEndpoint,
+  dashboardsEndpoint,
+  dashboardRegistrationEndpoint,
+} from "@dashivo/shared-schema/api";
+import { dashboardSchema, createEmptyDashboard } from "@dashivo/shared-schema/dashboard";
 import source from "#dashboard/dashboard.json" with { type: "json" };
 
 const poolId = "ap-northeast-1_Test";
@@ -39,6 +43,7 @@ const createToken = (sub: string, overrides: Record<string, unknown> = {}) => {
 };
 
 const createRepository = (userId: string): DashboardRepository => ({
+  registerDashboardAtomically: async (id) => ({ id, title: userId, updatedAt: "2026-10-10" }),
   listDashboards: async () => [
     { id: "shared-id", title: userId, updatedAt: "2026-01-01T00:00:00.000Z" },
   ],
@@ -85,6 +90,37 @@ const createTestApp = (owners: string[]) =>
     },
     dashboardHtmlBuilder: async () => new ArrayBuffer(0),
   });
+
+test("trial registration requires authentication and uses only the verified owner's repository", async () => {
+  const owners: string[] = [];
+  const app = createTestApp(owners);
+  const registration = {
+    revisionId: "fd3a24b5-5a81-44ed-9ea4-dd9e53b48e88",
+    dashboard: createEmptyDashboard("Trial"),
+    sources: {},
+  };
+  const request = (userId?: string, body = registration) =>
+    app.request(dashboardRegistrationEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(userId ? { "X-Dashivo-Token": createToken(userId) } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+  expect((await request()).status).toBe(401);
+  expect(owners).toEqual([]);
+  for (const userId of ["user-a", "user-b"]) {
+    const response = await request(userId);
+    expect(response.status).toBe(200);
+    expect((await response.json()).dashboard).toMatchObject({
+      id: `draft-${registration.revisionId}`,
+      title: userId,
+    });
+  }
+  expect(owners).toEqual(["user-a", "user-b"]);
+  expect((await request("user-a", { ...registration, revisionId: "invalid" })).status).toBe(400);
+});
 
 test("rejects missing, expired, malformed and wrong-use tokens before resolving storage", async () => {
   const owners: string[] = [];

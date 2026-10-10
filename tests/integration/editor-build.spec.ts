@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { build } from "vite";
 import { createEditorViteConfiguration } from "@dashivo/shared-vite/editor";
 
-test("online editor bundles no local dashboard, CSV or Python logic", async () => {
+test("online editor bundles the fixed sample, not mutable local dashboard files", async () => {
   const result = await build({
     ...createEditorViteConfiguration(path.resolve(".")),
     configFile: false,
@@ -25,10 +25,11 @@ test("online editor bundles no local dashboard, CSV or Python logic", async () =
       chunk.type === "chunk" ? Object.keys(chunk.modules) : [],
     );
     expect(modules.filter((id) => id.startsWith(`${path.resolve("dashboard")}/`))).toEqual([]);
+    expect(modules).toContain(path.resolve("app/client/src/sample/dashboard.json"));
     for (const chunk of result.output) {
       if (chunk.type === "chunk") {
-        expect(chunk.code).not.toContain("Sale-pulse");
-        expect(chunk.code).not.toContain("sales-analysis");
+        expect(chunk.code).not.toContain("開発用: 認証済み");
+        expect(chunk.code).not.toContain("dashivo.dev.authenticated");
       }
     }
   }

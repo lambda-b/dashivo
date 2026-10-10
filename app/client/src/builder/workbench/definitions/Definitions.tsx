@@ -3,7 +3,7 @@ import { FileCode2, Plus, Trash2, Upload } from "lucide-react";
 import { useQuery } from "@dashivo/shared-lib/query";
 import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
 import { useDefinitionActions } from "@/builder/hooks/useDefinitionActions";
-import { loadAssetCatalog } from "@/api/python";
+import { useWorkspace } from "@/storage/context";
 import { LogicDialog } from "@/builder/workbench/definitions/LogicDialog";
 import { Button } from "@/components/primitives/Button";
 import { IconButton } from "@/components/primitives/IconButton";
@@ -37,11 +37,12 @@ export const Definitions = ({
   const { removeInput, removeLogic, registerCsv, isPending, isRegisteringCsv } =
     useDefinitionActions();
   const fileInput = useRef<HTMLInputElement>(null);
+  const { storage, queryKey } = useWorkspace();
 
   const catalog = useQuery({
     meta: { errorMessage: messages.assets.loadFailed },
-    queryKey: ["dashboard-assets", dashboardId],
-    queryFn: () => loadAssetCatalog(dashboardId),
+    queryKey: queryKey("dashboard-assets", dashboardId),
+    queryFn: () => storage.loadAssetCatalog(dashboardId),
   });
   const deletionDisabledReason = getLogicDeletionDisabledReason(dashboard, selected, isPending);
 

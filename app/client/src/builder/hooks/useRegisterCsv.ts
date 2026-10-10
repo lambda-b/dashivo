@@ -2,8 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@dashivo/shared-lib/query";
 import { dashboardQueryKey, useDashboardId } from "@/app/context/useDashboard";
 import { ApiError } from "@/api/request";
-import { saveDashboard } from "@/api/dashboard";
-import { uploadInputSource } from "@/api/python";
+import { useWorkspace } from "@/storage/context";
 import { createUniqueIndexedName } from "@dashivo/shared-utils/createUniqueIndexedName";
 import type { DashboardSchema } from "@shared/dashboard";
 import { messages } from "@/messages";
@@ -11,11 +10,13 @@ import { messages } from "@/messages";
 export const useRegisterCsv = () => {
   const client = useQueryClient();
   const dashboardId = useDashboardId();
-  const queryKey = [...dashboardQueryKey, dashboardId] as const;
+  const { storage, queryKey: workspaceKey, scope } = useWorkspace();
+  const queryKey = workspaceKey(...dashboardQueryKey, dashboardId);
 
   return useMutation({
+    mutationKey: ["workspace"],
     meta: { errorMessage: messages.csv.registerFailed },
-    scope: { id: `dashboard-save:${dashboardId}` },
+    scope: { id: `dashboard-save:${scope}:${dashboardId}` },
     retry: false,
     onMutate: () => client.cancelQueries({ queryKey }),
     mutationFn: async (file: File) => {
@@ -23,14 +24,14 @@ export const useRegisterCsv = () => {
       const dashboard = client.getQueryData<DashboardSchema>(queryKey);
       if (!dashboard) throw new Error("Dashboard is not loaded.");
 
-      const path = await uploadInputSource(dashboardId, file);
+      const path = await storage.uploadInputSource(dashboardId, file);
       const id = createUniqueIndexedName(
         dashboard.analysis.inputs.map((input) => input.id),
         "input-",
       );
 
       try {
-        return await saveDashboard(dashboardId, {
+        return await storage.saveDashboard(dashboardId, {
           analysis: {
             ...dashboard.analysis,
             inputs: [...dashboard.analysis.inputs, { id, type: "csv", path }],
@@ -46,8 +47,9 @@ export const useRegisterCsv = () => {
     },
     onSuccess: (dashboard) => {
       client.setQueryData(queryKey, dashboard);
-      void client.invalidateQueries({ queryKey: ["dashboards"] });
+      void client.invalidateQueries({ queryKey: workspaceKey("dashboards") });
     },
-    onSettled: () => client.invalidateQueries({ queryKey: ["dashboard-assets", dashboardId] }),
+    onSettled: () =>
+      client.invalidateQueries({ queryKey: workspaceKey("dashboard-assets", dashboardId) }),
   });
 };

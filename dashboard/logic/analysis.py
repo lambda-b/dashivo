@@ -9,6 +9,10 @@ def execute(inputs: dict[str, pd.DataFrame], params: dict):
     if region != "All":
         frame = frame[frame["region"] == region]
 
+    period = params.get("sales_period", {})
+    dates = pd.to_datetime(frame["date"])
+    frame = frame[dates.between(period.get("from") or dates.min(), period.get("to") or dates.max())]
+
     summary = (
         frame.groupby("date", as_index=False)
         .agg(revenue=("revenue", "sum"), orders=("orders", "sum"))

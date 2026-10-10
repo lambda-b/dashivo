@@ -1,0 +1,119 @@
+{
+  "revisionId": "379e534657b945daace4f64112bca9fdb0932e2fac2022823857c9a05b5785d8",
+  "previousRevisionIds": ["368ac695a8801fe752dda2662652acc978f37aff0d05f23700f2424ded653dd1"],
+  "dashboard": {
+    "title": "Serialized save",
+    "description": "地域別の売上と注文状況を、ブラウザ内Pythonで集計します。",
+    "analysis": {
+      "inputs": [
+        {
+          "id": "sales",
+          "type": "csv",
+          "path": "data/sales-overview/raw/sales.csv"
+        },
+        {
+          "id": "input-1",
+          "type": "csv",
+          "path": "data/sales-overview/raw/sales.csv"
+        }
+      ],
+      "logic": [
+        {
+          "id": "sales-analysis",
+          "type": "python",
+          "path": "logic/analysis.py"
+        },
+        {
+          "id": "sales-revenue",
+          "type": "python",
+          "path": "logic/revenue.py"
+        },
+        {
+          "id": "sales-orders",
+          "type": "python",
+          "path": "logic/orders.py"
+        },
+        {
+          "id": "sales-table",
+          "type": "python",
+          "path": "logic/table.py"
+        }
+      ]
+    },
+    "controls": [
+      {
+        "type": "radio",
+        "key": "region",
+        "displayName": "営業地域",
+        "defaultValue": "All",
+        "options": [
+          {
+            "label": "すべて",
+            "value": "All"
+          },
+          {
+            "label": "East",
+            "value": "East"
+          },
+          {
+            "label": "West",
+            "value": "West"
+          }
+        ],
+        "layout": "horizontal"
+      },
+      {
+        "type": "date-range",
+        "key": "sales_period",
+        "displayName": "対象期間",
+        "defaultValue": {
+          "from": "2026-01-01",
+          "to": "2026-03-31"
+        }
+      }
+    ],
+    "tabs": [
+      {
+        "id": "summary",
+        "label": "サマリー",
+        "contents": [
+          {
+            "id": "revenue",
+            "logic": "sales-revenue"
+          },
+          {
+            "id": "orders",
+            "logic": "sales-orders"
+          }
+        ]
+      },
+      {
+        "id": "charts",
+        "label": "グラフ",
+        "contents": [
+          {
+            "id": "monthly-revenue",
+            "logic": "sales-analysis"
+          }
+        ]
+      },
+      {
+        "id": "tables",
+        "label": "テーブル",
+        "contents": [
+          {
+            "id": "monthly-summary",
+            "logic": "sales-table"
+          }
+        ]
+      }
+    ]
+  },
+  "sources": {
+    "data/sales-overview/raw/sales.csv": "date,region,revenue,orders\n2026-01-01,East,125000,42\n2026-01-01,West,98000,34\n2026-02-01,East,141000,47\n2026-02-01,West,110000,38\n2026-03-01,East,153000,51\n2026-03-01,West,127000,43\n",
+    "logic/analysis.py": "from dashivo import plot\nimport numpy as np\nimport pandas as pd\n\n\ndef execute(inputs: dict[str, pd.DataFrame], params: dict):\n    frame = inputs[\"sales\"]\n    region = params.get(\"region\", \"All\")\n    if region != \"All\":\n        frame = frame[frame[\"region\"] == region]\n\n    period = params.get(\"sales_period\", {})\n    dates = pd.to_datetime(frame[\"date\"])\n    frame = frame[dates.between(period.get(\"from\") or dates.min(), period.get(\"to\") or dates.max())]\n\n    summary = (\n        frame.groupby(\"date\", as_index=False)\n        .agg(revenue=(\"revenue\", \"sum\"), orders=(\"orders\", \"sum\"))\n        .sort_values(\"date\")\n    )\n    summary[\"average_order_value\"] = np.divide(\n        summary[\"revenue\"], summary[\"orders\"]\n    ).round(2)\n\n    fig = plot.line(summary, x=\"date\", y=\"revenue\")\n    fig.title(\"月次売上\")\n    fig.legend(visible=False)\n    fig.y_axis(format=\"number\")\n    return fig\n",
+    "logic/revenue.py": "from dashivo import plot\nimport pandas as pd\n\n\ndef execute(inputs: dict[str, pd.DataFrame], params: dict):\n    data = inputs[\"sales\"]\n    region = params.get(\"region\", \"All\")\n    if region != \"All\":\n        data = data[data[\"region\"] == region]\n\n    period = params.get(\"sales_period\", {})\n    dates = pd.to_datetime(data[\"date\"])\n    data = data[dates.between(period.get(\"from\") or dates.min(), period.get(\"to\") or dates.max())]\n\n    fig = plot.metric(int(data[\"revenue\"].sum()), format=\"currency\", emphasis=\"strong\")\n    fig.title(\"売上\")\n    return fig\n",
+    "logic/orders.py": "from dashivo import plot\nimport pandas as pd\n\n\ndef execute(inputs: dict[str, pd.DataFrame], params: dict):\n    data = inputs[\"sales\"]\n    region = params.get(\"region\", \"All\")\n    if region != \"All\":\n        data = data[data[\"region\"] == region]\n\n    period = params.get(\"sales_period\", {})\n    dates = pd.to_datetime(data[\"date\"])\n    data = data[dates.between(period.get(\"from\") or dates.min(), period.get(\"to\") or dates.max())]\n\n    fig = plot.metric(int(data[\"orders\"].sum()), format=\"number\", emphasis=\"accent\")\n    fig.title(\"注文件数\")\n    return fig\n",
+    "logic/table.py": "from dashivo import plot\nimport numpy as np\nimport pandas as pd\n\n\ndef execute(inputs: dict[str, pd.DataFrame], params: dict):\n    frame = inputs[\"sales\"]\n    region = params.get(\"region\", \"All\")\n    if region != \"All\":\n        frame = frame[frame[\"region\"] == region]\n\n    period = params.get(\"sales_period\", {})\n    dates = pd.to_datetime(frame[\"date\"])\n    frame = frame[dates.between(period.get(\"from\") or dates.min(), period.get(\"to\") or dates.max())]\n\n    summary = (\n        frame.groupby(\"date\", as_index=False)\n        .agg(revenue=(\"revenue\", \"sum\"), orders=(\"orders\", \"sum\"))\n        .sort_values(\"date\")\n    )\n    summary[\"average_order_value\"] = np.divide(\n        summary[\"revenue\"], summary[\"orders\"]\n    ).round(2)\n\n    fig = plot.table(summary)\n    fig.title(\"月次サマリー\")\n    fig.column(\"date\", label=\"月\")\n    fig.column(\"revenue\", label=\"売上\", format=\"currency\")\n    fig.column(\"orders\", label=\"注文件数\", format=\"number\")\n    fig.column(\"average_order_value\", label=\"平均注文額\", format=\"currency\")\n    return fig\n"
+  }
+}

@@ -8,13 +8,16 @@ import { SelectList } from "@/components/primitives/SelectList";
 import { useCopyReference } from "@/builder/hooks/useCopyReference";
 import { QueryBoundary } from "@/components/feedback/QueryBoundary";
 import { messages } from "@/messages";
+import { useWorkspace } from "@/storage/context";
 
 const InputRows = ({ inputId }: { inputId?: string }) => {
   const dashboard = useSavedDashboard();
   const dashboardId = useDashboardId();
+  const { storage, queryKey } = useWorkspace();
   const { data } = useSuspenseQuery({
-    queryKey: ["input-preview", dashboardId, dashboard.analysis.inputs],
-    queryFn: async () => analysisPort.inspect(await loadInputs(dashboardId, dashboard.analysis)),
+    queryKey: queryKey("input-preview", dashboardId, dashboard.analysis.inputs),
+    queryFn: async () =>
+      analysisPort.inspect(await loadInputs(dashboardId, dashboard.analysis, storage)),
     meta: { errorMessage: messages.csv.loadFailed, errorBoundary: true },
   });
   const rows = inputId ? (data[inputId] ?? []) : [];

@@ -4,7 +4,7 @@ import { AppBrand } from "@/components/AppBrand";
 import { useSuspenseQuery } from "@dashivo/shared-lib/query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSavedDashboard } from "@/app/context/useDashboard";
-import { loadPythonSource } from "@/api/python";
+import { useWorkspace } from "@/storage/context";
 import { Definitions } from "@/builder/workbench/definitions/Definitions";
 import { CodeWorkspace } from "@/builder/workbench/code/CodeWorkspace";
 import { useDashboardId } from "@/app/context/useDashboard";
@@ -13,9 +13,10 @@ import { messages } from "@/messages";
 
 const PythonSource = ({ logicId, path }: { logicId: string; path: string }) => {
   const dashboardId = useDashboardId();
+  const { storage, queryKey } = useWorkspace();
   const { data } = useSuspenseQuery({
-    queryKey: ["python-source", dashboardId, path],
-    queryFn: () => loadPythonSource(dashboardId, path),
+    queryKey: queryKey("python-source", dashboardId, path),
+    queryFn: () => storage.loadPythonSource(dashboardId, path),
     meta: { errorMessage: messages.logic.loadFailed, errorBoundary: true },
   });
 
