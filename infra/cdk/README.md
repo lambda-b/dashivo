@@ -6,6 +6,7 @@
 
 - `DashivoWeb`：Web配信用の非公開S3、CloudFront OAC、DNS検証付きACM証明書、A/AAAAレコード。
 - `DashivoIdentity`：東京リージョンのCognito User Pool、公開クライアント、認可コード方式のHosted UI。削除保護・10分のAccess/ID token・1日のRefresh token・ローテーションを設定する。
+- `DashivoStorage`：東京リージョンのDynamoDBと、CSV・生成HTML・アクセスログ用の非公開S3。保存先はWeb/APIから独立した削除保護付きスタックとする。RepositoryとLambdaへの接続はまだ行っていない。
 - APIの認証境界を実装。`X-Dashivo-Token` のAccess tokenを `aws-jwt-verify` で検証し、検証済み `sub` ごとのRepositoryとサービスをリクエストに紐づける。ローカルAPIは従来どおり認証なしで使用できる。
 - 公開用Editorのログイン/ログアウト・認可コード+PKCE・セッション更新をAmplify SDKで実装。トークンはタブ単位の `sessionStorage` に保存し、APIへAccess tokenだけを送信する。ログアウト時はQuery cacheも破棄する。
 - 未認証では1件の試用ダッシュボードをIndexedDBへ保存する。初回は固定サンプルを表示し、その既知の版は登録対象外とする。ログイン時に編集済みの版をCSV・Pythonとまとめて自動登録し、登録済みのユーザー・revisionIdは重複登録しない。ログイン後はサーバーAPIへ切り替え、複数作成・HTMLダウンロードが可能になる。
@@ -56,6 +57,34 @@ pnpm --filter @dashivo/infra-cdk exec cdk bootstrap aws://154539905353/ap-northe
 6. GitHub OIDCデプロイ、EditorのS3同期・CloudFront invalidation。HTMLは短いTTL、hash付きアセットは長いTTLを設定する。
 7. 本番公開前にCSPをWorker/WASM/Cognitoに合わせて設定し、WAFの費用・レート制限、ログ・アラーム、バックアップを決定する。Shield AdvancedやWAFをこの初期スタックで自動購入しない。
 8. 試用版の自動登録APIを本番Repositoryへ接続する。同じユーザー・revisionIdの再送は既存登録を返し、サーバー側の編集内容を上書きしない。定義・CSV・Pythonの原子的な保存を保証する。
+
+## 保存基盤と次の実装境界
+
+`DashivoStorage` は保存先の定義だけを担当する。APIのサービスやトランザクション制御をCDKスタックに置かず、後続のAWS Repositoryを既存のサーバーへ注入する。Web・Cognitoの既存Construct IDは変更していない。
+
+| リソース     | 用途                             | 現在の設定                                                                                                                |
+| ------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `Dashboards` | JSON定義・Python・CSV参照情報    | 単一リージョン、オンデマンド、AWS所有キーで暗号化、削除保護・削除時保持。GSI・Streams・レプリカ追加なし。                 |
+| `Assets`     | ダッシュボードごとのCSV          | 非公開、S3管理キーで暗号化、HTTPS必須、ACL無効。データ自体は自動失効させない。未完了multipart uploadのみ1日後に中止対象。 |
+| `Downloads`  | 生成した単一HTML                 | 非公開・暗号化・HTTPS必須・ACL無効。オブジェクトは1日後に削除対象。CSVとはバケットを分け、誤失効を防ぐ。                  |
+| `AccessLogs` | Assets/DownloadsのS3アクセスログ | 非公開・暗号化・HTTPS必須・ACL無効。14日後に削除対象。                                                                    |
+
+S3 Lifecycleは削除時刻を保証しない。ダウンロードのアクセス期限は、後続実装で認証後に発行する短時間の署名URLによって別途制御する。保存用バケットはCloudFrontへ公開しない。
+
+費用優先でDynamoDB PITR・S3バージョニング・カスタマー管理KMSキーは有効化していない。**削除時保持はバックアップではない**ため、誤更新・オブジェクト削除からの復旧は保証しない。公開前にバックアップ方針を決める。オンデマンド課金も料金上限を意味しない。
+
+後続Repositoryのキー設計は以下を前提とする。キー生成はCDKではなくRepository側に実装する。
+
+- `pk = USER#<検証済みCognito sub>`。クライアントから所有者IDを受け取らない。
+- 定義は `sk = DASHBOARD#<dashboard-id>`。一覧はユーザーのpartitionに対するprefix Queryで取得し、全ユーザーのScanは行わない。
+- Pythonは `sk = LOGIC#<dashboard-id>#<logic-id>`。CSV参照情報は `sk = CSV#<dashboard-id>#<input-id>` として定義と分離する。
+- S3は `users/<sub>/dashboards/<dashboard-id>/...` を起点とする。ユーザーが渡すファイルパスだけで保存先を決めない。
+- JSONとPythonの更新は、`expectedVersion` の条件付き書き込みとDynamoDBトランザクションで公開する。Lambdaプロセス内の排他制御は使わない。
+- CSVは不変のオブジェクトキーへ保存した後、参照情報をDynamoDBで確定する。S3とDynamoDBをまたぐDBトランザクションはないため、未確定オブジェクトの扱い・再試行・冪等登録もRepository実装で検証する。
+
+次はAWS Repositoryとその競合・ユーザー分離テストを実装し、その後にLambda Function URL/OAC、HTMLの署名URLダウンロード、GitHub OIDCデプロイの順に接続する。
+
+仕様確認：[CDK TableV2](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.TableV2.html)、[S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html)。
 
 Google連携にはGoogle OAuthのクライアントIDとSecretが必要。Secretはチャット・Git・CDK contextへ載せず、AWSのSecret管理に登録する。
 

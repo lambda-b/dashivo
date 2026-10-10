@@ -2,6 +2,7 @@ import { App, Tags } from "aws-cdk-lib";
 import configuration from "@dashivo/infra-cdk/configuration" with { type: "json" };
 import { createWebStack } from "@dashivo/infra-cdk/stacks/web";
 import { createIdentityStack } from "@dashivo/infra-cdk/stacks/identity";
+import { createStorageStack } from "@dashivo/infra-cdk/stacks/storage";
 
 const app = new App();
 const googleClientId = app.node.tryGetContext("googleClientId") as string | undefined;
@@ -24,6 +25,11 @@ createIdentityStack(app, "DashivoIdentity", {
     googleClientId && googleSecretArn
       ? { clientId: googleClientId, secretArn: googleSecretArn }
       : undefined,
+});
+
+createStorageStack(app, "DashivoStorage", {
+  env: { account: configuration.deployment.account, region: "ap-northeast-1" },
+  terminationProtection: true,
 });
 
 Tags.of(app).add("Application", "dashivo");

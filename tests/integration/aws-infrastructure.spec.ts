@@ -3,6 +3,100 @@ import { App } from "aws-cdk-lib";
 import { Match, Template } from "aws-cdk-lib/assertions";
 import { createWebStack } from "@dashivo/infra-cdk/stacks/web";
 import { createIdentityStack } from "@dashivo/infra-cdk/stacks/identity";
+import { createStorageStack } from "@dashivo/infra-cdk/stacks/storage";
+import configuration from "@dashivo/infra-cdk/configuration" with { type: "json" };
+
+const storage = Template.fromStack(
+  createStorageStack(new App({ context: configuration.context }), "StorageTest", {
+    env: { account: "111111111111", region: "ap-northeast-1" },
+    terminationProtection: true,
+  }).stack,
+);
+
+test("dashboard storage uses a single-region on-demand table with retained user data", () => {
+  storage.resourceCountIs("AWS::DynamoDB::GlobalTable", 1);
+  storage.hasResourceProperties("AWS::DynamoDB::GlobalTable", {
+    BillingMode: "PAY_PER_REQUEST",
+    KeySchema: [
+      { AttributeName: "pk", KeyType: "HASH" },
+      { AttributeName: "sk", KeyType: "RANGE" },
+    ],
+    AttributeDefinitions: [
+      { AttributeName: "pk", AttributeType: "S" },
+      { AttributeName: "sk", AttributeType: "S" },
+    ],
+    SSESpecification: { SSEEnabled: false },
+    Replicas: [
+      Match.objectLike({
+        Region: "ap-northeast-1",
+        DeletionProtectionEnabled: true,
+        PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: false },
+      }),
+    ],
+    GlobalSecondaryIndexes: Match.absent(),
+  });
+  const table = Object.values(storage.findResources("AWS::DynamoDB::GlobalTable"))[0];
+  expect(table.DeletionPolicy).toBe("Retain");
+  expect(table.UpdateReplacePolicy).toBe("Retain");
+  storage.resourceCountIs("AWS::KMS::Key", 0);
+});
+
+test("CSV and generated HTML use separate private encrypted buckets with limited retention", () => {
+  storage.resourceCountIs("AWS::S3::Bucket", 3);
+  for (const bucket of Object.values(storage.findResources("AWS::S3::Bucket"))) {
+    expect(bucket.DeletionPolicy).toBe("Retain");
+    expect(bucket.UpdateReplacePolicy).toBe("Retain");
+    expect(bucket.Properties.PublicAccessBlockConfiguration).toEqual({
+      BlockPublicAcls: true,
+      BlockPublicPolicy: true,
+      IgnorePublicAcls: true,
+      RestrictPublicBuckets: true,
+    });
+    expect(bucket.Properties.BucketEncryption.ServerSideEncryptionConfiguration).toEqual([
+      { ServerSideEncryptionByDefault: { SSEAlgorithm: "AES256" } },
+    ]);
+    expect(bucket.Properties.OwnershipControls).toEqual({
+      Rules: [{ ObjectOwnership: "BucketOwnerEnforced" }],
+    });
+    expect(bucket.Properties.WebsiteConfiguration).toBeUndefined();
+    expect(bucket.Properties.VersioningConfiguration).toBeUndefined();
+  }
+  storage.hasResourceProperties("AWS::S3::Bucket", {
+    LoggingConfiguration: Match.objectLike({ LogFilePrefix: "assets/" }),
+    LifecycleConfiguration: {
+      Rules: [{ Status: "Enabled", AbortIncompleteMultipartUpload: { DaysAfterInitiation: 1 } }],
+    },
+  });
+  storage.hasResourceProperties("AWS::S3::Bucket", {
+    LoggingConfiguration: Match.objectLike({ LogFilePrefix: "downloads/" }),
+    LifecycleConfiguration: {
+      Rules: [
+        {
+          Status: "Enabled",
+          ExpirationInDays: 1,
+          AbortIncompleteMultipartUpload: { DaysAfterInitiation: 1 },
+        },
+      ],
+    },
+  });
+  storage.hasResourceProperties("AWS::S3::Bucket", {
+    LifecycleConfiguration: { Rules: [{ Status: "Enabled", ExpirationInDays: 14 }] },
+  });
+  storage.resourceCountIs("AWS::Lambda::Function", 0);
+  storage.resourceCountIs("AWS::EC2::NatGateway", 0);
+  const policies = Object.values(storage.findResources("AWS::S3::BucketPolicy"));
+  expect(policies).toHaveLength(3);
+  for (const policy of policies) {
+    expect(policy.Properties.PolicyDocument.Statement).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          Effect: "Deny",
+          Condition: { Bool: { "aws:SecureTransport": "false" } },
+        }),
+      ]),
+    );
+  }
+});
 
 const template = Template.fromStack(
   createWebStack(new App(), "WebTest", {
