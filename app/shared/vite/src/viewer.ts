@@ -32,10 +32,6 @@ export const createViewerViteConfiguration = ({
       alias: {
         "#generated/assets": generatedAssetsPath,
         "@/app/App": viewerEntryPath,
-        "#dashboard/dashboard.json": dashboardPath,
-        "virtual:dashivo/dashboard": fileURLToPath(
-          new URL("./viewer/virtual/dashboard.ts", import.meta.url),
-        ),
       },
     },
     plugins: [

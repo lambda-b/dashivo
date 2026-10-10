@@ -1,22 +1,13 @@
 import { dashboardIdSchema, inputSourcePathSchema } from "@dashivo/shared-schema/dashboard";
 import { inputSourceUploadQuerySchema } from "@dashivo/shared-schema/api";
 import type { DashboardAssetRepository } from "@dashivo/server/models/dashboard-repository";
-import { InputSourceAccessDenied } from "@dashivo/server/models/input-source-access-denied";
-
-const ownedInputPath = (dashboardId: string, path: string) => {
-  const id = dashboardIdSchema.parse(dashboardId);
-  const sourcePath = inputSourcePathSchema.parse(path);
-
-  if (!sourcePath.startsWith(`data/${id}/`)) throw new InputSourceAccessDenied();
-
-  return { id, sourcePath };
-};
-
 export const createDashboardAssetService = (repository: DashboardAssetRepository) => ({
   list: (dashboardId: string) => repository.listAssets(dashboardIdSchema.parse(dashboardId)),
   readInput: (dashboardId: string, path: string) => {
-    const input = ownedInputPath(dashboardId, path);
-    return repository.readInput(input.id, input.sourcePath);
+    return repository.readInput(
+      dashboardIdSchema.parse(dashboardId),
+      inputSourcePathSchema.parse(path),
+    );
   },
   createInput: (dashboardId: string, fileName: string, source: string) =>
     repository.createInput(

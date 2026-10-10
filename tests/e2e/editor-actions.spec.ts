@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import source from "#dashboard/dashboard.json" with { type: "json" };
+import { createEmptyDashboard } from "@dashivo/shared-schema/dashboard";
 
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/dashboards/sales-overview", (route) =>
@@ -7,7 +8,44 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-test("dashboard creation errors use common notification without losing the title", async ({
+test("creates from an ID alone and displays the saved header title in the dashboard list", async ({
+  page,
+}) => {
+  let dashboard = createEmptyDashboard("Untitled");
+  let created = false;
+  const item = () => ({ id: "new-report", title: dashboard.title, updatedAt: "2026-10-11" });
+  await page.route("**/api/dashboards", async (route) => {
+    if (route.request().method() === "POST") {
+      expect(route.request().postDataJSON()).toEqual({ id: "new-report" });
+      created = true;
+      return route.fulfill({ status: 201, json: { dashboard: item() } });
+    }
+    return route.fulfill({ json: { dashboards: created ? [item()] : [] } });
+  });
+  await page.route("**/api/dashboards/new-report", async (route) => {
+    if (route.request().method() === "PUT") {
+      dashboard = { ...dashboard, ...route.request().postDataJSON().settings };
+    }
+    return route.fulfill({ json: { dashboard } });
+  });
+
+  await page.goto("http://127.0.0.1:3030/");
+  await expect(page.getByPlaceholder("タイトルを入力")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "作成", exact: true })).toBeDisabled();
+  await page.getByLabel("ダッシュボードID").fill("new-report");
+  await page.getByRole("button", { name: "作成", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Untitled", exact: true })).toBeVisible();
+  const list = page.getByRole("navigation", { name: "ダッシュボード一覧" });
+  await expect(list.getByRole("button", { name: "Untitled", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "ヘッダーを編集" }).click();
+  await page.getByLabel("タイトル", { exact: true }).fill("営業レポート");
+  await page.getByRole("button", { name: "dashboard.jsonを保存" }).click();
+  await expect(list.getByRole("button", { name: "営業レポート", exact: true })).toBeVisible();
+  await expect(list.getByRole("button", { name: "Untitled", exact: true })).toHaveCount(0);
+});
+
+test("dashboard creation errors use common notification without losing the ID", async ({
   page,
 }) => {
   await page.route("**/api/dashboards", (route) =>
@@ -16,10 +54,10 @@ test("dashboard creation errors use common notification without losing the title
       : route.continue(),
   );
   await page.goto("http://127.0.0.1:3030/#/d/sales-overview");
-  await page.getByLabel("新しいダッシュボード").fill("Keep this title");
+  await page.getByLabel("ダッシュボードID").fill("created");
   await page.getByRole("button", { name: "作成", exact: true }).click();
   await expect(page.getByText("Create failed", { exact: true })).toHaveCount(1);
-  await expect(page.getByLabel("新しいダッシュボード")).toHaveValue("Keep this title");
+  await expect(page.getByLabel("ダッシュボードID")).toHaveValue("created");
   await expect(page.getByRole("button", { name: "作成", exact: true })).toBeEnabled();
 });
 

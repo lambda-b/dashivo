@@ -12,11 +12,10 @@ test("keeps settings drafts while using the latest saved analysis definition", a
   });
   await page.route("**/api/dashboards/sales-overview/sources/csv**", (route) => {
     if (route.request().method() === "POST")
-      return route.fulfill({ status: 201, json: { path: "data/sales-overview/extra.csv" } });
+      return route.fulfill({ status: 201, json: { path: "data/extra.csv" } });
 
     const path = new URL(route.request().url()).searchParams.get("path");
-    if (path === "data/sales-overview/extra.csv")
-      return route.fulfill({ json: { source: "value\n1\n" } });
+    if (path === "data/extra.csv") return route.fulfill({ json: { source: "value\n1\n" } });
 
     return route.continue();
   });
@@ -40,7 +39,7 @@ test("keeps settings drafts while using the latest saved analysis definition", a
   await expect(page.getByText("保存しました", { exact: true })).toBeVisible();
   expect(dashboard.title).toBe("Keep settings draft");
   expect(dashboard.analysis.inputs).toHaveLength(source.analysis.inputs.length + 1);
-  expect(dashboard.analysis.inputs.at(-1)?.path).toBe("data/sales-overview/extra.csv");
+  expect(dashboard.analysis.inputs.at(-1)?.path).toBe("data/extra.csv");
 });
 
 test("validates settings before saving or placing content and keeps invalid drafts editable", async ({

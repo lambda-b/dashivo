@@ -9,7 +9,7 @@ import { configureServerRoutes } from "@dashivo/server/router";
 import { DashboardRevisionConflict } from "@dashivo/server/models/dashboard-revision-conflict";
 import { DashboardNotFound } from "@dashivo/server/models/dashboard-not-found";
 import { InputSourceConflict } from "@dashivo/server/models/input-source-conflict";
-import { InputSourceAccessDenied } from "@dashivo/server/models/input-source-access-denied";
+import { DashboardIdConflict } from "@dashivo/server/models/dashboard-id-conflict";
 
 export const createServerApp = (
   dependencies: ServerDependencyProvider,
@@ -37,8 +37,8 @@ export const createServerApp = (
       return context.json({ error: error.message }, 409);
     }
 
-    if (error instanceof InputSourceAccessDenied) {
-      return context.json({ error: error.message }, 403);
+    if (error instanceof DashboardIdConflict) {
+      return context.json({ error: error.message }, 409);
     }
 
     console.error(error);

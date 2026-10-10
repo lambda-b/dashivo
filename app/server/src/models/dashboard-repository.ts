@@ -14,7 +14,7 @@ export interface DashboardSnapshot {
 
 export interface DashboardDefinitionRepository {
   listDashboards(): Promise<DashboardListItem[]>;
-  createDashboard(preferredId: string, dashboard: DashboardSchema): Promise<DashboardListItem>;
+  createDashboard(id: string, dashboard: DashboardSchema): Promise<DashboardListItem>;
   readDashboard(id: string): Promise<DashboardSnapshot>;
   writeDashboard(id: string, dashboard: DashboardSchema, expectedVersion: string): Promise<void>;
   /** Publish definition and sources together; an existing ID is returned without overwriting it. */

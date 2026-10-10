@@ -4,6 +4,8 @@ import { IconButton } from "@/components/primitives/IconButton";
 import { FormField } from "@/components/primitives/FormField";
 import { TextInput } from "@/components/primitives/TextInput";
 
+import { dashboardIdSchema } from "@shared/dashboard";
+import type { DashboardCreate } from "@shared/api";
 import { useState, type ReactNode } from "react";
 import { Menu, Plus, X } from "lucide-react";
 
@@ -17,10 +19,11 @@ export const DashboardSidebar = ({
   open: boolean;
   children: ReactNode;
   creating: boolean;
-  onCreate: (title: string) => void;
+  onCreate: (definition: DashboardCreate) => void;
   onOpenChange: (open: boolean) => void;
 }) => {
-  const [title, setTitle] = useState("");
+  const [id, setId] = useState("");
+  const validId = dashboardIdSchema.safeParse(id).success;
 
   return open ? (
     <aside className="fixed inset-y-0 left-0 z-40 flex w-[min(18rem,85vw)] flex-col border-r border-stone-200 bg-white shadow-sm">
@@ -43,20 +46,21 @@ export const DashboardSidebar = ({
         className="grid gap-2 border-t border-stone-200 p-3"
         onSubmit={(event) => {
           event.preventDefault();
-          if (title.trim()) onCreate(title.trim());
+          if (validId) onCreate({ id });
         }}
       >
-        <FormField label="新しいダッシュボード">
+        <h3 className="text-sm font-semibold">新しいダッシュボード</h3>
+        <FormField label="ダッシュボードID">
           <TextInput
-            id="new-dashboard-title"
-            maxLength={120}
-            onChange={setTitle}
-            placeholder="タイトルを入力"
-            value={title}
+            id="new-dashboard-id"
+            onChange={setId}
+            placeholder="sales-overview"
+            value={id}
           />
         </FormField>
+        <p className="text-xs text-stone-500">半角英小文字・数字・ハイフンで指定してください。</p>
         <Button
-          disabled={!title.trim()}
+          disabled={!validId}
           icon={Plus}
           pending={creating}
           size="regular"

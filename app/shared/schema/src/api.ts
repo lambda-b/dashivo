@@ -32,7 +32,11 @@ export const dashboardListItemSchema = z.object({
   sample: z.boolean().optional(),
 });
 export const dashboardListSchema = z.array(dashboardListItemSchema);
-export const dashboardCreateSchema = z.object({ title: z.string().trim().min(1).max(120) });
+export type DashboardCreate = z.infer<typeof dashboardCreateSchema>;
+
+export const dashboardCreateSchema = z.object({
+  id: dashboardIdSchema,
+});
 
 export const dashboardRegistrationSchema = z
   .object({

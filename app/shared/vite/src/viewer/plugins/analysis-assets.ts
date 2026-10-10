@@ -6,6 +6,8 @@ import { dashboardSchema } from "@dashivo/shared-schema/dashboard";
 
 const analysisAssetsModuleId = "virtual:dashivo/analysis-assets";
 const resolvedModuleId = `\0${analysisAssetsModuleId}`;
+const dashboardModuleId = "virtual:dashivo/dashboard";
+const resolvedDashboardModuleId = `\0${dashboardModuleId}`;
 
 const resolveDashboardAsset = (dashboardRoot: string, assetPath: string) => {
   const resolvedPath = path.resolve(dashboardRoot, assetPath);
@@ -19,12 +21,19 @@ const resolveDashboardAsset = (dashboardRoot: string, assetPath: string) => {
 export const analysisAssets = (dashboardPath: string, dashboardRoot: string): Plugin => ({
   name: "dashivo-analysis-assets",
   enforce: "pre",
-  resolveId: (id) => (id === analysisAssetsModuleId ? resolvedModuleId : undefined),
+  resolveId: (id) => {
+    if (id === analysisAssetsModuleId) return resolvedModuleId;
+    if (id === dashboardModuleId) return resolvedDashboardModuleId;
+  },
   async load(id) {
-    if (id !== resolvedModuleId) return undefined;
+    if (id !== resolvedModuleId && id !== resolvedDashboardModuleId) return undefined;
 
     this.addWatchFile(dashboardPath);
     const dashboard = dashboardSchema.parse(JSON.parse(await fs.readFile(dashboardPath, "utf8")));
+    if (id === resolvedDashboardModuleId) {
+      return `export const dashboard = ${JSON.stringify(dashboard)};`;
+    }
+
     const imports: string[] = [];
 
     const inputs = new Map(

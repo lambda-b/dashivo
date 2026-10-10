@@ -161,7 +161,7 @@ test("shared dialogs close on Escape, restore focus, and prevent dismissal while
   });
   await page.route("**/api/dashboards/sales-overview/sources/python**", (route) => {
     const path = new URL(route.request().url()).searchParams.get("path");
-    return path === "logic/sales-overview/logic-1.py"
+    return path === "logic/logic-1.py"
       ? route.fulfill({
           json: {
             source:

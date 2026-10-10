@@ -71,13 +71,13 @@ for (const failFirstSave of [false, true]) {
     await page.route("**/api/dashboards/sales-overview/assets", (route) =>
       route.fulfill({
         json: {
-          csv: ["data/sales-overview/raw/sales.csv"],
+          csv: ["data/raw/sales.csv"],
           python: ["logic/analysis.py"],
         },
       }),
     );
     await page.route("**/api/dashboards/sales-overview/sources/csv**", (route) =>
-      route.fulfill({ status: 201, json: { path: "data/sales-overview/new.csv" } }),
+      route.fulfill({ status: 201, json: { path: "data/new.csv" } }),
     );
 
     await page.goto("http://127.0.0.1:3030");

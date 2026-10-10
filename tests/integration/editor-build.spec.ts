@@ -1,7 +1,44 @@
 import path from "node:path";
+import fs from "node:fs/promises";
+import os from "node:os";
 import { expect, test } from "@playwright/test";
 import { build } from "vite";
 import { createEditorViteConfiguration } from "@dashivo/shared-vite/editor";
+import { analysisAssets } from "@dashivo/shared-vite/viewer/plugins/analysis-assets";
+import { createEmptyDashboard } from "@dashivo/shared-schema/dashboard";
+
+test("viewer embeds the selected definition without a fixed dashboard JSON import", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-viewer-definition-"));
+  try {
+    for (const title of ["First dashboard", "Second dashboard"]) {
+      const dashboardPath = path.join(root, "dashboard.json");
+      await fs.writeFile(dashboardPath, JSON.stringify(createEmptyDashboard(title)));
+      const result = await build({
+        configFile: false,
+        logLevel: "silent",
+        plugins: [analysisAssets(dashboardPath, root)],
+        build: {
+          write: false,
+          minify: false,
+          rollupOptions: {
+            input: "virtual:dashivo/dashboard",
+            preserveEntrySignatures: "strict",
+          },
+        },
+      });
+      expect(Array.isArray(result)).toBe(false);
+      if ("output" in result) {
+        const chunks = result.output.filter((item) => item.type === "chunk");
+        expect(chunks.map((chunk) => chunk.code).join("\n")).toContain(title);
+        expect(chunks.flatMap((chunk) => Object.keys(chunk.modules))).toEqual([
+          "\0virtual:dashivo/dashboard",
+        ]);
+      }
+    }
+  } finally {
+    await fs.rm(root, { recursive: true });
+  }
+});
 
 test("online editor bundles the fixed sample, not mutable local dashboard files", async () => {
   const result = await build({

@@ -1,17 +1,17 @@
 {
-  "title": "Serialized save",
+  "title": "売上ダッシュボード（サンプル）",
   "description": "地域別の売上と注文状況を、ブラウザ内Pythonで集計します。",
   "analysis": {
     "inputs": [
       {
         "id": "sales",
         "type": "csv",
-        "path": "data/sales-overview/raw/sales.csv"
+        "path": "data/raw/sales.csv"
       },
       {
         "id": "input-1",
         "type": "csv",
-        "path": "data/sales-overview/raw/sales.csv"
+        "path": "data/raw/sales.csv"
       }
     ],
     "logic": [

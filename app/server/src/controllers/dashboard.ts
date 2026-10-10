@@ -19,8 +19,8 @@ export const listDashboards: Handler<ServerEnv> = async (context) =>
 
 /** Dashboardを新規作成する。 */
 export const createDashboard: Handler<ServerEnv> = async (context) => {
-  const { title } = await parseJsonBody(context.req.raw, dashboardCreateSchema);
-  const dashboard = await context.get("dashboardDefinitionService").create(title);
+  const definition = await parseJsonBody(context.req.raw, dashboardCreateSchema);
+  const dashboard = await context.get("dashboardDefinitionService").create(definition);
 
   return context.json(dashboardCreatedResponseSchema.parse({ dashboard }), 201);
 };

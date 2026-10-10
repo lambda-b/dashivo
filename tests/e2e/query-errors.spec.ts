@@ -26,7 +26,7 @@ test("dashboard initial failure shows one inline error and retries without hidin
   await expect(page.getByRole("alert")).toHaveText("Dashboard unavailable");
   expect(requests).toBe(1);
   await expect(page.locator("[data-sonner-toast]")).toHaveCount(0);
-  await expect(page.getByLabel("新しいダッシュボード")).toBeVisible();
+  await expect(page.getByLabel("ダッシュボードID")).toBeVisible();
   await page.getByRole("button", { name: "再試行" }).click();
   await expect(page.getByRole("heading", { name: source.title, level: 1 })).toBeVisible();
 });

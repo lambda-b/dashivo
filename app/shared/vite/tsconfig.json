@@ -6,8 +6,7 @@
     "allowJs": true,
     "maxNodeModuleJsDepth": 1,
     "paths": {
-      "#generated/assets": ["../../../.pyodide-cache/assets.ts"],
-      "#dashboard/dashboard.json": ["../../../dashboard/definitions/sales-overview.json"]
+      "#generated/assets": ["../../../.pyodide-cache/assets.ts"]
     }
   },
   "include": ["src"]

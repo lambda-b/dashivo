@@ -172,7 +172,7 @@ export const browserStorage: DashboardStorage = {
 
   uploadInputSource: async (id, file) => {
     const { fileName } = inputSourceUploadQuerySchema.parse({ fileName: file.name });
-    const path = inputSourcePathSchema.parse(`data/${id}/${fileName}`);
+    const path = inputSourcePathSchema.parse(`data/${fileName}`);
     const source = await file.text();
     await write(id, (record) => {
       if (Object.hasOwn(record.sources, path)) throw new ApiError(messages.storage.fileExists, 409);

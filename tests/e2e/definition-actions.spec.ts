@@ -20,7 +20,7 @@ test("displays fixed CSV registration and allows deletion and re-registration", 
   });
   await page.route("**/api/dashboards/sales-overview/sources/csv**", (route) => {
     if (route.request().method() === "POST")
-      return route.fulfill({ status: 201, json: { path: "data/sales-overview/replacement.csv" } });
+      return route.fulfill({ status: 201, json: { path: "data/replacement.csv" } });
     return route.continue();
   });
   await page.goto("http://127.0.0.1:3030/#/d/sales-overview/builder/python/sales-analysis");
@@ -77,9 +77,7 @@ test("displays fixed CSV registration and allows deletion and re-registration", 
   });
   await expect(csvList.getByRole("listitem")).toHaveCount(1);
   await expect(csvList.getByText("input-1", { exact: true })).toBeVisible();
-  await expect(
-    csvList.getByText("data/sales-overview/replacement.csv", { exact: true }),
-  ).toBeVisible();
+  await expect(csvList.getByText("data/replacement.csv", { exact: true })).toBeVisible();
   expect(saves).toBe(2);
 
   await page.getByRole("button", { name: "選択中の定義を削除" }).click();

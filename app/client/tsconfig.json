@@ -14,8 +14,7 @@
         "../shared/vite/src/editor/virtual/*"
       ],
       "@/*": ["./src/*"],
-      "@shared/*": ["../shared/schema/src/*"],
-      "#dashboard/dashboard.json": ["../../dashboard/definitions/sales-overview.json"]
+      "@shared/*": ["../shared/schema/src/*"]
     },
     "types": ["vite/client", "node"],
     "isolatedModules": true,

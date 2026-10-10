@@ -127,7 +127,7 @@ test("guest editing persists JSON, CSV and Python without API access or HTML dow
     return route.abort();
   });
   await page.goto(origin);
-  await expect(page.getByLabel("新しいダッシュボード")).toHaveCount(0);
+  await expect(page.getByLabel("ダッシュボードID")).toHaveCount(0);
   await expect(page.getByLabel("開発用: 認証済み")).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: sample.dashboard.title, exact: true }),
@@ -247,7 +247,7 @@ test("login registers edited trial revisions once and logout restores the trial"
   await editTitle("Browser draft");
   await expect(page.getByRole("heading", { name: "Browser draft", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "ログイン", exact: true }).click();
-  await expect(page.getByLabel("新しいダッシュボード")).toBeVisible();
+  await expect(page.getByLabel("ダッシュボードID")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Browser draft", exact: true })).toBeVisible();
   expect(registrations).toHaveLength(1);
   await expect(page.getByRole("button", { name: "HTMLをダウンロード" })).toBeEnabled();
@@ -257,7 +257,7 @@ test("login registers edited trial revisions once and logout restores the trial"
   await expect(page.getByRole("button", { name: "HTMLをダウンロード" })).toHaveCount(0);
   await expect(page.getByText("試用", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "ログイン", exact: true }).click();
-  await expect(page.getByLabel("新しいダッシュボード")).toBeVisible();
+  await expect(page.getByLabel("ダッシュボードID")).toBeVisible();
   expect(registrations).toHaveLength(1);
   await page.getByRole("button", { name: "ログアウト", exact: true }).click();
   await expect(page.getByRole("button", { name: "ログイン", exact: true })).toBeVisible();
@@ -283,7 +283,7 @@ test("login uses PKCE, gates API access and clears session tokens on logout", as
 
   await page.getByRole("button", { name: "ログイン", exact: true }).click();
   await expect(page.getByText("user-a@example.com")).toBeVisible();
-  await expect(page.getByLabel("新しいダッシュボード")).toBeVisible();
+  await expect(page.getByLabel("ダッシュボードID")).toBeVisible();
   expect(authorizations[0].searchParams.get("response_type")).toBe("code");
   expect(authorizations[0].searchParams.get("code_challenge_method")).toBe("S256");
   expect(authorizations[0].searchParams.get("code_challenge")).toBeTruthy();
@@ -386,22 +386,22 @@ test("expired tokens refresh and rotate before saving a dashboard", async ({ pag
       );
       return route.fulfill({
         status: 201,
-        json: { dashboard: { id: "created", title: "Created", updatedAt: "2026-10-05" } },
+        json: { dashboard: { id: "created", title: "Untitled", updatedAt: "2026-10-05" } },
       });
     }
     return route.fulfill({ json: { dashboards: [] } });
   });
   await page.route(`${origin}/api/dashboards/created`, (route) =>
-    route.fulfill({ json: { dashboard: createEmptyDashboard("Created") } }),
+    route.fulfill({ json: { dashboard: createEmptyDashboard("Untitled") } }),
   );
   await page.goto(origin);
   await page.getByRole("button", { name: "ログイン", exact: true }).click();
   await expect(page.getByRole("button", { name: "ログアウト", exact: true })).toBeVisible();
 
   await expireSession(page);
-  await page.getByLabel("新しいダッシュボード").fill("Created");
+  await page.getByLabel("ダッシュボードID").fill("created");
   await page.getByRole("button", { name: "作成", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Created", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Untitled", exact: true })).toBeVisible();
   expect(refreshes).toEqual([{ ClientId: clientId, RefreshToken: "test-refresh-token" }]);
   expect(
     await page.evaluate(() =>
@@ -437,7 +437,7 @@ for (const { name, signedOut } of [
       }),
     );
     await expireSession(page);
-    await page.getByLabel("新しいダッシュボード").fill("Created");
+    await page.getByLabel("ダッシュボードID").fill("created");
     await page.getByRole("button", { name: "作成", exact: true }).click();
 
     if (signedOut) {

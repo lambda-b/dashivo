@@ -29,7 +29,7 @@ test("development checkbox switches storage and keeps same-ID caches and drafts 
   await authentication.uncheck();
   await expect(page.getByRole("navigation", { name: "ダッシュボード一覧" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "ダッシュボード一覧を開く" })).toHaveCount(0);
-  await expect(page.getByLabel("新しいダッシュボード")).toHaveCount(0);
+  await expect(page.getByLabel("ダッシュボードID")).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: sample.dashboard.title, exact: true }),
   ).toBeVisible();
@@ -74,7 +74,7 @@ test("trial revisions change only on content changes and updates remain atomic",
       settings: { ...settings, title: "Edited trial" },
     });
     const settingsRevision = (await loadTrial()).revisionId;
-    const creationBlocked = await browserStorage.createDashboard("Second").then(
+    const creationBlocked = await browserStorage.createDashboard({ id: "second" }).then(
       () => false,
       () => true,
     );

@@ -27,17 +27,18 @@ test("trial registration atomically publishes all files and repeated revisions p
     expect(first.id).toBe(`draft-${registration.revisionId}`);
     expect(retry.id).toBe(first.id);
     expect(await repository.listDashboards()).toHaveLength(1);
-    const collision = await repository.createDashboard(first.id, registration.dashboard);
-    expect(collision.id).toBe(`${first.id}-2`);
+    await expect(repository.createDashboard(first.id, registration.dashboard)).rejects.toThrow(
+      "同じID",
+    );
     const imported = await dashboardDefinitionService.read(first.id);
     for (const input of imported.analysis.inputs) {
-      const original = input.path.replace(`/${first.id}/`, "/");
+      const original = input.path;
       expect(await repository.readInput(first.id, input.path)).toBe(
         registration.sources[original as keyof typeof registration.sources],
       );
     }
     for (const logic of imported.analysis.logic) {
-      const original = logic.path.replace(`/${first.id}/`, "/");
+      const original = logic.path;
       expect(await repository.readPython(first.id, logic.path)).toBe(
         registration.sources[original as keyof typeof registration.sources],
       );
@@ -48,13 +49,13 @@ test("trial registration atomically publishes all files and repeated revisions p
     });
     await pythonLogicService.create(first.id, {
       id: "extra",
-      path: `logic/${first.id}/extra.py`,
+      path: "logic/extra.py",
       source: "# new logic",
     });
     const sourcePath = imported.analysis.logic[0].path;
     await repository.writePython(first.id, sourcePath, "# server edit");
     await repository.createInput(first.id, "extra.csv", "value\n1\n");
-    expect((await repository.listAssets(first.id)).csv).toContain(`data/${first.id}/extra.csv`);
+    expect((await repository.listAssets(first.id)).csv).toContain("data/extra.csv");
     expect((await dashboardDefinitionService.register(registration)).title).toBe("Server edit");
     expect(await repository.readPython(first.id, sourcePath)).toBe("# server edit");
     expect((await dashboardDefinitionService.read(first.id)).analysis.logic.at(-1)?.id).toBe(
@@ -65,7 +66,7 @@ test("trial registration atomically publishes all files and repeated revisions p
       revisionId: randomUUID(),
     });
     expect(changed.id).not.toBe(first.id);
-    expect(await repository.listDashboards()).toHaveLength(3);
+    expect(await repository.listDashboards()).toHaveLength(2);
     await expect(
       dashboardDefinitionService.register({
         ...registration,
@@ -73,11 +74,9 @@ test("trial registration atomically publishes all files and repeated revisions p
         sources: {},
       }),
     ).rejects.toThrow();
-    expect(await repository.listDashboards()).toHaveLength(3);
+    expect(await repository.listDashboards()).toHaveLength(2);
     expect(
-      (await fs.readdir(path.join(root, "dashboard/registrations"))).some((name) =>
-        name.startsWith(".pending-"),
-      ),
+      (await fs.readdir(path.join(root, "dashboard"))).some((name) => name.startsWith(".pending-")),
     ).toBe(false);
   } finally {
     await fs.rm(root, { recursive: true });
@@ -102,7 +101,8 @@ test("definition-only storage supports empty lists, ID collisions and registrati
 
     const dashboard = dashboardSchema.parse(dashboardSource);
     const first = await repository.createDashboard("sales-overview", dashboard);
-    const second = await repository.createDashboard("sales-overview", dashboard);
+    await expect(repository.createDashboard("sales-overview", dashboard)).rejects.toThrow("同じID");
+    const second = await repository.createDashboard("sales-overview-2", dashboard);
     expect([first.id, second.id]).toEqual(["sales-overview", "sales-overview-2"]);
     expect((await repository.listDashboards()).map((entry) => entry.id).sort()).toEqual([
       first.id,
@@ -131,12 +131,12 @@ test("definition-only storage supports empty lists, ID collisions and registrati
 
 test("validates dashboard data in the application service", async () => {
   const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-editor-"));
-  await fs.mkdir(path.join(projectRoot, "dashboard/definitions"), { recursive: true });
+  await fs.mkdir(path.join(projectRoot, "dashboard/sales-overview"), { recursive: true });
   const { dashboardDefinitionService } = createService(projectRoot);
 
   try {
     await fs.writeFile(
-      path.join(projectRoot, "dashboard/definitions/sales-overview.json"),
+      path.join(projectRoot, "dashboard/sales-overview/dashboard.json"),
       `${JSON.stringify(dashboardSchema.parse(dashboardSource), null, 2)}\n`,
     );
     expect(await dashboardDefinitionService.read("sales-overview")).toEqual(
@@ -144,7 +144,7 @@ test("validates dashboard data in the application service", async () => {
     );
 
     await fs.writeFile(
-      path.join(projectRoot, "dashboard/definitions/sales-overview.json"),
+      path.join(projectRoot, "dashboard/sales-overview/dashboard.json"),
       '{"title":"Invalid"}',
     );
     await expect(dashboardDefinitionService.read("sales-overview")).rejects.toThrow();
@@ -153,14 +153,47 @@ test("validates dashboard data in the application service", async () => {
   }
 });
 
+test("creates dashboards with the requested ID and scans only per-dashboard definitions", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-dashboard-id-"));
+  const { repository, dashboardDefinitionService } = createService(root);
+
+  try {
+    const created = await dashboardDefinitionService.create({
+      id: "custom-id",
+    });
+    expect(created.id).toBe("custom-id");
+    expect(
+      JSON.parse(await fs.readFile(path.join(root, "dashboard/custom-id/dashboard.json"), "utf8"))
+        .title,
+    ).toBe("Untitled");
+    await expect(dashboardDefinitionService.create({ id: "custom-id" })).rejects.toThrow("同じID");
+    expect((await dashboardDefinitionService.read("custom-id")).title).toBe("Untitled");
+    await expect(async () =>
+      dashboardDefinitionService.create({ id: "../outside" }),
+    ).rejects.toThrow();
+    await fs.mkdir(path.join(root, "dashboard/not-a-dashboard/data"), { recursive: true });
+    await fs.writeFile(path.join(root, "dashboard/not-a-dashboard/data/dashboard.json"), "{}");
+    expect((await repository.listDashboards()).map((entry) => entry.id)).toEqual(["custom-id"]);
+    const { analysis: _, ...settings } = await dashboardDefinitionService.read("custom-id");
+    await dashboardDefinitionService.update("custom-id", {
+      settings: { ...settings, title: "営業レポート" },
+    });
+    expect(await dashboardDefinitionService.list()).toEqual([
+      expect.objectContaining({ id: "custom-id", title: "営業レポート" }),
+    ]);
+  } finally {
+    await fs.rm(root, { recursive: true });
+  }
+});
+
 test("updates the dashboard and registers logic through separate application services", async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-scoped-"));
-  await fs.mkdir(path.join(root, "dashboard/definitions"), { recursive: true });
+  await fs.mkdir(path.join(root, "dashboard/sales-overview"), { recursive: true });
   const { repository, dashboardDefinitionService, pythonLogicService } = createService(root);
 
   try {
     await fs.writeFile(
-      path.join(root, "dashboard/definitions/sales-overview.json"),
+      path.join(root, "dashboard/sales-overview/dashboard.json"),
       `${JSON.stringify(dashboardSchema.parse(dashboardSource), null, 2)}\n`,
     );
     const { analysis, ...settings } = dashboardSchema.parse(dashboardSource);
@@ -171,10 +204,7 @@ test("updates the dashboard and registers logic through separate application ser
     await dashboardDefinitionService.update("sales-overview", {
       analysis: {
         ...analysis,
-        inputs: [
-          ...analysis.inputs,
-          { id: "extra", type: "csv", path: "data/sales-overview/raw/sales.csv" },
-        ],
+        inputs: [...analysis.inputs, { id: "extra", type: "csv", path: "data/raw/sales.csv" }],
       },
     });
 

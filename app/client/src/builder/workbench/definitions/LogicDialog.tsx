@@ -3,7 +3,7 @@ import { Dialog } from "@/components/primitives/Dialog";
 import { Button } from "@/components/primitives/Button";
 import { FormField } from "@/components/primitives/FormField";
 import { TextInput } from "@/components/primitives/TextInput";
-import { useDashboardId, useSavedDashboard } from "@/app/context/useDashboard";
+import { useSavedDashboard } from "@/app/context/useDashboard";
 import { useCreatePythonLogic } from "@/builder/hooks/useCreatePythonLogic";
 import { createUniqueIndexedName } from "@dashivo/shared-utils/createUniqueIndexedName";
 import { messages } from "@/messages";
@@ -26,15 +26,14 @@ export const LogicDialog = ({
   files: string[];
 }) => {
   const dashboard = useSavedDashboard();
-  const dashboardId = useDashboardId();
 
   const [id, setId] = useState(() =>
     createUniqueIndexedName(
       [
         ...dashboard.analysis.logic.map((logic) => logic.id),
         ...files
-          .filter((path) => path.startsWith(`logic/${dashboardId}/`))
-          .map((path) => path.replace(`logic/${dashboardId}/`, "").replace(/\.py$/, "")),
+          .filter((path) => path.startsWith("logic/"))
+          .map((path) => path.replace("logic/", "").replace(/\.py$/, "")),
       ],
       "logic-",
     ),
@@ -52,7 +51,7 @@ export const LogicDialog = ({
     createLogic.mutate(
       {
         id,
-        path: `logic/${dashboardId}/${id}.py`,
+        path: `logic/${id}.py`,
         source: defaultSource,
       },
       {
@@ -87,7 +86,7 @@ export const LogicDialog = ({
         <TextInput monospace value={id} onChange={setId} />
       </FormField>
       <p className="mt-2 break-all font-mono text-xs text-stone-500">
-        Pythonファイル: logic/{dashboardId}/{id}.py
+        Pythonファイル: logic/{id}.py
       </p>
       {error && (
         <p role="alert" className="text-red-700">

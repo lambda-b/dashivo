@@ -6,6 +6,7 @@ import {
   dashboardRegistrationEndpoint,
   dashboardRegistrationSchema,
   type DashboardRegistration,
+  type DashboardCreate,
 } from "@shared/api";
 import { requestJson } from "@/api/request";
 import { messages } from "@/messages";
@@ -20,13 +21,13 @@ export const loadDashboards = async ({ signal }: { signal: AbortSignal }) => {
   return dashboardListResponseSchema.parse(result).dashboards;
 };
 
-export const createDashboard = async (title: string) => {
+export const createDashboard = async (definition: DashboardCreate) => {
   const result = await requestJson(
     dashboardsEndpoint,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dashboardCreateSchema.parse({ title })),
+      body: JSON.stringify(dashboardCreateSchema.parse(definition)),
     },
     messages.dashboard.createFailed,
   );

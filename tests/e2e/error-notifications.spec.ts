@@ -28,7 +28,7 @@ for (const failure of ["upload", "network", "definition"] as const) {
       if (failure === "network") return route.abort("failed");
       return failure === "upload"
         ? route.fulfill({ status: 400, json: { error: "Upload failed" } })
-        : route.fulfill({ status: 201, json: { path: "data/sales-overview/new.csv" } });
+        : route.fulfill({ status: 201, json: { path: "data/new.csv" } });
     });
 
     await page.goto("http://127.0.0.1:3030/#/d/sales-overview");

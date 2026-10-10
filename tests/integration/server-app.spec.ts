@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { createServerApp } from "@dashivo/server/app";
+import { DashboardIdConflict } from "@dashivo/server/models/dashboard-id-conflict";
 import {
   dashboardItemEndpoint,
+  dashboardsEndpoint,
   dashboardDownloadEndpoint,
   dashboardInputSourceEndpoint,
   dashboardPythonLogicEndpoint,
@@ -24,19 +26,18 @@ const createTestApp = () =>
       listDashboards: async () => [
         { id: "sales-overview", title: dashboard.title, updatedAt: "2026-01-01T00:00:00.000Z" },
       ],
-      createDashboard: async (_preferredId, createdDashboard) => ({
-        id: "new-dashboard",
-        title: createdDashboard.title,
-        updatedAt: "2026-01-01T00:00:00.000Z",
-      }),
+      createDashboard: async (id, createdDashboard) => {
+        if (id === "sales-overview") throw new DashboardIdConflict();
+        return { id, title: createdDashboard.title, updatedAt: "2026-01-01T00:00:00.000Z" };
+      },
       listAssets: async () => ({
-        csv: ["data/sales-overview/raw/sales.csv"],
+        csv: ["data/raw/sales.csv"],
         python: ["logic/analysis.py"],
       }),
       readDashboard: async () => ({ dashboard, version: "v1" }),
       writeDashboard: async () => {},
       readInput: async (_id, path) => `input:${path}`,
-      createInput: async (id, fileName) => `data/${id}/${fileName}`,
+      createInput: async (_id, fileName) => `data/${fileName}`,
       readPython: async (_id, path) => `python:${path}`,
       writePython: async () => {},
       createPython: async () => {},
@@ -61,20 +62,36 @@ test("Hono API validates shared contracts without exposing persistence", async (
   expect(invalid.status).toBe(400);
 });
 
+test("Hono API requires a chosen dashboard ID and reports duplicate IDs as conflicts", async () => {
+  const app = createTestApp();
+  const create = (body: unknown) =>
+    app.request(dashboardsEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  const created = await create({ id: "my-dashboard" });
+  expect(created.status).toBe(201);
+  expect((await created.json()).dashboard).toMatchObject({ id: "my-dashboard", title: "Untitled" });
+  expect((await create({ title: "Title" })).status).toBe(400);
+  expect((await create({ id: "../outside" })).status).toBe(400);
+  expect((await create({ id: "sales-overview" })).status).toBe(409);
+});
+
 test("Hono API serves inputs and downloadable viewer through injected services", async () => {
   const app = createTestApp();
   const input = await app.request(
-    `${dashboardInputSourceEndpoint("sales-overview")}?path=data%2Fsales-overview%2Fraw%2Fsales.csv`,
+    `${dashboardInputSourceEndpoint("sales-overview")}?path=data%2Fraw%2Fsales.csv`,
   );
 
   expect(input.status).toBe(200);
-  expect(await input.json()).toEqual({ source: "input:data/sales-overview/raw/sales.csv" });
+  expect(await input.json()).toEqual({ source: "input:data/raw/sales.csv" });
 
   const unrelatedInput = await app.request(
-    `${dashboardInputSourceEndpoint("sales-overview")}?path=data%2Fanother-dashboard%2Fprivate.csv`,
+    `${dashboardInputSourceEndpoint("sales-overview")}?path=data%2F..%2Fprivate.csv`,
   );
 
-  expect(unrelatedInput.status).toBe(403);
+  expect(unrelatedInput.status).toBe(400);
 
   const uploaded = await app.request(
     `${dashboardInputSourceEndpoint("sales-overview")}?fileName=orders.csv`,
@@ -86,7 +103,7 @@ test("Hono API serves inputs and downloadable viewer through injected services",
   );
 
   expect(uploaded.status).toBe(201);
-  expect(await uploaded.json()).toEqual({ path: "data/sales-overview/orders.csv" });
+  expect(await uploaded.json()).toEqual({ path: "data/orders.csv" });
 
   const download = await app.request(dashboardDownloadEndpoint("sales-overview"), {
     method: "POST",

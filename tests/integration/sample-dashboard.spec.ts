@@ -16,7 +16,7 @@ test("sample Python applies region and inclusive date ranges to every output", a
     await fs.readFile("app/client/src/ports/workers/python/dashivo.py", "utf8"),
   );
   python.runPython("from dashivo import serialize\nimport pandas as pd, io");
-  python.globals.set("sample_csv", sample.sources["data/sales-overview/raw/sales.csv"]);
+  python.globals.set("sample_csv", sample.sources["data/raw/sales.csv"]);
 
   const cases = [
     { params: {}, revenue: 754000, orders: 255, dates: ["2026-01-01", "2026-02-01", "2026-03-01"] },
@@ -58,7 +58,9 @@ test("sample Python applies region and inclusive date ranges to every output", a
     for (const logic of sample.dashboard.analysis.logic) {
       const source = sample.sources[logic.path as keyof typeof sample.sources];
       // 固定サンプルとローカルの保存済みPythonのどちらも同じ処理にする。
-      expect(await fs.readFile(path.join("dashboard", logic.path), "utf8")).toBe(source);
+      expect(await fs.readFile(path.join("dashboard/sales-overview", logic.path), "utf8")).toBe(
+        source,
+      );
       python.globals.set("logic_source", source);
       const result = JSON.parse(
         python.runPython(`

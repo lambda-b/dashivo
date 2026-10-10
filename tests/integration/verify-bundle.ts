@@ -32,7 +32,8 @@ for (const file of manifest.files) {
   }
 }
 
-for (const marker of ["Builderを開く", "DEVELOPMENT ONLY", "Dashboard Builder", "/api/dashboard"]) {
+// APIスキーマのURL定数は通信を意味しない。実際の通信ゼロはoffline.spec.tsで検証する。
+for (const marker of ["Builderを開く", "DEVELOPMENT ONLY", "Dashboard Builder"]) {
   if (html.includes(marker)) {
     throw new Error(`Development-only marker found: ${marker}`);
   }

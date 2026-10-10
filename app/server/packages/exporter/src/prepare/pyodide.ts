@@ -12,9 +12,9 @@ const pythonStandardLibraryFile = "python_stdlib.zip";
 
 export const preparePyodide = async (
   projectRoot: string,
-  dashboardPath = path.join(projectRoot, "dashboard", "definitions", "sales-overview.json"),
+  dashboardPath = path.join(projectRoot, "dashboard", "sales-overview", "dashboard.json"),
   cacheRoot = path.join(projectRoot, ".pyodide-cache"),
-  dashboardRoot = path.join(projectRoot, "dashboard"),
+  dashboardRoot = path.dirname(dashboardPath),
 ) => {
   const pyodideRoot = path.dirname(fileURLToPath(import.meta.resolve("pyodide")));
   const dashboard: DashboardSchema = JSON.parse(await fs.readFile(dashboardPath, "utf8"));

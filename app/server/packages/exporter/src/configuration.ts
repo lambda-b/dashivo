@@ -5,9 +5,9 @@ import { createViewerViteConfiguration as createViewerViteConfig } from "@dashiv
 
 export const createViewerViteConfiguration = (
   projectRoot: string,
-  dashboardPath = path.join(projectRoot, "dashboard", "definitions", "sales-overview.json"),
+  dashboardPath = path.join(projectRoot, "dashboard", "sales-overview", "dashboard.json"),
   generatedAssetsPath = path.join(projectRoot, ".pyodide-cache", "assets.ts"),
-  dashboardRoot = path.join(projectRoot, "dashboard"),
+  dashboardRoot = path.dirname(dashboardPath),
 ) =>
   createViewerViteConfig({
     clientRoot: path.join(projectRoot, "app/client"),

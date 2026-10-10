@@ -91,7 +91,11 @@ pnpm test:e2e
 └─ work/              # プロジェクト計画（Git管理外）
 ```
 
-Pythonの分析処理は `dashboard/logic/` の各ファイルに `execute(inputs, params)` として記述します。`inputs` はInput IDをキーにしたDataFrameの辞書、`params` はグローバルパラメータです。DataFrameは呼び出しごとにコピーされます。CSV、Python source、組み込みの `dashivo` ライブラリはいずれもビルド時にHTMLへ埋め込まれます。
+ダッシュボードは `dashboard/<dashboard-id>/dashboard.json` に定義し、CSVは同じディレクトリの `data/`、Pythonは `logic/` に保存します。定義内のパスは `data/sales.csv`・`logic/analysis.py` のようにダッシュボードを起点とします。開発画面の一覧は `dashboard/*/dashboard.json` をスキャンして取得します。新規作成時はIDを指定し、重複するIDは使用できません。
+
+新規作成時のタイトルは `Untitled` です。「ヘッダーを編集」で保存したタイトルが「マイダッシュボード」の一覧に反映されます。
+
+Pythonの分析処理は `dashboard/<dashboard-id>/logic/` の各ファイルに `execute(inputs, params)` として記述します。`inputs` はInput IDをキーにしたDataFrameの辞書、`params` はグローバルパラメータです。DataFrameは呼び出しごとにコピーされます。CSV、Python source、組み込みの `dashivo` ライブラリはいずれもビルド時にHTMLへ埋め込まれます。
 
 ```python
 from dashivo import plot

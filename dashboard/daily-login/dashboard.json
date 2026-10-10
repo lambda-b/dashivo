@@ -1,0 +1,112 @@
+{
+  "title": "日次ログイン状況（サンプル）",
+  "description": "架空のログインデータから、成功・失敗の件数と端末別の利用状況を確認します。",
+  "analysis": {
+    "inputs": [
+      {
+        "id": "logins",
+        "type": "csv",
+        "path": "data/raw/logins.csv"
+      }
+    ],
+    "logic": [
+      {
+        "id": "total-logins",
+        "type": "python",
+        "path": "logic/total_logins.py"
+      },
+      {
+        "id": "failed-logins",
+        "type": "python",
+        "path": "logic/failed_logins.py"
+      },
+      {
+        "id": "daily-trend",
+        "type": "python",
+        "path": "logic/daily_trend.py"
+      },
+      {
+        "id": "platform-share",
+        "type": "python",
+        "path": "logic/platform_share.py"
+      },
+      {
+        "id": "daily-table",
+        "type": "python",
+        "path": "logic/daily_table.py"
+      }
+    ]
+  },
+  "controls": [
+    {
+      "type": "radio",
+      "key": "platform",
+      "displayName": "端末",
+      "defaultValue": "all",
+      "options": [
+        {
+          "value": "all",
+          "label": "すべて"
+        },
+        {
+          "value": "web",
+          "label": "Web"
+        },
+        {
+          "value": "mobile",
+          "label": "モバイル"
+        }
+      ],
+      "layout": "horizontal"
+    },
+    {
+      "type": "date-range",
+      "key": "login_period",
+      "displayName": "対象期間",
+      "defaultValue": {
+        "from": "2026-10-01",
+        "to": "2026-10-10"
+      }
+    }
+  ],
+  "tabs": [
+    {
+      "id": "overview",
+      "label": "サマリー",
+      "contents": [
+        {
+          "id": "total-logins",
+          "logic": "total-logins"
+        },
+        {
+          "id": "failed-logins",
+          "logic": "failed-logins"
+        }
+      ]
+    },
+    {
+      "id": "charts",
+      "label": "グラフ",
+      "contents": [
+        {
+          "id": "daily-trend",
+          "logic": "daily-trend"
+        },
+        {
+          "id": "platform-share",
+          "logic": "platform-share"
+        }
+      ]
+    },
+    {
+      "id": "tables",
+      "label": "テーブル",
+      "contents": [
+        {
+          "id": "daily-table",
+          "logic": "daily-table"
+        }
+      ]
+    }
+  ]
+}

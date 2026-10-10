@@ -3,6 +3,7 @@ import { useMutation } from "@dashivo/shared-lib/query";
 import { useNavigate } from "react-router-dom";
 import { useWorkspace } from "@/storage/context";
 import { dashboardQueryKey } from "@/app/context/useDashboard";
+import type { DashboardCreate } from "@shared/api";
 import { messages } from "@/messages";
 
 export const useDashboardActions = () => {
@@ -21,7 +22,7 @@ export const useDashboardActions = () => {
   });
 
   return {
-    createDashboard: (title: string) => create.mutate(title),
+    createDashboard: (definition: DashboardCreate) => create.mutate(definition),
     isPending: create.isPending,
   };
 };
