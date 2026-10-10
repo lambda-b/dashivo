@@ -7,6 +7,7 @@
 - `DashivoWeb`：Web配信用の非公開S3、CloudFront OAC、DNS検証付きACM証明書、A/AAAAレコード。
 - `DashivoIdentity`：東京リージョンのCognito User Pool、公開クライアント、認可コード方式のHosted UI。削除保護・10分のAccess/ID token・1日のRefresh token・ローテーションを設定する。
 - `DashivoStorage`：東京リージョンのDynamoDBと、CSV・生成HTML・アクセスログ用の非公開S3。保存先はWeb/APIから独立した削除保護付きスタックとする。
+- `DashivoDeployment`：GitHub Actions用OIDCロール。既存の共有providerを参照し、main限定・承認付き `production` Environmentからのみ引き受けられる。初回デプロイ済み。
 - `DashivoApi`：東京リージョンのLambda（Node.js 24 / ARM64コンテナ）へAWS Repositoryを接続。Function URLはIAM認証とCloudFront OACに限定し、アプリケーションでもCognito JWTを検証する。ViteによるHTML生成とS3の署名URL配信まで実装済み。API・イメージは未デプロイ。
 - APIの認証境界を実装。`X-Dashivo-Token` のAccess tokenを `aws-jwt-verify` で検証し、検証済み `sub` ごとのRepositoryとサービスをリクエストに紐づける。ローカルAPIは従来どおり認証なしで使用できる。
 - 公開用Editorのログイン/ログアウト・認可コード+PKCE・セッション更新をAmplify SDKで実装。トークンはタブ単位の `sessionStorage` に保存し、APIへAccess tokenだけを送信する。ログアウト時はQuery cacheも破棄する。
@@ -30,6 +31,8 @@
 - 初回の認証スタックはLiteとローテーションの組み合わせで失敗したため、Essentialsへ修正して再作成した。失敗時に残ったUser Poolはユーザー・アプリクライアントともに0件と確認して削除済みで、未使用リソースは残していない。
 
 各リソースの最新IDはCloudFormationのOutputsから取得する。今後のデプロイも必ず差分を確認し、公開までの残作業を完了するまではEditorを配置しない。
+
+GitHubリポジトリは `lambda-b/dashivo` へ改名済み。`DashivoDeployment` とEnvironment変数 `AWS_DEPLOY_ROLE_ARN` を設定した。GitHub上のARM64イメージビルド・Runtime Interface Emulator・HTML生成、静的チェック・72件の単体/結合テスト・ブラウザーE2E・CDK synthは成功済み。本番ジョブはEnvironment承認待ちで、API・Editorの公開はまだ実行していない。
 
 ## ローカル検証
 
@@ -86,7 +89,7 @@ pnpm --filter @dashivo/infra-cdk exec cdk deploy DashivoDeployment --exclusively
 
 GitHubの `production` Environmentにmainブランチ限定・必須レビューを設定し、Environment変数 `AWS_DEPLOY_ROLE_ARN` へ上記スタックの同名出力 `DeployRoleArn` を登録する。このリポジトリではGitHub APIのOIDC設定を確認し、`repo:lambda-b@95673625/dashivo@1358907948:environment:production` の完全一致を使う。名前だけの旧形式やワイルドカードは許可しない。リポジトリ移転・Environment変更時は信頼設定も見直す。
 
-ロールの直接権限は既知の4スタックのOutputs参照、Webバケットの読み書き、対象Distributionのキャッシュ無効化に限定する。CDK用には2リージョン・6個のbootstrapロールだけを引き受けられる。ただしbootstrapのCloudFormation実行ロールは管理者相当の権限を持つため、デプロイ権限全体がAPIだけの最小権限になるわけではない。Environment承認とmain限定は必須とし、PRにはAWS資格情報を渡さない。将来はCloudFormation実行ロール自体の権限境界も検討する。
+ロールの直接権限は既知の4スタックのOutputs参照、Webバケットの読み書き、対象Distributionのキャッシュ無効化に限定する。CDK用には2リージョン・8個のbootstrapロール（deploy・差分確認用lookup・file/image publishing）だけを引き受けられる。ただしlookupはアカウント内の広い読み取り権限、CloudFormation実行ロールは管理者相当の権限を持つため、デプロイ権限全体がAPIだけの最小権限になるわけではない。Environment承認とmain限定は必須とし、PRにはAWS資格情報を渡さない。将来はCloudFormation実行ロール自体の権限境界も検討する。
 
 ## APIの段階的な接続
 

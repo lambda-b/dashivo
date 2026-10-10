@@ -45,7 +45,7 @@ export const createDeploymentStack = (app: App, id: string, props: DeploymentSta
     new PolicyStatement({
       actions: ["sts:AssumeRole"],
       resources: ["us-east-1", "ap-northeast-1"].flatMap((region) =>
-        ["deploy", "file-publishing", "image-publishing"].map(
+        ["deploy", "lookup", "file-publishing", "image-publishing"].map(
           (purpose) =>
             `arn:${stack.partition}:iam::${stack.account}:role/cdk-hnb659fds-${purpose}-role-${stack.account}-${region}`,
         ),

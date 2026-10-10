@@ -46,7 +46,7 @@ test("GitHub deployment trusts only the immutable production subject and scopes 
   const statements = policies[0].Properties.PolicyDocument.Statement;
   expect(statements).toHaveLength(5);
   expect(statements[0]).toMatchObject({ Action: "sts:AssumeRole", Effect: "Allow" });
-  expect(statements[0].Resource).toHaveLength(6);
+  expect(statements[0].Resource).toHaveLength(8);
   expect(statements[0].Resource).toContainEqual({
     "Fn::Join": [
       "",
