@@ -19,6 +19,17 @@
 
 **まだサービス公開はできません。** このスタックはS3へアプリやダッシュボードをアップロードしません。AWS Repository・Lambda API・Editorの配信接続を完成させてから公開します。`pnpm build` の成果物はダウンロード用Viewerであり、サービス用Editorとしてアップロードしないでください。
 
+## デプロイ状況
+
+2026-10-11にアカウント `154539905353` へ `DashivoWeb`・`DashivoIdentity`・`DashivoStorage` の初回デプロイを完了した。アプリの配置とAPI接続は未実施のため、サービスURLは現時点では403を返す。
+
+- Web：`us-east-1`、CloudFront Distribution ID `E20479BV3E4M6Z`。DNS・証明書・HTTPS接続を確認済み。
+- 認証・保存：`ap-northeast-1`。Cognitoのローテーション・削除保護、DynamoDBのオンデマンド設定・削除保護、S3の公開アクセス遮断・生成HTMLのLifecycleを確認済み。
+- Google連携は未設定。公開前にOAuthクライアントとSecretを設定する。
+- 初回の認証スタックはLiteとローテーションの組み合わせで失敗したため、Essentialsへ修正して再作成した。失敗時に残ったUser Poolはユーザー・アプリクライアントともに0件と確認して削除済みで、未使用リソースは残していない。
+
+各リソースの最新IDはCloudFormationのOutputsから取得する。今後のデプロイも必ず差分を確認し、公開までの残作業を完了するまではEditorを配置しない。
+
 ## ローカル検証
 
 ```bash
