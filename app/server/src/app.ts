@@ -1,5 +1,6 @@
 import { Hono, type MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { bodyLimit } from "hono/body-limit";
 import {
   configureServerContext,
   type ServerDependencyProvider,
@@ -16,6 +17,19 @@ export const createServerApp = (
   beforeServices?: MiddlewareHandler<ServerEnv>,
 ) => {
   const app = new Hono<ServerEnv>();
+
+  app.use("*", async (context, next) => {
+    await next();
+    context.header("Cache-Control", "no-store");
+  });
+  app.use(
+    "*",
+    bodyLimit({
+      maxSize: 4_000_000,
+      onError: (context) =>
+        context.json({ error: "送信データが大きすぎます。4MB以内にしてください。" }, 413),
+    }),
+  );
 
   if (beforeServices) app.use("*", beforeServices);
   app.use("*", configureServerContext(dependencies));

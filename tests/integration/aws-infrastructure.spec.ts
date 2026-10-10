@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
 import { App } from "aws-cdk-lib";
 import { Match, Template } from "aws-cdk-lib/assertions";
 import { createWebStack } from "@dashivo/infra-cdk/stacks/web";
@@ -12,13 +14,19 @@ test("Lambda API is IAM-protected, non-VPC, and callable only by the configured 
   const env = { account: "111111111111", region: "ap-northeast-1" };
   const data = createStorageStack(app, "ApiStorageTest", { env });
   const api = Template.fromStack(
-    createApiStack(app, "ApiTest", { env, table: data.table, assets: data.assets }),
+    createApiStack(app, "ApiTest", {
+      env,
+      table: data.table,
+      assets: data.assets,
+      downloads: data.downloads,
+    }),
   );
   api.hasResourceProperties("AWS::Lambda::Function", {
-    Runtime: "nodejs24.x",
+    PackageType: "Image",
+    Runtime: Match.absent(),
     Architectures: ["arm64"],
-    MemorySize: 512,
-    Timeout: 30,
+    MemorySize: 2048,
+    Timeout: 60,
     VpcConfig: Match.absent(),
   });
   api.hasResourceProperties("AWS::Lambda::Url", { AuthType: "AWS_IAM" });
@@ -79,9 +87,37 @@ test("Lambda API is IAM-protected, non-VPC, and callable only by the configured 
             ],
           },
         },
+        {
+          Effect: "Allow",
+          Action: ["s3:GetObject", "s3:PutObject"],
+          Resource: {
+            "Fn::Join": [
+              "",
+              [{ "Fn::ImportValue": Match.anyValue() }, "/users/*/dashboards/*/*.html"],
+            ],
+          },
+        },
       ],
     },
   });
+
+  const assembly = app.synth();
+  const assets = JSON.parse(
+    fs.readFileSync(path.join(assembly.directory, "ApiTest.assets.json"), "utf8"),
+  );
+  for (const asset of Object.values(assets.dockerImages) as { source: { directory: string } }[]) {
+    const files = fs.readdirSync(path.join(assembly.directory, asset.source.directory), {
+      recursive: true,
+      encoding: "utf8",
+    });
+    expect(files).toContain("infra/cdk/lambda/Dockerfile");
+    expect(files).toContain("app/client/src/app/ViewerApp.tsx");
+    expect(
+      files.some((file) =>
+        /(^|\/)(dashboard|node_modules|cdk\.out|\.env(?:\.|$)|\.git)(\/|$)/.test(file),
+      ),
+    ).toBe(false);
+  }
 });
 
 test("CloudFront API behavior signs requests, disables caching and forwards only required headers", () => {

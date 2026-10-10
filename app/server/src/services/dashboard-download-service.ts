@@ -8,7 +8,10 @@ import type {
   DashboardDefinitionRepository,
   PythonLogicRepository,
 } from "@dashivo/server/models/dashboard-repository";
-import type { DashboardHtmlBuilder } from "@dashivo/server/models/dashboard-html-builder";
+import type {
+  DashboardHtmlBuilder,
+  DashboardDownloadStorage,
+} from "@dashivo/server/models/dashboard-html-builder";
 
 const loadSources = async (
   repository: DashboardDefinitionRepository & DashboardAssetRepository & PythonLogicRepository,
@@ -36,6 +39,7 @@ const loadSources = async (
 export const createDashboardDownloadService = (
   repository: DashboardDefinitionRepository & DashboardAssetRepository & PythonLogicRepository,
   htmlBuilder: DashboardHtmlBuilder,
+  downloadStorage: DashboardDownloadStorage,
 ) => ({
   build: async (dashboardId: string) => {
     const id = dashboardIdSchema.parse(dashboardId);
@@ -43,7 +47,9 @@ export const createDashboardDownloadService = (
     const snapshot = await repository.readDashboard(id);
     const dashboard = dashboardSchema.parse(snapshot.dashboard);
     const sources = await loadSources(repository, id, dashboard);
-    return htmlBuilder({ dashboardId: id, dashboard, sources });
+    const html = await htmlBuilder({ dashboardId: id, dashboard, sources });
+
+    return { url: await downloadStorage(id, html) };
   },
 });
 

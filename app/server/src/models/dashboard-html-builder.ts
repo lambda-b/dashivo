@@ -12,3 +12,7 @@ export interface DashboardExportRequest {
 }
 
 export type DashboardHtmlBuilder = (request: DashboardExportRequest) => Promise<ArrayBuffer>;
+
+export const downloadUrlLifetimeSeconds = 300;
+
+export type DashboardDownloadStorage = (dashboardId: string, html: ArrayBuffer) => Promise<string>;

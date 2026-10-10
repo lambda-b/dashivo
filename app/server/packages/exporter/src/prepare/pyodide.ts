@@ -62,7 +62,7 @@ export const preparePyodide = async (
     await fs.copyFile(path.join(pyodideRoot, file), path.join(cacheRoot, file));
   }
 
-  const pyodide = await loadPyodide({ packageCacheDir: cacheRoot });
+  const pyodide = await loadPyodide({ indexURL: pyodideRoot, packageCacheDir: cacheRoot });
   const loadedPackages = await pyodide.loadPackagesFromImports(
     "import pandas as pd\n" + analysisSources.join("\n").replace(/^from dashivo import .*$/gm, ""),
     { messageCallback: () => {} },

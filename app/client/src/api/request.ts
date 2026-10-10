@@ -64,15 +64,6 @@ export const requestJson = async (
   }
 };
 
-export const requestBlob = async (
-  input: RequestInfo | URL,
-  init: RequestInit | undefined,
-  fallback: string,
-) => {
-  const response = await requestResponse(input, init, fallback);
-  return response.blob();
-};
-
 export const request = async (
   input: RequestInfo | URL,
   init: RequestInit | undefined,

@@ -291,6 +291,7 @@ test("the authenticated server selects the repository from verified sub, not req
     verifyAccessToken: async () => ({ sub: ownerId }),
     repositoryForUser: repository,
     dashboardHtmlBuilder: async () => new ArrayBuffer(0),
+    downloadStorageForUser: () => async () => "https://example.com/download",
   });
   expect((await app.request(dashboardsEndpoint)).status).toBe(401);
   expect(dbMock.calls()).toHaveLength(0);

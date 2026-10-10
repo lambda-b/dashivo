@@ -17,6 +17,7 @@ const createTestApp = () =>
   createServerApp({
     dashboardHtmlBuilder: async () =>
       Uint8Array.from(new TextEncoder().encode("<html>viewer</html>")).buffer,
+    dashboardDownloadStorage: async () => "/api/downloads/test/sales-overview",
     repository: {
       registerDashboardAtomically: async (id, createdDashboard) => ({
         id,
@@ -110,8 +111,8 @@ test("Hono API serves inputs and downloadable viewer through injected services",
   });
 
   expect(download.status).toBe(200);
-  expect(download.headers.get("Content-Disposition")).toBe('attachment; filename="dashboard.html"');
-  expect(await download.text()).toBe("<html>viewer</html>");
+  expect(await download.json()).toEqual({ url: "/api/downloads/test/sales-overview" });
+  expect(download.headers.get("Cache-Control")).toBe("no-store");
 });
 
 test("Hono API creates Python logic through its dedicated service", async () => {

@@ -1,5 +1,8 @@
 import type { DashboardRepository } from "@dashivo/server/models/dashboard-repository";
-import type { DashboardHtmlBuilder } from "@dashivo/server/models/dashboard-html-builder";
+import type {
+  DashboardHtmlBuilder,
+  DashboardDownloadStorage,
+} from "@dashivo/server/models/dashboard-html-builder";
 import { createDashboardAssetService } from "@dashivo/server/services/dashboard-asset-service";
 import { createDashboardDefinitionService } from "@dashivo/server/services/dashboard-definition-service";
 import { createDashboardDownloadService } from "@dashivo/server/services/dashboard-download-service";
@@ -13,6 +16,7 @@ import type { Context, MiddlewareHandler } from "hono";
 export interface ServerDependencies {
   repository: DashboardRepository;
   dashboardHtmlBuilder: DashboardHtmlBuilder;
+  dashboardDownloadStorage: DashboardDownloadStorage;
 }
 
 export type ServerEnv = {
@@ -32,11 +36,16 @@ export type ServerDependencyProvider =
 
 const createServices = ({
   dashboardHtmlBuilder,
+  dashboardDownloadStorage,
   repository,
 }: ServerDependencies): ServerServices => ({
   assetService: createDashboardAssetService(repository),
   dashboardDefinitionService: createDashboardDefinitionService(repository),
-  dashboardDownloadService: createDashboardDownloadService(repository, dashboardHtmlBuilder),
+  dashboardDownloadService: createDashboardDownloadService(
+    repository,
+    dashboardHtmlBuilder,
+    dashboardDownloadStorage,
+  ),
   pythonLogicService: createPythonLogicService(repository),
 });
 

@@ -7,7 +7,7 @@
 - `DashivoWeb`：Web配信用の非公開S3、CloudFront OAC、DNS検証付きACM証明書、A/AAAAレコード。
 - `DashivoIdentity`：東京リージョンのCognito User Pool、公開クライアント、認可コード方式のHosted UI。削除保護・10分のAccess/ID token・1日のRefresh token・ローテーションを設定する。
 - `DashivoStorage`：東京リージョンのDynamoDBと、CSV・生成HTML・アクセスログ用の非公開S3。保存先はWeb/APIから独立した削除保護付きスタックとする。
-- `DashivoApi`：東京リージョンのLambda（Node.js 24 / ARM64）へAWS Repositoryを接続。Function URLはIAM認証とCloudFront OACに限定し、アプリケーションでもCognito JWTを検証する。未デプロイ。HTML生成・署名URL配信は未接続で、ダウンロード要求には501を返す。
+- `DashivoApi`：東京リージョンのLambda（Node.js 24 / ARM64コンテナ）へAWS Repositoryを接続。Function URLはIAM認証とCloudFront OACに限定し、アプリケーションでもCognito JWTを検証する。ViteによるHTML生成とS3の署名URL配信まで実装済み。API・イメージは未デプロイ。
 - APIの認証境界を実装。`X-Dashivo-Token` のAccess tokenを `aws-jwt-verify` で検証し、検証済み `sub` ごとのRepositoryとサービスをリクエストに紐づける。ローカルAPIは従来どおり認証なしで使用できる。
 - 公開用Editorのログイン/ログアウト・認可コード+PKCE・セッション更新をAmplify SDKで実装。トークンはタブ単位の `sessionStorage` に保存し、APIへAccess tokenだけを送信する。ログアウト時はQuery cacheも破棄する。
 - 未認証では1件の試用ダッシュボードをIndexedDBへ保存する。初回は固定サンプルを表示し、その既知の版は登録対象外とする。ログイン時に編集済みの版をCSV・Pythonとまとめて自動登録し、登録済みのユーザー・revisionIdは重複登録しない。ログイン後はサーバーAPIへ切り替え、複数作成・HTMLダウンロードが可能になる。
@@ -75,7 +75,7 @@ APIデプロイ後、`ApiUrl` 出力からホスト名だけを取得し、`infr
 
 続いて差分確認後に `DashivoWeb` をデプロイする。`/api/*` のみLambdaへ送り、OACは常にSigV4署名する。APIキャッシュは無効で、Cognitoトークン・Content-Type・本文SHA-256とクエリのみ転送する。Cookieや閲覧側のHost/Authorizationは転送しない。Lambda側のリソースポリシーも上記Distributionだけを許可する。
 
-LambdaはVPC・NATを使用しない。実行ロールはテーブルの読み取り・条件付き書き込み、CSV prefixのGetObject/PutObject、専用ログへの書き込みに限定する。SDKクライアントは実行環境で再利用する。HTTP本文は4,000,000バイトを上限とし、Base64化されるFunction URLイベントの6MB制限に余裕を持たせる。全レスポンスに `Cache-Control: no-store` を付ける。
+LambdaはVPC・NATを使用しない。実行ロールはテーブルの読み取り・条件付き書き込み、CSV・生成HTML prefixのGetObject/PutObject、専用ログへの書き込みに限定する。SDKクライアントは実行環境で再利用する。HTTP本文は4,000,000バイトを上限とし、Base64化されるFunction URLイベントの6MB制限に余裕を持たせる。この制限と `Cache-Control: no-store` はローカルを含む共通サーバーで適用する。
 
 ローカル検証はSDKモックとLambda形式のイベント、CDKテンプレートを使う。実AWSでの権限・JWT・保存動作は、APIデプロイ後に別途確認する。
 
@@ -85,7 +85,7 @@ LambdaはVPC・NATを使用しない。実行ロールはテーブルの読み�
 2. DynamoDB/S3 Repositoryの実AWS結合確認。実装とSDKモックによる検証は完了。Python登録とJSON更新はDynamoDBトランザクションで整合性を保証する。
 3. Lambda Function URL + CloudFront `/api/*` のデプロイと実AWS検証。IAM認証・OAC・必要ヘッダーの転送設定は実装済み。
 4. 公開EditorへCognitoの公開設定を渡し、配信用バケットへ配置する。Editor/Viewerの用途判定とローカルデータの分離は実装済み。
-5. サーバー側HTML生成のLambda対応。Vite/Pyodideの実行・依存ファイル・生成サイズを検証し、大きいHTMLのダウンロードにはS3の期限付きURLを使用する。
+5. サーバー側HTML生成のLambda実機検証。Vite/Pyodide同梱のDockerfileとS3の期限付きURL配信は実装済み。Dockerイメージのビルド・起動、実Lambda上の生成時間・メモリ・権限を確認する。
 6. GitHub OIDCデプロイ、EditorのS3同期・CloudFront invalidation。HTMLは短いTTL、hash付きアセットは長いTTLを設定する。
 7. 本番公開前にCSPをWorker/WASM/Cognitoに合わせて設定し、WAFの費用・レート制限、ログ・アラーム、バックアップを決定する。Shield AdvancedやWAFをこの初期スタックで自動購入しない。
 8. 試用版の自動登録APIを本番Repositoryへ接続する。同じユーザー・revisionIdの再送は既存登録を返し、サーバー側の編集内容を上書きしない。定義・CSV・Pythonの原子的な保存を保証する。
@@ -122,7 +122,41 @@ S3 Lifecycleは削除時刻を保証しない。ダウンロードのアクセ�
 - 初期の安全上限は1項目350,000バイト、1トランザクション3,500,000バイト、一括登録99ファイル。CSV本体はDynamoDBのサイズ計算に含めない。上限超過は413で返す。
 - S3とDynamoDBは同時にロールバックできない。DBの成否不明時にCSVを削除すると確定済み参照を壊すため、自動削除しない。失敗・競合した登録の未参照オブジェクトが残る場合があり、公開前に参照照合による回収を実装する。Assets全体へ一律の失効は設定しない。
 
-SDKモックでキー分離・競合時のエラー・トランザクションの構成・再送・ページング・認証済みサーバーとの接続を確認した。実AWSでのトランザクション動作やIAM権限は未検証。次はLambda Function URL/OACと実AWS結合確認、その後にHTMLの署名URLダウンロード、GitHub OIDCデプロイの順に接続する。
+SDKモックでキー分離・競合時のエラー・トランザクションの構成・再送・ページング・認証済みサーバーとの接続を確認した。実AWSでのトランザクション動作やIAM権限は未検証。次はDockerイメージの検証、Lambda Function URL/OACと実AWS結合確認、その後にGitHub OIDCデプロイの順に接続する。
+
+## HTMLダウンロードの共通フロー
+
+ローカルとAWSでAPIやUIを分けない。共通サービスが保存済み定義・CSV・Pythonを読み、同じVite exporterで単一HTMLを生成し、保存先へ渡して `{ "url": "..." }` を返す。画面はそのURLを開くだけで、HTMLをAPIレスポンスやブラウザーのBlobへ詰め直さない。
+
+- ローカル：`.cache/downloads/<UUID>/<dashboard-id>.html` へ保存し、`/api/downloads/<UUID>/<dashboard-id>` で配信する。有効期限は5分。次の生成時に1日以上経過した生成物を回収する。
+- AWS：非公開Downloadsバケットの `users/<検証済みsub>/dashboards/<dashboard-id>/<UUID>.html` へ保存し、5分有効の署名付きGET URLを返す。物理削除は既存の1日Lifecycleに任せる。署名URLは持っている人が期限内に使えるため、ログや通知へ出力しない。
+- どちらもContent-Dispositionはattachment、生成HTMLのCache-Controlはprivate/no-store。ローカルURLも再ダウンロード可能で、期限切れには410を返す。
+- 生成処理はリクエストごとの一時ディレクトリだけへ書き込み、成功・失敗ともに定義・出力・Pyodide用一時ファイルを削除する。アプリの配布領域には書き込まない。ユーザーのPythonはHTMLへ埋め込むだけで、サーバーでexecuteしない。
+
+Viteのネイティブ依存とViewerソースを同じLinux/ARM64環境へまとめるため、`lambda/Dockerfile` を使用する。ビルド対象はコードと固定サンプルのみで、ローカルのdashboard・環境変数ファイル・node_modules・CDK出力はDocker contextから除外する。CDK synthのテストでもこの除外を検証する。実行時のVite依存は遅延importし、一般のAPIリクエストでは初期化しない。
+
+Lambdaは2048MB・60秒、CloudFrontのorigin read timeoutも60秒。オンデマンドのままで常時起動費用を増やさない。サンプルHTMLは約20MBで、Lambdaの同期レスポンス上限を越えるためS3経由にする。追加のPythonパッケージは既存のPyodide配布元から取得するため、初回の生成時間はネットワークにも依存する。実測が制限へ近づく場合は、ローカルも含めた共通の非同期ジョブAPIを検討する。
+
+Dockerが使用可能な環境で、デプロイ前に以下を実行する（ARM64以外ではBuildx/QEMUが必要）。
+
+```bash
+docker build --platform linux/arm64 -f infra/cdk/lambda/Dockerfile -t dashivo-api .
+```
+
+Dockerの実ビルド・Lambda Runtime Interface Emulatorでの起動・AWS上の実行はまだ未検証。CDK synthの成功だけでイメージの起動確認済みとは扱わない。
+
+Dockerfileと同じ依存選択・ハンドラーのbundle・production依存への絞り込みは、隔離ディレクトリで検証した。通常のNode.jsで未認証の401応答と約20MBのHTML生成を確認したが、Amazon LinuxのイメージやLambda上の確認を代替するものではない。
+
+実行コードからのIAM権限の自動照合には以下を使用できる。現在の環境にはuvx/pipがないため未実行。デプロイ前に生成結果を確認し、CDKの実行ロールと照合する。IAMへ自動適用するオプションは付けない。
+
+```bash
+uvx iam-policy-autopilot@latest generate-policies \
+  /workspaces/dashivo/infra/cdk/lambda/handler.ts \
+  /workspaces/dashivo/infra/cdk/persistence/aws-dashboard-repository.ts \
+  /workspaces/dashivo/infra/cdk/persistence/aws-dashboard-download-storage.ts \
+  --region ap-northeast-1 --account 154539905353 \
+  --service-hints s3 dynamodb --pretty
+```
 
 仕様確認：[CDK TableV2](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.TableV2.html)、[S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html)。
 

@@ -2,10 +2,10 @@ import type { Handler } from "hono";
 import type { ServerEnv } from "@dashivo/server/context";
 
 /**
- * 保存済みDashboard定義から単一HTMLを生成してダウンロードする。
+ * 保存済みDashboardから単一HTMLを生成・保存し、期限付きダウンロードURLを返す。
  */
-export const downloadDashboard: Handler<ServerEnv> = async (context) =>
-  context.body(await context.get("dashboardDownloadService").build(context.req.param("id")!), 200, {
-    "Content-Disposition": 'attachment; filename="dashboard.html"',
-    "Content-Type": "text/html; charset=utf-8",
-  });
+export const downloadDashboard: Handler<ServerEnv> = async (context) => {
+  return context.json(
+    await context.get("dashboardDownloadService").build(context.req.param("id")!),
+  );
+};

@@ -86,6 +86,7 @@ export const createWebStack = (app: App, id: string, props: WebStackProps) => {
       "/api/*",
       new HttpOrigin(props.apiOriginDomain, {
         originAccessControlId: oac.originAccessControlId,
+        readTimeout: Duration.seconds(60),
       }),
       {
         viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,

@@ -15,16 +15,15 @@ export const useDownloadDashboard = () => {
       if (!authenticated) throw new ApiError(messages.auth.downloadRequiresLogin, 401);
       return storage.downloadDashboardFile(dashboardId);
     },
-    onSuccess: (dashboard) => {
-      const url = URL.createObjectURL(dashboard);
+    onSuccess: (url) => {
       const link = document.createElement("a");
 
       link.href = url;
       link.download = `${dashboardId}.html`;
+      link.referrerPolicy = "no-referrer";
       document.body.append(link);
       link.click();
       link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 0);
     },
   });
 

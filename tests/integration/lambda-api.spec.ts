@@ -42,7 +42,13 @@ const handler = createLambdaHandler({
       assetsBucket: "assets",
     }),
   dashboardHtmlBuilder: async () => {
-    throw new HTTPException(501, { message: "HTMLダウンロードはまだ準備中です。" });
+    return new Uint8Array(7_000_000).buffer;
+  },
+  downloadStorageForUser: (ownerId) => async (dashboardId, html) => {
+    expect(ownerId).toBe("e58f017d-30d8-49b2-a056-b79688e79971");
+    expect(dashboardId).toBe("example");
+    expect(html.byteLength).toBe(7_000_000);
+    return "https://downloads.example.com/dashboard.html";
   },
 });
 
@@ -125,10 +131,13 @@ test("oversized payloads are rejected without storage calls", async () => {
   expect(response.headers?.["cache-control"]).toBe("no-store");
 });
 
-test("unfinished download delivery explicitly returns 501 instead of an invalid HTML file", async () => {
+test("large HTML stays out of the Lambda response and delivery is scoped to the verified owner", async () => {
   const response = await handler(
     event(dashboardDownloadEndpoint("example"), "POST", undefined, "valid"),
   );
-  expect(response.statusCode).toBe(501);
-  expect(JSON.parse(response.body).error).toContain("準備中");
+  expect(response.statusCode).toBe(200);
+  expect(JSON.parse(response.body)).toEqual({
+    url: "https://downloads.example.com/dashboard.html",
+  });
+  expect(response.body.length).toBeLessThan(1000);
 });

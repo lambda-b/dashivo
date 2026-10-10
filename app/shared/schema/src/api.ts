@@ -62,6 +62,12 @@ export const dashboardRegistrationSchema = z
 export type DashboardRegistration = z.infer<typeof dashboardRegistrationSchema>;
 
 export const apiErrorSchema = z.object({ error: z.string() });
+export const dashboardDownloadResponseSchema = z.object({
+  url: z.union([
+    z.url({ protocol: /^https$/ }),
+    z.string().regex(/^\/api\/downloads\/[0-9a-f-]{36}\/[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  ]),
+});
 export const dashboardResponseSchema = z.object({ dashboard: dashboardSchema });
 export const dashboardCreatedResponseSchema = z.object({
   dashboard: dashboardListItemSchema,

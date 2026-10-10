@@ -39,6 +39,7 @@ createApiStack(app, "DashivoApi", {
   terminationProtection: true,
   table: storage.table,
   assets: storage.assets,
+  downloads: storage.downloads,
 });
 
 Tags.of(app).add("Application", "dashivo");

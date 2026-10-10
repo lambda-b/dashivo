@@ -10,6 +10,7 @@
     "@dashivo/infra": "workspace:*",
     "@dashivo/infra-cdk": "workspace:*",
     "@dashivo/server": "workspace:*",
+    "@dashivo/server-exporter": "workspace:*",
     "@dashivo/shared-lib": "workspace:*",
     "@dashivo/shared-schema": "workspace:*",
     "@dashivo/shared-utils": "workspace:*",

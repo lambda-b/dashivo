@@ -20,15 +20,12 @@ const writeSource = async (root: string, { path: sourcePath, source }: Dashboard
   await fs.writeFile(destination, source, "utf8");
 };
 
-export const createDashboardHtmlBuilder = (
-  sourceRoot: string,
-  assetCacheRoot = path.join(os.tmpdir(), "dashivo-pyodide-cache"),
-): DashboardHtmlBuilder => {
-  return async ({ dashboardId, dashboard, sources }) => {
+export const createDashboardHtmlBuilder = (sourceRoot: string): DashboardHtmlBuilder => {
+  return async ({ dashboard, sources }) => {
     const dashboardRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-dashboard-"));
     const outputRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-build-"));
     const dashboardPath = path.join(dashboardRoot, "dashboard.json");
-    const dashboardCacheRoot = path.join(assetCacheRoot, dashboardId);
+    const dashboardCacheRoot = await fs.mkdtemp(path.join(os.tmpdir(), "dashivo-pyodide-"));
 
     try {
       await fs.writeFile(dashboardPath, JSON.stringify(dashboard), "utf8");
@@ -56,6 +53,7 @@ export const createDashboardHtmlBuilder = (
     } finally {
       await fs.rm(dashboardRoot, { recursive: true, force: true });
       await fs.rm(outputRoot, { recursive: true, force: true });
+      await fs.rm(dashboardCacheRoot, { recursive: true, force: true });
     }
   };
 };

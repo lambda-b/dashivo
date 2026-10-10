@@ -89,6 +89,7 @@ const createTestApp = (owners: string[]) =>
       return createRepository(userId);
     },
     dashboardHtmlBuilder: async () => new ArrayBuffer(0),
+    downloadStorageForUser: () => async () => "https://example.com/download",
   });
 
 test("trial registration requires authentication and uses only the verified owner's repository", async () => {
