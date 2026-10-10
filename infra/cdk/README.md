@@ -104,7 +104,7 @@ pnpm --filter @dashivo/infra-cdk exec cdk synth --strict --lookups false \
 
 APIではID tokenや未検証のJWTを受け付けない。署名・期限・issuer・client_id・token_useを検証し、失敗は共通ハンドラーで401として返す。JWKS取得等の予期しない障害は認証失敗へ握り潰さない。JWTのローカル検証では既発行Access tokenの即時失効までは保証できないため、有効期限を短くしている。
 
-Classic hosted UIを使うのは費用優先でLiteプランを選ぶため。ブラウザーのPKCE・トークン更新・ログアウトはAmplify SDKに任せる。
+Refresh token rotationにはEssentials以上が必要なため、Essentialsプランを使用する。直接認証・Googleログインは月1万MAUまで無料枠がある。ログイン画面は従来のClassic hosted UIを維持し、ブラウザーのPKCE・トークン更新・ログアウトはAmplify SDKに任せる。
 
 ## 公開用Editorのビルド
 

@@ -115,7 +115,7 @@ test("Cognito uses code flow without a browser secret and rotates short-lived se
     }),
   );
   identity.hasResourceProperties("AWS::Cognito::UserPool", {
-    UserPoolTier: "LITE",
+    UserPoolTier: "ESSENTIALS",
     DeletionProtection: "ACTIVE",
     AdminCreateUserConfig: { AllowAdminCreateUserOnly: true },
   });

@@ -26,7 +26,7 @@ interface IdentityStackProps extends StackProps {
 export const createIdentityStack = (app: App, id: string, props: IdentityStackProps) => {
   const stack = new Stack(app, id, props);
   const pool = new UserPool(stack, "UserPool", {
-    featurePlan: FeaturePlan.LITE,
+    featurePlan: FeaturePlan.ESSENTIALS,
     selfSignUpEnabled: false,
     signInAliases: { email: true },
     autoVerify: { email: true },
@@ -73,7 +73,7 @@ export const createIdentityStack = (app: App, id: string, props: IdentityStackPr
   });
   if (google) client.node.addDependency(google);
 
-  // Classic hosted UI is available on the cost-focused Lite plan.
+  // Keep the classic hosted UI while Essentials enables refresh token rotation.
   const domain = pool.addDomain("Domain", {
     cognitoDomain: { domainPrefix: `dashivo-${stack.account}` },
     managedLoginVersion: ManagedLoginVersion.CLASSIC_HOSTED_UI,
