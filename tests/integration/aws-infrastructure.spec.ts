@@ -8,6 +8,67 @@ import { createIdentityStack } from "@dashivo/infra-cdk/stacks/identity";
 import { createStorageStack } from "@dashivo/infra-cdk/stacks/storage";
 import configuration from "@dashivo/infra-cdk/configuration" with { type: "json" };
 import { createApiStack } from "@dashivo/infra-cdk/stacks/api";
+import { createDeploymentStack } from "@dashivo/infra-cdk/stacks/deployment";
+
+test("GitHub deployment trusts only the immutable production subject and scopes direct access", () => {
+  const template = Template.fromStack(
+    createDeploymentStack(new App(), "DeploymentTest", {
+      env: { account: "111111111111", region: "ap-northeast-1" },
+      oidcSubject: "repo:owner@123/dashivo@456:environment:production",
+    }),
+  );
+  template.resourceCountIs("AWS::IAM::OIDCProvider", 0);
+  template.resourceCountIs("AWS::IAM::Role", 1);
+  template.hasResourceProperties("AWS::IAM::Role", {
+    RoleName: "DashivoGitHubDeploy",
+    MaxSessionDuration: 3600,
+    ManagedPolicyArns: Match.absent(),
+    AssumeRolePolicyDocument: {
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Effect: "Allow",
+          Action: "sts:AssumeRoleWithWebIdentity",
+          Principal: { Federated: Match.anyValue() },
+          Condition: {
+            StringEquals: {
+              "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+              "token.actions.githubusercontent.com:sub":
+                "repo:owner@123/dashivo@456:environment:production",
+            },
+          },
+        },
+      ],
+    },
+  });
+  const policies = Object.values(template.findResources("AWS::IAM::Policy"));
+  expect(policies).toHaveLength(1);
+  const statements = policies[0].Properties.PolicyDocument.Statement;
+  expect(statements).toHaveLength(5);
+  expect(statements[0]).toMatchObject({ Action: "sts:AssumeRole", Effect: "Allow" });
+  expect(statements[0].Resource).toHaveLength(6);
+  expect(statements[0].Resource).toContainEqual({
+    "Fn::Join": [
+      "",
+      [
+        "arn:",
+        { Ref: "AWS::Partition" },
+        ":iam::111111111111:role/cdk-hnb659fds-image-publishing-role-111111111111-ap-northeast-1",
+      ],
+    ],
+  });
+  expect(statements[1].Action).toBe("cloudformation:DescribeStacks");
+  expect(statements[1].Resource).toHaveLength(4);
+  expect(statements[2].Action).toBe("s3:ListBucket");
+  expect(statements[3].Action).toEqual(["s3:GetObject", "s3:PutObject"]);
+  expect(statements[4].Action).toEqual([
+    "cloudfront:CreateInvalidation",
+    "cloudfront:GetInvalidation",
+  ]);
+  expect(statements.every((statement: { Resource: unknown }) => statement.Resource !== "*")).toBe(
+    true,
+  );
+});
 
 test("Lambda API is IAM-protected, non-VPC, and callable only by the configured distribution", () => {
   const app = new App({ context: configuration.context });

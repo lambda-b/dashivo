@@ -41,6 +41,10 @@ pnpm cdk:synth
 pnpm cdk:diff
 ```
 
+Dockerが利用可能なら `node tests/integration/verify-lambda-image.ts` でLambdaイメージも検証する。現在のCPUアーキテクチャ向けにビルドし、AWS付属のRuntime Interface Emulatorで未認証リクエストの401を確認した後、読み取り専用のルートファイルシステム・512MBの `/tmp`・2GBメモリで実際にHTMLを生成する。生成HTMLのサイズと一時ソースの削除も検証する。AWS資格情報は不要で、AWSリソースには接続しない。
+
+GitHub Actionsの `lambda-image` ジョブは `ubuntu-24.04-arm` を使い、本番と同じARM64で上記を実行する。イメージは検証用で、ECRへの登録やデプロイは行わない。ローカルのDockerがない環境では実行できず、CIの成功を確認するまでイメージ検証済みとは扱わない。
+
 `cdk:synth` はテンプレート生成のみ。`cdk:diff` はChange Setを作らない読み取り比較。接続先アカウントとドメインは `cdk.json` の `deployment` で管理する。秘密情報や認証情報はこのファイルへ書かない。
 
 ## デプロイ前の確認
@@ -57,7 +61,32 @@ pnpm --filter @dashivo/infra-cdk exec cdk bootstrap aws://154539905353/us-east-1
 pnpm --filter @dashivo/infra-cdk exec cdk bootstrap aws://154539905353/ap-northeast-1
 ```
 
-現在はCIにデプロイ権限を与えていない。後続でGitHub OIDCの信頼を `lambda-b/dashlet` の承認付きEnvironmentへ限定し、bootstrapロールを引き受けるデプロイロールを定義する。長期アクセスキーは使わない。
+GitHubリポジトリは `lambda-b/dashivo`。`DashivoDeployment` は既存のGitHub OIDC providerを参照し、承認付き `production` Environment専用のデプロイロールを定義する。長期アクセスキーは使わない。
+
+## GitHub Actionsからのデプロイ
+
+`Deploy` workflowはmainへのpushまたは手動起動で、共通の検証とARM64 Lambdaイメージ検証を実行する。すべて成功し、`production` Environmentで承認されると、OIDCで1時間以内のAWS資格情報を取得する。
+
+1. 既存の認証/Webスタックから公開設定を読み、Editorをビルドする。
+2. CDKでAPIの差分を出力し、イメージをビルド・bootstrapのECRへ登録してLambdaをデプロイする。
+3. APIのFunction URLを取得し、CloudFrontの `/api/*` を接続する。
+4. Editorの関連ファイルをS3へ配置し、最後にindex.htmlを更新する。旧ファイルは即時削除しない。
+5. CloudFrontのキャッシュを無効化し、トップページの200・未認証APIの401を確認する。
+
+認証・保存・デプロイ権限スタックはこのworkflowで更新しない。変更が必要な場合は管理者が差分確認の上で別途デプロイする。CDKの `--require-approval never` は無条件の自動公開ではなく、GitHub Environmentで承認済みのジョブ内に限定する。差分は承認後のジョブログに出るため、承認前のレビューはコミット内容と検証結果で行う。
+
+初期設定は管理者が一度だけ実施する。
+
+```bash
+pnpm --filter @dashivo/infra-cdk exec cdk diff DashivoDeployment --no-change-set
+pnpm --filter @dashivo/infra-cdk exec cdk deploy DashivoDeployment --exclusively --require-approval broadening \
+  --parameters DashivoDeployment:WebsiteBucketName=YOUR_WEBSITE_BUCKET \
+  --parameters DashivoDeployment:DistributionId=YOUR_DISTRIBUTION_ID
+```
+
+GitHubの `production` Environmentにmainブランチ限定・必須レビューを設定し、Environment変数 `AWS_DEPLOY_ROLE_ARN` へ上記スタックの同名出力 `DeployRoleArn` を登録する。このリポジトリではGitHub APIのOIDC設定を確認し、`repo:lambda-b@95673625/dashivo@1358907948:environment:production` の完全一致を使う。名前だけの旧形式やワイルドカードは許可しない。リポジトリ移転・Environment変更時は信頼設定も見直す。
+
+ロールの直接権限は既知の4スタックのOutputs参照、Webバケットの読み書き、対象Distributionのキャッシュ無効化に限定する。CDK用には2リージョン・6個のbootstrapロールだけを引き受けられる。ただしbootstrapのCloudFormation実行ロールは管理者相当の権限を持つため、デプロイ権限全体がAPIだけの最小権限になるわけではない。Environment承認とmain限定は必須とし、PRにはAWS資格情報を渡さない。将来はCloudFormation実行ロール自体の権限境界も検討する。
 
 ## APIの段階的な接続
 

@@ -10,5 +10,9 @@
     "domainName": "dashivo.pisan-zapra.com",
     "zoneName": "pisan-zapra.com",
     "hostedZoneId": "Z01271562HEUJDE1YKHK5"
+  },
+  "github": {
+    "oidcSubjectPrefix": "repo:lambda-b@95673625/dashivo@1358907948",
+    "environment": "production"
   }
 }

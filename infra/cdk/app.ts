@@ -4,8 +4,15 @@ import { createWebStack } from "@dashivo/infra-cdk/stacks/web";
 import { createIdentityStack } from "@dashivo/infra-cdk/stacks/identity";
 import { createStorageStack } from "@dashivo/infra-cdk/stacks/storage";
 import { createApiStack } from "@dashivo/infra-cdk/stacks/api";
+import { createDeploymentStack } from "@dashivo/infra-cdk/stacks/deployment";
 
 const app = new App();
+createDeploymentStack(app, "DashivoDeployment", {
+  env: { account: configuration.deployment.account, region: "ap-northeast-1" },
+  terminationProtection: true,
+  oidcSubject: `${configuration.github.oidcSubjectPrefix}:environment:${configuration.github.environment}`,
+});
+
 const googleClientId = app.node.tryGetContext("googleClientId") as string | undefined;
 const googleSecretArn = app.node.tryGetContext("googleSecretArn") as string | undefined;
 if (Boolean(googleClientId) !== Boolean(googleSecretArn)) {

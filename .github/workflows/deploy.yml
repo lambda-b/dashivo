@@ -1,0 +1,97 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    uses: ./.github/workflows/validate.yml
+
+  deploy:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    environment:
+      name: production
+      url: https://dashivo.pisan-zapra.com
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ap-northeast-1
+      CDK_DISABLE_TELEMETRY: "true"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24.13.0"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: aws-actions/configure-aws-credentials@cabfdba3510de1431bac9dba27511d97497fc100 # v5
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-northeast-1
+          allowed-account-ids: "154539905353"
+          role-session-name: dashivo-${{ github.run_id }}
+      - name: Read deployed configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          output() {
+            aws cloudformation describe-stacks --region "$1" --stack-name "$2" \
+              --query "Stacks[0].Outputs[?OutputKey=='$3'].OutputValue | [0]" --output text
+          }
+          {
+            echo "WEBSITE_BUCKET=$(output us-east-1 DashivoWeb WebsiteBucketName)"
+            echo "DISTRIBUTION_ID=$(output us-east-1 DashivoWeb DistributionId)"
+            echo "VITE_COGNITO_USER_POOL_ID=$(output ap-northeast-1 DashivoIdentity UserPoolId)"
+            echo "VITE_COGNITO_CLIENT_ID=$(output ap-northeast-1 DashivoIdentity UserPoolClientId)"
+            echo "VITE_COGNITO_LOGIN_URL=$(output ap-northeast-1 DashivoIdentity LoginDomain)"
+          } >> "$GITHUB_ENV"
+      - run: pnpm build:editor
+      - name: Review and deploy API
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @dashivo/infra-cdk exec cdk synth DashivoApi --strict --lookups false
+          pnpm --filter @dashivo/infra-cdk exec cdk diff DashivoApi --exclusively --no-change-set
+          pnpm --filter @dashivo/infra-cdk exec cdk deploy DashivoApi --exclusively --require-approval never \
+            --parameters "DashivoApi:UserPoolId=$VITE_COGNITO_USER_POOL_ID" \
+            --parameters "DashivoApi:UserPoolClientId=$VITE_COGNITO_CLIENT_ID" \
+            --parameters "DashivoApi:DistributionId=$DISTRIBUTION_ID"
+      - name: Review and deploy API routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          api_url=$(aws cloudformation describe-stacks --stack-name DashivoApi \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue | [0]" --output text)
+          api_domain="${api_url#https://}"
+          api_domain="${api_domain%/}"
+          pnpm --filter @dashivo/infra-cdk exec cdk synth DashivoWeb --strict --lookups false -c "apiOriginDomain=$api_domain"
+          pnpm --filter @dashivo/infra-cdk exec cdk diff DashivoWeb --exclusively --no-change-set -c "apiOriginDomain=$api_domain"
+          pnpm --filter @dashivo/infra-cdk exec cdk deploy DashivoWeb --exclusively --require-approval never -c "apiOriginDomain=$api_domain"
+      - name: Publish Editor
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws s3 sync dist/editor/ "s3://$WEBSITE_BUCKET/" --exclude index.html --cache-control no-cache
+          aws s3 cp dist/editor/index.html "s3://$WEBSITE_BUCKET/index.html" --cache-control no-cache --content-type text/html
+          invalidation_id=$(aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" \
+            --paths '/*' --query Invalidation.Id --output text)
+          aws cloudfront wait invalidation-completed --distribution-id "$DISTRIBUTION_ID" --id "$invalidation_id"
+      - name: Verify public endpoints
+        run: |
+          curl --fail --silent --show-error https://dashivo.pisan-zapra.com/ --output /dev/null
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' https://dashivo.pisan-zapra.com/api/dashboards)
+          test "$status" = 401
