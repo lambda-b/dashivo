@@ -13,12 +13,6 @@ createDeploymentStack(app, "DashivoDeployment", {
   oidcSubject: `${configuration.github.oidcSubjectPrefix}:environment:${configuration.github.environment}`,
 });
 
-const googleClientId = app.node.tryGetContext("googleClientId") as string | undefined;
-const googleSecretArn = app.node.tryGetContext("googleSecretArn") as string | undefined;
-if (Boolean(googleClientId) !== Boolean(googleSecretArn)) {
-  throw new Error("Google client ID and Secret ARN must be configured together.");
-}
-
 createWebStack(app, "DashivoWeb", {
   ...configuration.deployment,
   env: { account: configuration.deployment.account, region: "us-east-1" },
@@ -30,10 +24,7 @@ createIdentityStack(app, "DashivoIdentity", {
   domainName: configuration.deployment.domainName,
   env: { account: configuration.deployment.account, region: "ap-northeast-1" },
   terminationProtection: true,
-  google:
-    googleClientId && googleSecretArn
-      ? { clientId: googleClientId, secretArn: googleSecretArn }
-      : undefined,
+  google: configuration.google,
 });
 
 const storage = createStorageStack(app, "DashivoStorage", {

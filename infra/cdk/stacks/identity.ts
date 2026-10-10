@@ -1,8 +1,9 @@
+import { fileURLToPath } from "node:url";
 import {
   CfnOutput,
+  CustomResource,
   Duration,
   RemovalPolicy,
-  SecretValue,
   Stack,
   type App,
   type StackProps,
@@ -12,15 +13,22 @@ import {
   ManagedLoginVersion,
   Mfa,
   OAuthScope,
-  ProviderAttribute,
   UserPool,
   UserPoolClientIdentityProvider,
-  UserPoolIdentityProviderGoogle,
 } from "aws-cdk-lib/aws-cognito";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Runtime } from "aws-cdk-lib/aws-lambda";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
+import { Provider } from "aws-cdk-lib/custom-resources";
+import type { GoogleProviderProperties } from "@dashivo/infra-cdk/lambda/google-provider";
 
 interface IdentityStackProps extends StackProps {
   readonly domainName: string;
-  readonly google?: { readonly clientId: string; readonly secretArn: string };
+  readonly google?: {
+    readonly clientIdParameter: GoogleProviderProperties["ClientIdParameter"];
+    readonly clientSecretParameter: GoogleProviderProperties["ClientSecretParameter"];
+  };
 }
 
 export const createIdentityStack = (app: App, id: string, props: IdentityStackProps) => {
@@ -43,15 +51,49 @@ export const createIdentityStack = (app: App, id: string, props: IdentityStackPr
     deletionProtection: true,
     removalPolicy: RemovalPolicy.RETAIN,
   });
-  const google =
-    props.google &&
-    new UserPoolIdentityProviderGoogle(stack, "Google", {
-      userPool: pool,
-      clientId: props.google.clientId,
-      clientSecretValue: SecretValue.secretsManager(props.google.secretArn),
-      scopes: ["openid", "email", "profile"],
-      attributeMapping: { email: ProviderAttribute.GOOGLE_EMAIL },
+  let google: CustomResource | undefined;
+
+  if (props.google) {
+    const handler = new NodejsFunction(stack, "GoogleHandler", {
+      entry: fileURLToPath(new URL("../lambda/google-provider.ts", import.meta.url)),
+      runtime: Runtime.NODEJS_24_X,
+      handler: "handler",
+      timeout: Duration.seconds(30),
+      bundling: { externalModules: [] },
+      logGroup: new LogGroup(stack, "GoogleLogs", { retention: RetentionDays.TWO_WEEKS }),
     });
+    handler.addToRolePolicy(
+      new PolicyStatement({
+        actions: ["ssm:GetParameters"],
+        resources: [props.google.clientIdParameter, props.google.clientSecretParameter].map(
+          ({ name }) =>
+            stack.formatArn({ service: "ssm", resource: "parameter", resourceName: name.slice(1) }),
+        ),
+      }),
+    );
+    handler.addToRolePolicy(
+      new PolicyStatement({
+        actions: [
+          "cognito-idp:CreateIdentityProvider",
+          "cognito-idp:UpdateIdentityProvider",
+          "cognito-idp:DeleteIdentityProvider",
+        ],
+        resources: [pool.userPoolArn],
+      }),
+    );
+
+    const provider = new Provider(stack, "GoogleProvider", { onEventHandler: handler });
+    google = new CustomResource(stack, "Google", {
+      serviceToken: provider.serviceToken,
+      resourceType: "Custom::GoogleIdentityProvider",
+      properties: {
+        UserPoolId: pool.userPoolId,
+        ClientIdParameter: props.google.clientIdParameter,
+        ClientSecretParameter: props.google.clientSecretParameter,
+      } satisfies GoogleProviderProperties,
+    });
+  }
+
   const client = pool.addClient("WebClient", {
     generateSecret: false,
     authFlows: { userSrp: true },

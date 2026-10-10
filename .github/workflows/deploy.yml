@@ -60,6 +60,13 @@ jobs:
             echo "VITE_COGNITO_LOGIN_URL=$(output ap-northeast-1 DashivoIdentity LoginDomain)"
           } >> "$GITHUB_ENV"
       - run: pnpm build:editor
+      - name: Review and deploy storage exports
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @dashivo/infra-cdk exec cdk synth DashivoStorage --strict --lookups false
+          pnpm --filter @dashivo/infra-cdk exec cdk diff DashivoStorage --exclusively --no-change-set
+          pnpm --filter @dashivo/infra-cdk exec cdk deploy DashivoStorage --exclusively --require-approval never
       - name: Review and deploy API
         shell: bash
         run: |

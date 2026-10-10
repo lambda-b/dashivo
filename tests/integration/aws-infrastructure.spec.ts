@@ -363,22 +363,65 @@ test("Google credentials are resolved at deployment and enable only the configur
       env: { account: "111111111111", region: "ap-northeast-1" },
       domainName: "dashivo.example.com",
       google: {
-        clientId: "example.apps.googleusercontent.com",
-        secretArn: "arn:aws:secretsmanager:ap-northeast-1:111111111111:secret:google-abcdef",
+        clientIdParameter: { name: "/test/google/client-id", version: 2 },
+        clientSecretParameter: { name: "/test/google/client-secret", version: 1 },
       },
     }),
   );
-  identity.hasResourceProperties("AWS::Cognito::UserPoolIdentityProvider", {
-    ProviderType: "Google",
-    AttributeMapping: { email: "email" },
-    ProviderDetails: Match.objectLike({
-      client_id: "example.apps.googleusercontent.com",
-      client_secret: Match.stringLikeRegexp("\\{\\{resolve:secretsmanager:"),
+  identity.resourceCountIs("AWS::Cognito::UserPoolIdentityProvider", 0);
+  identity.hasResourceProperties("Custom::GoogleIdentityProvider", {
+    UserPoolId: Match.anyValue(),
+    ClientIdParameter: { name: "/test/google/client-id", version: 2 },
+    ClientSecretParameter: { name: "/test/google/client-secret", version: 1 },
+  });
+  identity.hasResourceProperties("AWS::IAM::Policy", {
+    PolicyDocument: Match.objectLike({
+      Statement: Match.arrayWith([
+        {
+          Effect: "Allow",
+          Action: "ssm:GetParameters",
+          Resource: [
+            {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  { Ref: "AWS::Partition" },
+                  ":ssm:ap-northeast-1:111111111111:parameter/test/google/client-id",
+                ],
+              ],
+            },
+            {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  { Ref: "AWS::Partition" },
+                  ":ssm:ap-northeast-1:111111111111:parameter/test/google/client-secret",
+                ],
+              ],
+            },
+          ],
+        },
+        {
+          Effect: "Allow",
+          Action: [
+            "cognito-idp:CreateIdentityProvider",
+            "cognito-idp:UpdateIdentityProvider",
+            "cognito-idp:DeleteIdentityProvider",
+          ],
+          Resource: Match.anyValue(),
+        },
+      ]),
     }),
   });
   identity.hasResourceProperties("AWS::Cognito::UserPoolClient", {
     SupportedIdentityProviders: ["Google"],
   });
+  const resource = Object.keys(identity.findResources("Custom::GoogleIdentityProvider"))[0];
+  const client = Object.values(identity.findResources("AWS::Cognito::UserPoolClient"))[0];
+  expect(client.DependsOn).toContain(resource);
+  expect(JSON.stringify(identity.toJSON())).not.toContain("client_secret");
 });
 
 test("website storage stays private, encrypted and retained", () => {

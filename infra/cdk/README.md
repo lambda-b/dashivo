@@ -27,7 +27,7 @@
 
 - Web：`us-east-1`、CloudFront Distribution ID `E20479BV3E4M6Z`。DNS・証明書・HTTPS接続を確認済み。
 - 認証・保存：`ap-northeast-1`。Cognitoのローテーション・削除保護、DynamoDBのオンデマンド設定・削除保護、S3の公開アクセス遮断・生成HTMLのLifecycleを確認済み。
-- Google連携は未設定。公開前にOAuthクライアントとSecretを設定する。
+- Google連携は東京リージョンのParameter Storeを参照する。Identityスタックへの反映後に利用可能。
 - 初回の認証スタックはLiteとローテーションの組み合わせで失敗したため、Essentialsへ修正して再作成した。失敗時に残ったUser Poolはユーザー・アプリクライアントともに0件と確認して削除済みで、未使用リソースは残していない。
 
 各リソースの最新IDはCloudFormationのOutputsから取得する。今後のデプロイも必ず差分を確認し、公開までの残作業を完了するまではEditorを配置しない。
@@ -186,8 +186,9 @@ uvx iam-policy-autopilot@latest generate-policies \
   /workspaces/dashivo/infra/cdk/lambda/handler.ts \
   /workspaces/dashivo/infra/cdk/persistence/aws-dashboard-repository.ts \
   /workspaces/dashivo/infra/cdk/persistence/aws-dashboard-download-storage.ts \
+  /workspaces/dashivo/infra/cdk/lambda/google-provider.ts \
   --region ap-northeast-1 --account 154539905353 \
-  --service-hints s3 dynamodb --pretty
+  --service-hints s3 dynamodb ssm cognito-idp --pretty
 ```
 
 仕様確認：[CDK TableV2](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.TableV2.html)、[S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html)。
@@ -198,15 +199,21 @@ Google連携にはGoogle OAuthのクライアントIDとSecretが必要。Secret
 
 Google未設定時はセルフ登録を無効にし、管理者が作成したCognitoユーザーのみがログインできる。Googleを設定すると、Hosted UIのプロバイダーはGoogleだけになる。Googleの属性はemailへマッピングし、データ所有者はemailではなくCognito `sub` とする。メールが同じユーザー同士の自動リンクは行わない。
 
-東京リージョンのSecrets ManagerへGoogle Client Secretを**文字列そのもの**として保存し、公開クライアントIDとSecret ARNだけをCDK contextへ渡す。GoogleのOAuthクライアントには `GoogleRedirectUri` 出力のURLを登録する。
+東京リージョンのParameter Storeに登録済みの以下を使用する。`cdk.json` の `google` にはパラメータ名とバージョンだけを記載し、値は記載しない。
+
+- Client ID: `/pisan-zapra/oauth/google/client-id`（String、version 2）
+- Client Secret: `/pisan-zapra/oauth/google/client-secret`（SecureString、version 1、`alias/aws/ssm`）
+
+CognitoのIdP設定はCloudFormationの[SecureString動的参照の対象外](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/dynamic-references-ssm-secure-strings.html)のため、デプロイ時だけ動くCustom ResourceでSSMから読み取り、Cognitoへ設定する。Secretはテンプレート、Custom Resourceの応答、ログ、フロントエンドへ渡さない。読み取り権限はこの2パラメータ、IdPの変更権限はこのUser Poolだけに限定する。既定のSSM管理キーを使用するため、追加のKMS権限は不要。カスタマー管理キーへ変更する場合は、そのキーの復号権限も必要。
+
+GoogleのOAuthクライアントには `GoogleRedirectUri` 出力のURLを登録する。既存のUser PoolとApp Clientは作り直さず、Identityスタックだけを更新する。
 
 ```bash
-pnpm --filter @dashivo/infra-cdk exec cdk synth --strict --lookups false \
-  -c googleClientId=YOUR_CLIENT_ID.apps.googleusercontent.com \
-  -c googleSecretArn=arn:aws:secretsmanager:ap-northeast-1:YOUR_ACCOUNT:secret:YOUR_SECRET
+pnpm --filter @dashivo/infra-cdk exec cdk diff DashivoIdentity --no-change-set
+pnpm --filter @dashivo/infra-cdk exec cdk deploy DashivoIdentity --exclusively --require-approval broadening
 ```
 
-デプロイ時も同じcontextを渡す。Secretの解決はCloudFormationが行い、synthやアプリケーションはSecretを取得・出力しない。設定は必ずIDとARNの両方を指定する。
+資格情報を更新したら、`cdk.json` の対応する `version` を更新してIdentityスタックを再デプロイする。固定バージョンの参照により、更新失敗時は以前のバージョンへロールバックできる（以前のSSMバージョンは削除しない）。SSMの値を更新するだけではCognitoへ反映されない。通常のGitHubデプロイはStorage → API → Webの順で実行し、APIが参照するStorageの出力を先に反映する。Identityの更新は上記で明示的に実行する。
 
 APIではID tokenや未検証のJWTを受け付けない。署名・期限・issuer・client_id・token_useを検証し、失敗は共通ハンドラーで401として返す。JWKS取得等の予期しない障害は認証失敗へ握り潰さない。JWTのローカル検証では既発行Access tokenの即時失効までは保証できないため、有効期限を短くしている。
 

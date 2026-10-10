@@ -14,5 +14,9 @@
   "github": {
     "oidcSubjectPrefix": "repo:lambda-b@95673625/dashivo@1358907948",
     "environment": "production"
+  },
+  "google": {
+    "clientIdParameter": { "name": "/pisan-zapra/oauth/google/client-id", "version": 2 },
+    "clientSecretParameter": { "name": "/pisan-zapra/oauth/google/client-secret", "version": 1 }
   }
 }
