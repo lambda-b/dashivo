@@ -3,5 +3,5 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["app.ts", "stacks", "auth"]
+  "include": ["app.ts", "stacks", "auth", "persistence", "lambda"]
 }

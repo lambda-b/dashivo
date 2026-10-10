@@ -6,6 +6,8 @@
   "exports": {
     "./configuration": "./cdk.json",
     "./auth/*": "./auth/*.ts",
+    "./lambda/*": "./lambda/*.ts",
+    "./persistence/*": "./persistence/*.ts",
     "./stacks/*": "./stacks/*.ts"
   },
   "scripts": {
@@ -14,10 +16,16 @@
     "deploy": "cdk deploy --all --require-approval broadening"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1148.0",
+    "@aws-sdk/client-s3": "^3.1148.0",
+    "@aws-sdk/lib-dynamodb": "^3.1148.0",
+    "@dashivo/server": "workspace:*",
+    "@dashivo/shared-schema": "workspace:*",
     "aws-cdk-lib": "^2.272.0",
     "aws-jwt-verify": "^5.2.1",
     "constructs": "^10.8.1",
-    "hono": "^4.13.8"
+    "hono": "^4.13.8",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "aws-cdk": "^2.1144.0"

@@ -6,6 +6,9 @@ packages:
   - infra/cdk
   - tests
 
+allowBuilds:
+  esbuild: true
+
 minimumReleaseAgeExclude:
   - "@playwright/test@1.63.0"
   - playwright-core@1.63.0

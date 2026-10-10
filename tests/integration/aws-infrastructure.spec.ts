@@ -5,6 +5,131 @@ import { createWebStack } from "@dashivo/infra-cdk/stacks/web";
 import { createIdentityStack } from "@dashivo/infra-cdk/stacks/identity";
 import { createStorageStack } from "@dashivo/infra-cdk/stacks/storage";
 import configuration from "@dashivo/infra-cdk/configuration" with { type: "json" };
+import { createApiStack } from "@dashivo/infra-cdk/stacks/api";
+
+test("Lambda API is IAM-protected, non-VPC, and callable only by the configured distribution", () => {
+  const app = new App({ context: configuration.context });
+  const env = { account: "111111111111", region: "ap-northeast-1" };
+  const data = createStorageStack(app, "ApiStorageTest", { env });
+  const api = Template.fromStack(
+    createApiStack(app, "ApiTest", { env, table: data.table, assets: data.assets }),
+  );
+  api.hasResourceProperties("AWS::Lambda::Function", {
+    Runtime: "nodejs24.x",
+    Architectures: ["arm64"],
+    MemorySize: 512,
+    Timeout: 30,
+    VpcConfig: Match.absent(),
+  });
+  api.hasResourceProperties("AWS::Lambda::Url", { AuthType: "AWS_IAM" });
+  api.resourceCountIs("AWS::Lambda::Permission", 2);
+  for (const permission of Object.values(api.findResources("AWS::Lambda::Permission"))) {
+    expect(permission.Properties.Principal).toBe("cloudfront.amazonaws.com");
+    expect(permission.Properties.SourceAccount).toBe("111111111111");
+    expect(permission.Properties.SourceArn).toEqual({
+      "Fn::Join": [
+        "",
+        [
+          "arn:",
+          { Ref: "AWS::Partition" },
+          ":cloudfront::111111111111:distribution/",
+          { Ref: "DistributionId" },
+        ],
+      ],
+    });
+  }
+  api.hasResourceProperties("AWS::Lambda::Permission", {
+    Action: "lambda:InvokeFunctionUrl",
+    FunctionUrlAuthType: "AWS_IAM",
+  });
+  api.hasResourceProperties("AWS::Lambda::Permission", {
+    Action: "lambda:InvokeFunction",
+    InvokedViaFunctionUrl: true,
+  });
+  api.hasResourceProperties("AWS::Logs::LogGroup", { RetentionInDays: 14 });
+  api.resourceCountIs("AWS::EC2::NatGateway", 0);
+  api.hasResourceProperties("AWS::IAM::Role", { ManagedPolicyArns: Match.absent() });
+  api.hasResourceProperties("AWS::IAM::Policy", {
+    PolicyDocument: {
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Effect: "Allow",
+          Action: ["logs:CreateLogStream", "logs:PutLogEvents"],
+          Resource: Match.anyValue(),
+        },
+        {
+          Effect: "Allow",
+          Action: [
+            "dynamodb:GetItem",
+            "dynamodb:Query",
+            "dynamodb:PutItem",
+            "dynamodb:DeleteItem",
+            "dynamodb:ConditionCheckItem",
+          ],
+          Resource: { "Fn::ImportValue": Match.anyValue() },
+        },
+        {
+          Effect: "Allow",
+          Action: ["s3:GetObject", "s3:PutObject"],
+          Resource: {
+            "Fn::Join": [
+              "",
+              [{ "Fn::ImportValue": Match.anyValue() }, "/users/*/dashboards/*/csv/*"],
+            ],
+          },
+        },
+      ],
+    },
+  });
+});
+
+test("CloudFront API behavior signs requests, disables caching and forwards only required headers", () => {
+  const web = Template.fromStack(
+    createWebStack(new App({ context: configuration.context }), "ApiWebTest", {
+      env: { account: "111111111111", region: "us-east-1" },
+      domainName: "dashivo.example.com",
+      zoneName: "example.com",
+      hostedZoneId: "ZEXAMPLE",
+      apiOriginDomain: "example.lambda-url.ap-northeast-1.on.aws",
+    }),
+  );
+  web.hasResourceProperties("AWS::CloudFront::OriginAccessControl", {
+    OriginAccessControlConfig: Match.objectLike({
+      OriginAccessControlOriginType: "lambda",
+      SigningBehavior: "always",
+      SigningProtocol: "sigv4",
+    }),
+  });
+  web.hasResourceProperties("AWS::CloudFront::Distribution", {
+    DistributionConfig: Match.objectLike({
+      CacheBehaviors: [
+        Match.objectLike({
+          PathPattern: "/api/*",
+          AllowedMethods: ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
+          CachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+          ViewerProtocolPolicy: "https-only",
+        }),
+      ],
+      Origins: Match.arrayWith([
+        Match.objectLike({
+          DomainName: "example.lambda-url.ap-northeast-1.on.aws",
+          OriginAccessControlId: Match.anyValue(),
+        }),
+      ]),
+    }),
+  });
+  web.hasResourceProperties("AWS::CloudFront::OriginRequestPolicy", {
+    OriginRequestPolicyConfig: Match.objectLike({
+      HeadersConfig: {
+        HeaderBehavior: "whitelist",
+        Headers: ["X-Dashivo-Token", "Content-Type", "x-amz-content-sha256"],
+      },
+      CookiesConfig: { CookieBehavior: "none" },
+      QueryStringsConfig: { QueryStringBehavior: "all" },
+    }),
+  });
+});
 
 const storage = Template.fromStack(
   createStorageStack(new App({ context: configuration.context }), "StorageTest", {

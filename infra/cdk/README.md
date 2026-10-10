@@ -6,7 +6,8 @@
 
 - `DashivoWeb`：Web配信用の非公開S3、CloudFront OAC、DNS検証付きACM証明書、A/AAAAレコード。
 - `DashivoIdentity`：東京リージョンのCognito User Pool、公開クライアント、認可コード方式のHosted UI。削除保護・10分のAccess/ID token・1日のRefresh token・ローテーションを設定する。
-- `DashivoStorage`：東京リージョンのDynamoDBと、CSV・生成HTML・アクセスログ用の非公開S3。保存先はWeb/APIから独立した削除保護付きスタックとする。RepositoryとLambdaへの接続はまだ行っていない。
+- `DashivoStorage`：東京リージョンのDynamoDBと、CSV・生成HTML・アクセスログ用の非公開S3。保存先はWeb/APIから独立した削除保護付きスタックとする。
+- `DashivoApi`：東京リージョンのLambda（Node.js 24 / ARM64）へAWS Repositoryを接続。Function URLはIAM認証とCloudFront OACに限定し、アプリケーションでもCognito JWTを検証する。未デプロイ。HTML生成・署名URL配信は未接続で、ダウンロード要求には501を返す。
 - APIの認証境界を実装。`X-Dashivo-Token` のAccess tokenを `aws-jwt-verify` で検証し、検証済み `sub` ごとのRepositoryとサービスをリクエストに紐づける。ローカルAPIは従来どおり認証なしで使用できる。
 - 公開用Editorのログイン/ログアウト・認可コード+PKCE・セッション更新をAmplify SDKで実装。トークンはタブ単位の `sessionStorage` に保存し、APIへAccess tokenだけを送信する。ログアウト時はQuery cacheも破棄する。
 - 未認証では1件の試用ダッシュボードをIndexedDBへ保存する。初回は固定サンプルを表示し、その既知の版は登録対象外とする。ログイン時に編集済みの版をCSV・Pythonとまとめて自動登録し、登録済みのユーザー・revisionIdは重複登録しない。ログイン後はサーバーAPIへ切り替え、複数作成・HTMLダウンロードが可能になる。
@@ -17,7 +18,7 @@
 - 費用優先でPrice Class 100を使用する。日本のエッジはこのクラスの対象外なので、必要になった時点で配信遅延を測定して見直す。
 - GitHub Actionsでは静的チェック、単体・結合テスト、資格情報を必要としないCDK synthを実行する。
 
-**まだサービス公開はできません。** このスタックはS3へアプリやダッシュボードをアップロードしません。AWS Repository・Lambda API・Editorの配信接続を完成させてから公開します。`pnpm build` の成果物はダウンロード用Viewerであり、サービス用Editorとしてアップロードしないでください。
+**まだサービス公開はできません。** このスタックはS3へアプリやダッシュボードをアップロードしません。HTML生成とEditorの配信接続を完成させてから公開します。`pnpm build` の成果物はダウンロード用Viewerであり、サービス用Editorとしてアップロードしないでください。
 
 ## デプロイ状況
 
@@ -47,7 +48,7 @@ pnpm cdk:diff
 1. `aws sts get-caller-identity` で `cdk.json` のアカウントと一致することを確認する。
 2. 初回だけ管理者が対象リージョンのCDK bootstrapを実行する。これはIAMロール等を作成するため、synthとは別操作。
 3. `pnpm cdk:diff` で新規リソース・DNS・権限変更を確認する。
-4. 公開内容と料金面の確認後に `pnpm --filter @dashivo/infra-cdk deploy` を実行する。スタックの削除保護は有効。
+4. 公開内容と料金面の確認後に対象スタックを指定してデプロイする。APIは以下のパラメータを必要とするため、初回に引数なしの全スタックデプロイは行わない。スタックの削除保護は有効。
 
 初回bootstrapの対象：
 
@@ -58,11 +59,31 @@ pnpm --filter @dashivo/infra-cdk exec cdk bootstrap aws://154539905353/ap-northe
 
 現在はCIにデプロイ権限を与えていない。後続でGitHub OIDCの信頼を `lambda-b/dashlet` の承認付きEnvironmentへ限定し、bootstrapロールを引き受けるデプロイロールを定義する。長期アクセスキーは使わない。
 
+## APIの段階的な接続
+
+Webはバージニア、APIは東京にある。リージョン間の循環参照を作らないため、既存スタックのOutputsをAPIのCloudFormationパラメータとして渡す。
+
+```bash
+pnpm --filter @dashivo/infra-cdk exec cdk deploy DashivoApi \
+  --require-approval broadening \
+  --parameters DashivoApi:UserPoolId=ap-northeast-1_CrNgnPExa \
+  --parameters DashivoApi:UserPoolClientId=7mcm5dvr39nae59k137vibhdrp \
+  --parameters DashivoApi:DistributionId=E20479BV3E4M6Z
+```
+
+APIデプロイ後、`ApiUrl` 出力からホスト名だけを取得し、`infra/cdk/cdk.json` の `context.apiOriginDomain` に保存する。公開情報なのでGit管理してよい。後続のsynth/deployでも同じ値を使用し、省略によってAPI経路を消さないようにする。値は東京のLambda Function URLホスト名のみ許可する。
+
+続いて差分確認後に `DashivoWeb` をデプロイする。`/api/*` のみLambdaへ送り、OACは常にSigV4署名する。APIキャッシュは無効で、Cognitoトークン・Content-Type・本文SHA-256とクエリのみ転送する。Cookieや閲覧側のHost/Authorizationは転送しない。Lambda側のリソースポリシーも上記Distributionだけを許可する。
+
+LambdaはVPC・NATを使用しない。実行ロールはテーブルの読み取り・条件付き書き込み、CSV prefixのGetObject/PutObject、専用ログへの書き込みに限定する。SDKクライアントは実行環境で再利用する。HTTP本文は4,000,000バイトを上限とし、Base64化されるFunction URLイベントの6MB制限に余裕を持たせる。全レスポンスに `Cache-Control: no-store` を付ける。
+
+ローカル検証はSDKモックとLambda形式のイベント、CDKテンプレートを使う。実AWSでの権限・JWT・保存動作は、APIデプロイ後に別途確認する。
+
 ## 公開までの残作業
 
 1. 認証済みEditorと公開Lambdaの接続。ブラウザーのログイン/ログアウト・PKCE・更新処理とAPIトークン送信、サーバーのJWT検証は実装済み。実Cognitoでの結合確認はデプロイ後に行う。
-2. 検証済みのCognito `sub` を保存キーに使用するDynamoDB/S3 Repository。Python登録とJSON更新はDynamoDBトランザクションで整合性を保証する。
-3. Lambda Function URL + CloudFront `/api/*`。OACを有効化する。クライアントの書き込み時の `x-amz-content-sha256` とCognitoトークン用ヘッダーは実装済み。
+2. DynamoDB/S3 Repositoryの実AWS結合確認。実装とSDKモックによる検証は完了。Python登録とJSON更新はDynamoDBトランザクションで整合性を保証する。
+3. Lambda Function URL + CloudFront `/api/*` のデプロイと実AWS検証。IAM認証・OAC・必要ヘッダーの転送設定は実装済み。
 4. 公開EditorへCognitoの公開設定を渡し、配信用バケットへ配置する。Editor/Viewerの用途判定とローカルデータの分離は実装済み。
 5. サーバー側HTML生成のLambda対応。Vite/Pyodideの実行・依存ファイル・生成サイズを検証し、大きいHTMLのダウンロードにはS3の期限付きURLを使用する。
 6. GitHub OIDCデプロイ、EditorのS3同期・CloudFront invalidation。HTMLは短いTTL、hash付きアセットは長いTTLを設定する。
@@ -88,12 +109,20 @@ S3 Lifecycleは削除時刻を保証しない。ダウンロードのアクセ�
 
 - `pk = USER#<検証済みCognito sub>`。クライアントから所有者IDを受け取らない。
 - 定義は `sk = DASHBOARD#<dashboard-id>`。一覧はユーザーのpartitionに対するprefix Queryで取得し、全ユーザーのScanは行わない。
-- Pythonは `sk = LOGIC#<dashboard-id>#<logic-id>`。CSV参照情報は `sk = CSV#<dashboard-id>#<input-id>` として定義と分離する。
+- Pythonは `sk = LOGIC#<dashboard-id>#<path>`。CSV参照情報は `sk = CSV#<dashboard-id>#<path>` として定義と分離する。既存Repositoryのファイルパスによる読み書き・一覧取得に対応する。
 - S3は `users/<sub>/dashboards/<dashboard-id>/...` を起点とする。ユーザーが渡すファイルパスだけで保存先を決めない。
 - JSONとPythonの更新は、`expectedVersion` の条件付き書き込みとDynamoDBトランザクションで公開する。Lambdaプロセス内の排他制御は使わない。
 - CSVは不変のオブジェクトキーへ保存した後、参照情報をDynamoDBで確定する。S3とDynamoDBをまたぐDBトランザクションはないため、未確定オブジェクトの扱い・再試行・冪等登録もRepository実装で検証する。
 
-次はAWS Repositoryとその競合・ユーザー分離テストを実装し、その後にLambda Function URL/OAC、HTMLの署名URLダウンロード、GitHub OIDCデプロイの順に接続する。
+`persistence/aws-dashboard-repository.ts` に既存RepositoryのAWS実装を追加した。認証済みサーバーの `repositoryForUser` へ、検証済み `sub` を渡して使用する。SDKクライアントはLambdaハンドラー外で作成して共有し、DocumentClientは `removeUndefinedValues: true` を設定する。アプリケーションサービスはAWS SDKに依存しない。
+
+- 一覧はユーザーpartitionのprefix Queryをページングする。定義の読み取りは強い整合性を使い、更新は保存済みversionを条件にする。
+- Python登録は定義更新とソース新規作成を一つのTransactWriteへまとめる。CSV本体はユーザー・ダッシュボード・内容のSHA-256から決まるS3キーへ保存し、その後に参照を条件付き登録する。
+- 試用版登録は定義と全ソースの参照を一度に確定する。同じIDへの再送や同時登録では既存の定義を返し、サーバー編集を上書きしない。
+- 初期の安全上限は1項目350,000バイト、1トランザクション3,500,000バイト、一括登録99ファイル。CSV本体はDynamoDBのサイズ計算に含めない。上限超過は413で返す。
+- S3とDynamoDBは同時にロールバックできない。DBの成否不明時にCSVを削除すると確定済み参照を壊すため、自動削除しない。失敗・競合した登録の未参照オブジェクトが残る場合があり、公開前に参照照合による回収を実装する。Assets全体へ一律の失効は設定しない。
+
+SDKモックでキー分離・競合時のエラー・トランザクションの構成・再送・ページング・認証済みサーバーとの接続を確認した。実AWSでのトランザクション動作やIAM権限は未検証。次はLambda Function URL/OACと実AWS結合確認、その後にHTMLの署名URLダウンロード、GitHub OIDCデプロイの順に接続する。
 
 仕様確認：[CDK TableV2](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_dynamodb.TableV2.html)、[S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html)。
 
