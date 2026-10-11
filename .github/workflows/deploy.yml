@@ -98,7 +98,14 @@ jobs:
             --paths '/*' --query Invalidation.Id --output text)
           aws cloudfront wait invalidation-completed --distribution-id "$DISTRIBUTION_ID" --id "$invalidation_id"
       - name: Verify public endpoints
+        shell: bash
         run: |
+          set -euo pipefail
           curl --fail --silent --show-error https://dashivo.pisan-zapra.com/ --output /dev/null
           status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' https://dashivo.pisan-zapra.com/api/dashboards)
+          test "$status" = 401
+          payload_hash=$(printf '{}' | sha256sum | cut -d ' ' -f 1)
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --header 'Content-Type: application/json' --header "x-amz-content-sha256: $payload_hash" \
+            --data '{}' https://dashivo.pisan-zapra.com/api/dashboards)
           test "$status" = 401

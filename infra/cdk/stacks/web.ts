@@ -10,9 +10,6 @@ import {
   ViewerProtocolPolicy,
   FunctionUrlOriginAccessControl,
   OriginRequestPolicy,
-  OriginRequestHeaderBehavior,
-  OriginRequestQueryStringBehavior,
-  OriginRequestCookieBehavior,
 } from "aws-cdk-lib/aws-cloudfront";
 import { HttpOrigin, S3BucketOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { AaaaRecord, ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
@@ -92,15 +89,7 @@ export const createWebStack = (app: App, id: string, props: WebStackProps) => {
         viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
         allowedMethods: AllowedMethods.ALLOW_ALL,
         cachePolicy: CachePolicy.CACHING_DISABLED,
-        originRequestPolicy: new OriginRequestPolicy(stack, "ApiRequestPolicy", {
-          headerBehavior: OriginRequestHeaderBehavior.allowList(
-            "X-Dashivo-Token",
-            "Content-Type",
-            "x-amz-content-sha256",
-          ),
-          queryStringBehavior: OriginRequestQueryStringBehavior.all(),
-          cookieBehavior: OriginRequestCookieBehavior.none(),
-        }),
+        originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
         responseHeadersPolicy: ResponseHeadersPolicy.SECURITY_HEADERS,
       },
     );

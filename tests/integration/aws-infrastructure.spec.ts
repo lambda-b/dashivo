@@ -181,7 +181,7 @@ test("Lambda API is IAM-protected, non-VPC, and callable only by the configured 
   }
 });
 
-test("CloudFront API behavior signs requests, disables caching and forwards only required headers", () => {
+test("CloudFront API behavior signs requests, disables caching and uses the Lambda URL managed policy", () => {
   const web = Template.fromStack(
     createWebStack(new App({ context: configuration.context }), "ApiWebTest", {
       env: { account: "111111111111", region: "us-east-1" },
@@ -205,6 +205,7 @@ test("CloudFront API behavior signs requests, disables caching and forwards only
           PathPattern: "/api/*",
           AllowedMethods: ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
           CachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+          OriginRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac",
           ViewerProtocolPolicy: "https-only",
         }),
       ],
@@ -216,16 +217,7 @@ test("CloudFront API behavior signs requests, disables caching and forwards only
       ]),
     }),
   });
-  web.hasResourceProperties("AWS::CloudFront::OriginRequestPolicy", {
-    OriginRequestPolicyConfig: Match.objectLike({
-      HeadersConfig: {
-        HeaderBehavior: "whitelist",
-        Headers: ["X-Dashivo-Token", "Content-Type", "x-amz-content-sha256"],
-      },
-      CookiesConfig: { CookieBehavior: "none" },
-      QueryStringsConfig: { QueryStringBehavior: "all" },
-    }),
-  });
+  web.resourceCountIs("AWS::CloudFront::OriginRequestPolicy", 0);
 });
 
 const storage = Template.fromStack(

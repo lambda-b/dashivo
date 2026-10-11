@@ -105,7 +105,7 @@ pnpm --filter @dashivo/infra-cdk exec cdk deploy DashivoApi \
 
 APIデプロイ後、`ApiUrl` 出力からホスト名だけを取得し、`infra/cdk/cdk.json` の `context.apiOriginDomain` に保存する。公開情報なのでGit管理してよい。後続のsynth/deployでも同じ値を使用し、省略によってAPI経路を消さないようにする。値は東京のLambda Function URLホスト名のみ許可する。
 
-続いて差分確認後に `DashivoWeb` をデプロイする。`/api/*` のみLambdaへ送り、OACは常にSigV4署名する。APIキャッシュは無効で、Cognitoトークン・Content-Type・本文SHA-256とクエリのみ転送する。Cookieや閲覧側のHost/Authorizationは転送しない。Lambda側のリソースポリシーも上記Distributionだけを許可する。
+続いて差分確認後に `DashivoWeb` をデプロイする。`/api/*` のみLambdaへ送り、OACは常にSigV4署名する。APIキャッシュは無効で、[Lambda URL向けの標準ポリシーAllViewerExceptHostHeader](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html#managed-origin-request-policy-all-viewer-except-host-header)を使用する。閲覧側のHostは転送せずLambdaのHostへ置き換え、その他のヘッダー・Cookie・クエリは転送する。AuthorizationはOACの署名で上書きするため、Cognitoトークンには専用ヘッダーを使用する。`x-amz-content-sha256` の個別許可リスト指定はAWSに拒否されるため、独自OriginRequestPolicyは作らない。Lambda側のリソースポリシーも上記Distributionだけを許可する。
 
 LambdaはVPC・NATを使用しない。実行ロールはテーブルの読み取り・条件付き書き込み、CSV・生成HTML prefixのGetObject/PutObject、専用ログへの書き込みに限定する。SDKクライアントは実行環境で再利用する。HTTP本文は4,000,000バイトを上限とし、Base64化されるFunction URLイベントの6MB制限に余裕を持たせる。この制限と `Cache-Control: no-store` はローカルを含む共通サーバーで適用する。
 
