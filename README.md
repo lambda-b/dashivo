@@ -67,9 +67,13 @@ open dist/dashboard.html
 ```bash
 pnpm check
 pnpm build
-pnpm test:bundle
+pnpm test
 pnpm test:e2e
 ```
+
+テストは重要な契約と主要フローに絞ります。`unit` はスキーマ・通信制御、`integration` はAPI・保存先・認証・Python出力・ビルド境界、`e2e` は認証と保存先の切り替え・Python編集実行・オフラインHTMLを対象にします。CSSの細部、ライブラリ自体の動作、画面ごとの同種のエラー通知は個別に網羅しません。
+
+`pnpm test:e2e` は必要なEditorとHTMLをテスト内でビルドします。公開サイトのスモークテストは `DASHIVO_PUBLIC_URL` 指定時のみ実行します。
 
 ## ディレクトリ構成
 

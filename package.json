@@ -16,9 +16,8 @@
     "cdk:synth": "pnpm --filter @dashivo/infra-cdk synth",
     "cdk:diff": "pnpm --filter @dashivo/infra-cdk diff",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck",
-    "test:bundle": "node tests/integration/verify-bundle.ts",
-    "pretest:e2e": "pnpm build",
-    "test:e2e": "playwright test"
+    "test": "playwright test tests/unit tests/integration",
+    "test:e2e": "playwright test tests/e2e"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

@@ -27,9 +27,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      - run: pnpm exec playwright test tests/unit tests/integration
+      - run: pnpm test
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm exec playwright test tests/e2e/online-auth.spec.ts tests/e2e/browser-storage.spec.ts tests/e2e/download.spec.ts
+      - run: pnpm test:e2e
       - run: pnpm cdk:synth
 
   lambda-image:
