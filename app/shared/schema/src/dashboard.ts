@@ -52,7 +52,7 @@ const checkboxControlSchema = z
     defaultValue: z
       .array(z.string())
       .refine((values) => new Set(values).size === values.length, "values must be unique"),
-    layout: z.enum(["horizontal", "vertical"]).default("horizontal"),
+    layout: z.enum(["horizontal", "vertical"]),
   })
   .refine(
     (control) =>
@@ -114,7 +114,7 @@ const sliderControlSchema = z
 
 const radioControlSchema = choiceControlSchema.safeExtend({
   type: z.literal("radio"),
-  layout: z.enum(["horizontal", "vertical"]).default("horizontal"),
+  layout: z.enum(["horizontal", "vertical"]),
 });
 
 const metricContentSchema = z.object({

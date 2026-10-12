@@ -5,7 +5,7 @@
 ## 今回の対応
 
 - CSVは `dashboard/<id>/data/*.csv` に統一。定義・固定サンプル・テスト・READMEの参照も更新。
-- 編集済みのIndexedDB/AWSデータは自動で書き換えない。従来の `data/raw/` も有効な相対パスとして読み込める。未編集の既知サンプルだけは新revisionへ更新する。
+- 旧ブラウザー保存形式の補完・移行と旧サンプルの自動更新は行わない。未認証時は `trial` レコードだけを読み込み、存在しなければ現行サンプルを作成する。
 - Editor用CSPを追加。scriptのinline実行、object、frame埋め込みを禁止。PyodideのJSバインディング生成のため `unsafe-eval`、React/グラフのためinline style、Workerのためblobを許可する。ViewerのオフラインHTMLへはこのCSPを付けない。
 - CSP適用状態のEditorでOAuth模擬・保存・Python実行をブラウザーテストする。
 - 公開サイトのブラウザー確認を追加。未認証サンプルのPython実行、ログインボタン、一覧/ダウンロード非表示、無トークン/不正トークンの401を確認。公開データの読み取りとブラウザー内処理だけを行い、サーバーへデータ登録しない。

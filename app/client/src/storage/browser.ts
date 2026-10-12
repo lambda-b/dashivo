@@ -1,4 +1,4 @@
-import { createStore, get, values, update } from "idb-keyval";
+import { createStore, get, update } from "idb-keyval";
 import {
   dashboardSchema,
   dashboardDefinitionChangeSchema,
@@ -32,38 +32,7 @@ const requireDashboard = (record: StoredDashboard | undefined) => {
 
 const read = async (id: string) => requireDashboard(await get<StoredDashboard>(id, store));
 
-export const loadTrial = async () => {
-  const records = await values<StoredDashboard>(store);
-  const current = records.toSorted((left, right) =>
-    right.updatedAt.localeCompare(left.updatedAt),
-  )[0];
-  if (!current) return undefined;
-  // 以前のブラウザー保存も保持し、最新の1件を試用対象として扱う。
-  if (!current.revisionId || sample.previousRevisionIds.includes(current.revisionId)) {
-    await update<StoredDashboard>(
-      current.id,
-      (current) => {
-        const record = requireDashboard(current);
-        // 未編集の既知サンプルだけを更新する。並行して保存された編集済みの版は保持する。
-        if (sample.previousRevisionIds.includes(record.revisionId)) {
-          return {
-            ...record,
-            dashboard: dashboardSchema.parse(sample.dashboard),
-            sources: sample.sources,
-            revisionId: sample.revisionId,
-          };
-        }
-        return {
-          ...record,
-          revisionId: record.revisionId ?? crypto.randomUUID(),
-          registrations: record.registrations ?? {},
-        };
-      },
-      store,
-    );
-  }
-  return read(current.id);
-};
+export const loadTrial = () => get<StoredDashboard>("trial", store);
 
 const initializeSample = async () => {
   await update<StoredDashboard | undefined>(

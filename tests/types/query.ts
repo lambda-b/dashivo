@@ -25,14 +25,6 @@ export const useQueryTypeChecks = () => {
     meta: { errorMessage: "取得に失敗しました。" },
   }).data;
 
-  const initial: string = useQuery({
-    queryKey,
-    queryFn,
-    initialData: () => ({ count: 0 }),
-    select: (data) => String(data.count),
-    meta: { errorMessage: false },
-  }).data;
-
   const suspense: number = useSuspenseQuery({
     queryKey,
     queryFn,
@@ -53,5 +45,5 @@ export const useQueryTypeChecks = () => {
   // @ts-expect-error mutationFn の引数型も維持する。
   mutation.mutate("1");
 
-  void [selected, initial, suspense];
+  void [selected, suspense];
 };

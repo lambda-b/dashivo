@@ -8,6 +8,7 @@ import { WorkspaceContext } from "@/storage/context";
 import { serverStorage } from "@/storage/server";
 import { useRegisterTrial } from "@/storage/useRegisterTrial";
 import { Button } from "@/components/primitives/Button";
+import { QueryBoundary } from "@/components/feedback/QueryBoundary";
 import { messages } from "@/messages";
 import clsx from "clsx";
 
@@ -30,7 +31,11 @@ const RegisteredWorkspace = ({
       </div>
     );
   }
-  return <App />;
+  return (
+    <QueryBoundary errorMessage={messages.dashboard.listLoadFailed}>
+      <App />
+    </QueryBoundary>
+  );
 };
 
 export const EditorWorkspace = ({

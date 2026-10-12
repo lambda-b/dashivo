@@ -18,6 +18,7 @@ for (const type of ["radio", "select", "checkbox"] as const) {
       displayName: "地域",
       defaultValue: type === "checkbox" ? ["all"] : "all",
       options: [{ label: "All", value: "all" }],
+      ...(type !== "select" && { layout: "horizontal" }),
     };
     expect(dashboardSchema.safeParse({ ...source, controls: [control] }).success).toBe(true);
 
@@ -39,6 +40,27 @@ for (const type of ["radio", "select", "checkbox"] as const) {
     expect(invalid.success).toBe(false);
     if (!invalid.success) {
       expect(invalid.error.issues[0].path).toEqual(["controls", 0, "defaultValue"]);
+    }
+  });
+}
+
+for (const type of ["radio", "checkbox"] as const) {
+  test(`${type} requires an explicit layout`, () => {
+    const control = {
+      type,
+      key: "region",
+      displayName: "地域",
+      defaultValue: type === "checkbox" ? ["all"] : "all",
+      options: [{ label: "All", value: "all" }],
+    };
+    const result = dashboardSchema.safeParse({ ...source, controls: [control] });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues[0].path).toEqual(["controls", 0, "layout"]);
+
+    for (const layout of ["horizontal", "vertical"]) {
+      expect(
+        dashboardSchema.safeParse({ ...source, controls: [{ ...control, layout }] }).success,
+      ).toBe(true);
     }
   });
 }
@@ -78,6 +100,7 @@ test("rejects invalid references, duplicate placements and parameter defaults", 
         displayName: "地域",
         defaultValue: "missing",
         options: [{ label: "All", value: "All" }],
+        layout: "horizontal",
       },
     ],
   };

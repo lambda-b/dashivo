@@ -275,7 +275,9 @@ test("login registers edited trial revisions once and logout restores the trial"
   expect(errors).toEqual([]);
 });
 
-test("login uses PKCE, gates API access and clears session tokens on logout", async ({ page }) => {
+test("login uses PKCE, shows the sample for an empty account and clears tokens on logout", async ({
+  page,
+}) => {
   const { exchanges, authorizations, accessToken } = await mockLogin(page);
   const apiRequests: string[] = [];
   await page.route(`${origin}/api/dashboards`, (route) => {
@@ -290,6 +292,11 @@ test("login uses PKCE, gates API access and clears session tokens on logout", as
   await page.getByRole("button", { name: "ログイン", exact: true }).click();
   await expect(page.getByText("user-a@example.com")).toBeVisible();
   await expect(page.getByLabel("ダッシュボードID")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: sample.dashboard.title, exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("754,000", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "HTMLをダウンロード" })).toHaveCount(0);
   expect(authorizations[0].searchParams.get("response_type")).toBe("code");
   expect(authorizations[0].searchParams.get("code_challenge_method")).toBe("S256");
   expect(authorizations[0].searchParams.get("code_challenge")).toBeTruthy();
@@ -316,6 +323,69 @@ test("login uses PKCE, gates API access and clears session tokens on logout", as
       ),
     ),
   ).toEqual([]);
+});
+
+test("an empty account can create a dashboard without registering the sample", async ({ page }) => {
+  await mockLogin(page);
+  const dashboard = createEmptyDashboard("Untitled");
+  let created = false;
+  const writes: string[] = [];
+  await page.route(`${origin}/api/dashboards**`, (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (request.method() !== "GET") writes.push(path);
+    if (path === "/api/dashboards") {
+      const summary = { id: "first", title: dashboard.title, updatedAt: "2026-10-12" };
+      if (request.method() === "POST") {
+        created = true;
+        return route.fulfill({ json: { dashboard: summary } });
+      }
+      return route.fulfill({ json: { dashboards: created ? [summary] : [] } });
+    }
+    return route.fulfill({ json: { dashboard } });
+  });
+
+  await page.goto(origin);
+  await page.getByRole("button", { name: "ログイン", exact: true }).click();
+  await expect(page.getByLabel("ダッシュボードID")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: sample.dashboard.title, exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: sample.dashboard.title, exact: true }),
+  ).toBeVisible();
+  expect(writes).toEqual([]);
+
+  await page.getByLabel("ダッシュボードID").fill("first");
+  await page.getByRole("button", { name: "作成", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Untitled", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "HTMLをダウンロード" })).toBeEnabled();
+  expect(page.url()).toContain("#/d/first");
+  expect(writes).toEqual(["/api/dashboards"]);
+});
+
+test("a pending or failed account list does not fall back to the sample", async ({ page }) => {
+  await mockLogin(page);
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(`${origin}/api/dashboards`, async (route) => {
+    await pending;
+    return route.fulfill({ status: 403, json: { error: "一覧を取得できませんでした。" } });
+  });
+  await page.goto(origin);
+  await page.getByRole("button", { name: "ログイン", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("読み込み中…");
+  await expect(
+    page.getByRole("heading", { name: sample.dashboard.title, exact: true }),
+  ).toHaveCount(0);
+  release();
+  await expect(page.getByRole("alert")).toHaveText("一覧を取得できませんでした。");
+  await expect(
+    page.getByRole("heading", { name: sample.dashboard.title, exact: true }),
+  ).toHaveCount(0);
 });
 
 test("rejects an OAuth callback with a different state without exchanging tokens", async ({
@@ -384,18 +454,21 @@ const expireSession = (page: Page) =>
 
 test("expired tokens refresh and rotate before saving a dashboard", async ({ page }) => {
   const { refreshes, accessToken } = await mockLogin(page);
+  const dashboard = { id: "created", title: "Untitled", updatedAt: "2026-10-05" };
+  let created = false;
   await page.route(`${origin}/api/dashboards`, (route) => {
     if (route.request().method() === "POST") {
+      created = true;
       expect(route.request().headers()["x-dashivo-token"]).toBe(accessToken);
       expect(route.request().headers()["x-amz-content-sha256"]).toBe(
         createHash("sha256").update(route.request().postData()!).digest("hex"),
       );
       return route.fulfill({
         status: 201,
-        json: { dashboard: { id: "created", title: "Untitled", updatedAt: "2026-10-05" } },
+        json: { dashboard },
       });
     }
-    return route.fulfill({ json: { dashboards: [] } });
+    return route.fulfill({ json: { dashboards: created ? [dashboard] : [] } });
   });
   await page.route(`${origin}/api/dashboards/created`, (route) =>
     route.fulfill({ json: { dashboard: createEmptyDashboard("Untitled") } }),

@@ -5,7 +5,8 @@ import { DashboardIdContext, dashboardQueryKey } from "@/app/context/useDashboar
 import { Dashboard } from "@/app/Dashboard";
 import { DashboardBuilder } from "@/builder/DashboardBuilder";
 import { useDashboardActions } from "@/app/hooks/useDashboardActions";
-import { useWorkspace } from "@/storage/context";
+import { WorkspaceContext, useWorkspace } from "@/storage/context";
+import { browserStorage } from "@/storage/browser";
 import { DashboardSidebar } from "@/layouts/DashboardSidebar";
 import type { ParameterValue } from "@shared/dashboard";
 import { QueryBoundary } from "@/components/feedback/QueryBoundary";
@@ -22,15 +23,8 @@ const useDashboards = () => {
 };
 
 const DefaultDashboard = () => {
-  const dashboards = useDashboards();
-
-  return dashboards[0] ? (
-    <Navigate to={`/d/${dashboards[0].id}`} replace />
-  ) : (
-    <div className="grid min-h-screen place-items-center text-sm text-stone-500">
-      ダッシュボードを作成してください。
-    </div>
-  );
+  const [dashboard] = useDashboards();
+  return <Navigate to={`/d/${dashboard.id}`} replace />;
 };
 
 const DashboardList = () => {
@@ -84,9 +78,16 @@ const DashboardWorkspace = ({ dashboardId }: { dashboardId: string }) => {
 
 const EditorApp = () => {
   const { dashboardId } = useParams();
-  const { authenticated } = useWorkspace();
+  const workspace = useWorkspace();
+  const { authenticated } = workspace;
+  const dashboards = useDashboards();
   const { createDashboard, isPending } = useDashboardActions();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const contentWorkspace =
+    authenticated && dashboards.length === 0
+      ? { scope: "guest", storage: browserStorage, authenticated: false }
+      : workspace;
+
   return (
     <div className="min-h-screen bg-stone-100">
       {authenticated && (
@@ -101,17 +102,19 @@ const EditorApp = () => {
           </QueryBoundary>
         </DashboardSidebar>
       )}
-      <div className={clsx(authenticated && (sidebarOpen ? "lg:ml-72" : "ml-12"))}>
-        {dashboardId ? (
-          <QueryBoundary key={dashboardId} errorMessage={messages.dashboard.loadFailed}>
-            <DashboardWorkspace dashboardId={dashboardId} />
-          </QueryBoundary>
-        ) : (
-          <QueryBoundary errorMessage={messages.dashboard.listLoadFailed}>
-            <DefaultDashboard />
-          </QueryBoundary>
-        )}
-      </div>
+      <WorkspaceContext.Provider value={contentWorkspace}>
+        <div className={clsx(authenticated && (sidebarOpen ? "lg:ml-72" : "ml-12"))}>
+          {dashboardId ? (
+            <QueryBoundary key={dashboardId} errorMessage={messages.dashboard.loadFailed}>
+              <DashboardWorkspace dashboardId={dashboardId} />
+            </QueryBoundary>
+          ) : (
+            <QueryBoundary errorMessage={messages.dashboard.listLoadFailed}>
+              <DefaultDashboard />
+            </QueryBoundary>
+          )}
+        </div>
+      </WorkspaceContext.Provider>
     </div>
   );
 };

@@ -155,6 +155,7 @@ test("trial revisions change only on content changes and updates remain atomic",
   expect(result.firstPaths.python).toContain("logic/total.py");
   expect(result.firstPaths.python).not.toContain("logic/duplicate.py");
   expect(result.crossRead).toBe(true);
+  expect(result.firstPath).toBe("data/same.csv");
   expect(result.source).toBe("# updated");
   expect(result.dashboard.analysis.logic.map((logic: { id: string }) => logic.id)).toEqual([
     ...sample.dashboard.analysis.logic.map((logic) => logic.id),
@@ -226,37 +227,4 @@ test("trial registration skips the sample, retries failures and tracks each owne
   expect(result.anotherRevision.id).not.toBe(result.registered.id);
   expect(revisions).toHaveLength(4);
   expect(new Set(revisions.slice(0, 3)).size).toBe(1);
-});
-
-test("refreshes known untouched samples without replacing edited trial data", async ({ page }) => {
-  await page.goto(origin);
-  const result = await page.evaluate(async (sample) => {
-    const modulePath = "/src/storage/browser.ts";
-    const { browserStorage, loadTrial } = await import(modulePath);
-    const idbPath = "/node_modules/.vite/deps/idb-keyval.js";
-    const { createStore, update } = await import(idbPath);
-    await browserStorage.loadDashboards();
-    const store = createStore("dashivo-guest", "dashboards");
-    await update(
-      "trial",
-      (record: Record<string, unknown>) => ({
-        ...record,
-        revisionId: sample.previousRevisionIds[0],
-        dashboard: { ...sample.dashboard, title: "Old sample" },
-        sources: {},
-      }),
-      store,
-    );
-    const refreshed = await loadTrial();
-    await browserStorage.savePythonSource("trial", "logic/analysis.py", "# user edit");
-    const edited = await loadTrial();
-    const retained = await loadTrial();
-    return { refreshed, edited, retained };
-  }, sample);
-
-  expect(result.refreshed.revisionId).toBe(sample.revisionId);
-  expect(result.refreshed.dashboard).toEqual(sample.dashboard);
-  expect(result.refreshed.sources).toEqual(sample.sources);
-  expect(result.edited.revisionId).not.toBe(sample.revisionId);
-  expect(result.retained).toEqual(result.edited);
 });

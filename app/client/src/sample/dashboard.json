@@ -1,11 +1,5 @@
 {
   "revisionId": "5ec2f1e896a6d86e0518f31f85a55c7ff52c53c5bb72b159e82d820782cdfa69",
-  "previousRevisionIds": [
-    "af4f47cb83f7a4d491d71dd6bddc7050ff4d134045ed4f9eb4e4700627f403be",
-    "368ac695a8801fe752dda2662652acc978f37aff0d05f23700f2424ded653dd1",
-    "379e534657b945daace4f64112bca9fdb0932e2fac2022823857c9a05b5785d8",
-    "3d23b5017ef88d25b90b2ed6fbc6a40f584cec49ddf8a1883aa44ca5f095e178"
-  ],
   "dashboard": {
     "title": "売上ダッシュボード（サンプル）",
     "description": "地域別の売上と注文状況を、ブラウザ内Pythonで集計します。",

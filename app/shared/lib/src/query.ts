@@ -4,10 +4,7 @@ import {
   useMutation as useTanstackMutation,
   type DefaultError,
   type QueryKey,
-  type DefinedInitialDataOptions,
-  type DefinedUseQueryResult,
   type UseQueryOptions,
-  type UseQueryResult,
   type UseSuspenseQueryOptions,
   type UseMutationOptions,
 } from "@tanstack/react-query";
@@ -27,34 +24,14 @@ declare module "@tanstack/react-query" {
 
 type WithRequiredMeta<T extends { meta?: unknown }> = T & Required<Pick<T, "meta">>;
 
-type UseQuery = {
-  <
-    TQueryFnData = unknown,
-    TError = DefaultError,
-    TData = TQueryFnData,
-    TQueryKey extends QueryKey = QueryKey,
-  >(
-    options: WithRequiredMeta<DefinedInitialDataOptions<TQueryFnData, TError, TData, TQueryKey>>,
-  ): DefinedUseQueryResult<TData, TError>;
-  <
-    TQueryFnData = unknown,
-    TError = DefaultError,
-    TData = TQueryFnData,
-    TQueryKey extends QueryKey = QueryKey,
-  >(
-    options: WithRequiredMeta<UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>>,
-  ): UseQueryResult<TData, TError>;
-};
-
-// initialData がある場合に data が非 undefined になる、ライブラリの型推論を維持する。
-export const useQuery = (<
+export const useQuery = <
   TQueryFnData = unknown,
   TError = DefaultError,
   TData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey,
 >(
   options: WithRequiredMeta<UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>>,
-) => useTanstackQuery(options)) as UseQuery;
+) => useTanstackQuery(options);
 
 export const useSuspenseQuery = <
   TQueryFnData = unknown,
