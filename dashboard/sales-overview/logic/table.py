@@ -23,7 +23,7 @@ def execute(inputs: dict[str, pd.DataFrame], params: dict):
     ).round(2)
 
     fig = plot.table(summary)
-    fig.title("月次サマリー")
+    fig.title("日次サマリー")
     fig.column("date", label="月")
     fig.column("revenue", label="売上", format="currency")
     fig.column("orders", label="注文件数", format="number")

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { dashboardSchema, analysisOutputSchema } from "@dashivo/shared-schema/dashboard";
 import source from "#dashboard/dashboard.json" with { type: "json" };
 
-const metric = { type: "metric", title: "売上", format: "number", emphasis: "accent" };
+const metric = { type: "metric", title: "売上", columns: 1, format: "number", emphasis: "accent" };
 
 const table = {
   type: "table",
@@ -110,7 +110,7 @@ test("rejects invalid references, duplicate placements and parameter defaults", 
 
 test("validates Figure types, required columns in every row and nullable numeric values", () => {
   expect(() => analysisOutputSchema.parse({ data: [], view: metric })).toThrow("有限の数値");
-  expect(() => analysisOutputSchema.parse({ data: 1, view: table })).toThrow("行データ");
+  expect(() => analysisOutputSchema.parse({ data: 1, view: table })).toThrow();
   expect(() => analysisOutputSchema.parse({ data: [{ amount: 1 }, {}], view: table })).toThrow(
     "列「amount」",
   );

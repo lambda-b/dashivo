@@ -7,10 +7,18 @@ const sample = JSON.parse(await fs.readFile("app/client/src/sample/dashboard.jso
 const html = await createDashboardHtmlBuilder(path.resolve("."))({
   dashboardId: "sample",
   dashboard: dashboardSchema.parse(sample.dashboard),
-  sources: Object.entries(sample.sources as Record<string, string>).map(([path, source]) => ({
-    path,
-    source,
-  })),
+  sources: await Promise.all(
+    [
+      ...new Set(
+        [...sample.dashboard.analysis.inputs, ...sample.dashboard.analysis.logic].map(
+          (item) => item.path,
+        ),
+      ),
+    ].map(async (sourcePath) => ({
+      path: sourcePath,
+      source: await fs.readFile(path.join("app/client/src/sample", sourcePath), "utf8"),
+    })),
+  ),
 });
 
 await fs.writeFile(process.argv[2], new Uint8Array(html));

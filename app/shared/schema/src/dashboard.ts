@@ -120,6 +120,7 @@ const radioControlSchema = choiceControlSchema.safeExtend({
 const metricContentSchema = z.object({
   type: z.literal("metric"),
   title: z.string().min(1),
+  columns: z.union([z.literal(1), z.literal(2)]),
   format: z.enum(["currency", "number"]),
   emphasis: z.enum(["strong", "accent"]),
 });
@@ -345,19 +346,24 @@ export const dataRowSchema = z.record(z.string(), dataValueSchema);
 
 export const analysisOutputSchema = z
   .object({
-    data: z.union([z.number().finite(), z.array(dataRowSchema)]),
+    data: z.array(dataRowSchema),
     view: contentSchema,
   })
   .superRefine(({ data, view }, context) => {
     const fail = (message: string) => context.addIssue({ code: "custom", message });
 
     if (view.type === "metric") {
-      if (typeof data !== "number") fail("Metricは有限の数値を返す必要があります。");
-      return;
-    }
-
-    if (!Array.isArray(data)) {
-      fail("Chart/Tableは行データの配列を返す必要があります。");
+      if (
+        data.length === 0 ||
+        data.some(
+          (row) =>
+            typeof row.label !== "string" ||
+            typeof row.value !== "number" ||
+            !Number.isFinite(row.value),
+        )
+      ) {
+        fail("Metricは表示名と有限の数値を1件以上返す必要があります。");
+      }
       return;
     }
 

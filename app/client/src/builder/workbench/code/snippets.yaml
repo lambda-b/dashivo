@@ -21,6 +21,10 @@
   detail: "縦軸書式"
   template: |
     fig.y_axis(format="${1:currency}", minimum=${2:0})
+- label: "#metric_grid"
+  detail: "数値カードを2列表示"
+  template: |
+    fig = plot.metric({"${1:数値1}": ${2:0}, "${3:数値2}": ${4:0}}, columns=2)
 - label: "#pie"
   detail: "円グラフ"
   template: |

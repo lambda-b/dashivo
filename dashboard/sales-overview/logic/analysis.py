@@ -23,7 +23,7 @@ def execute(inputs: dict[str, pd.DataFrame], params: dict):
     ).round(2)
 
     fig = plot.line(summary, x="date", y="revenue")
-    fig.title("月次売上")
+    fig.title("日次売上")
     fig.legend(visible=False)
     fig.y_axis(format="number")
     return fig

@@ -16,7 +16,16 @@ test("trial registration atomically publishes all files and repeated revisions p
   const registration = {
     revisionId: randomUUID(),
     dashboard: dashboardSchema.parse(sample.dashboard),
-    sources: sample.sources,
+    sources: Object.fromEntries(
+      await Promise.all(
+        [...sample.dashboard.analysis.inputs, ...sample.dashboard.analysis.logic].map(
+          async ({ path: sourcePath }) => [
+            sourcePath,
+            await fs.readFile(path.join("app/client/src/sample", sourcePath), "utf8"),
+          ],
+        ),
+      ),
+    ),
   };
 
   try {

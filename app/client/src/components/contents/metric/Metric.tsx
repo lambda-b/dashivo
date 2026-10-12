@@ -1,5 +1,10 @@
 import clsx from "clsx";
-import type { MetricContentDefinition } from "@shared/dashboard";
+import type { DataRow, MetricContentDefinition } from "@shared/dashboard";
+
+interface MetricProps {
+  definition: MetricContentDefinition;
+  data: DataRow[];
+}
 
 interface MetricCardProps {
   definition: MetricContentDefinition;
@@ -14,10 +19,10 @@ const currency = new Intl.NumberFormat("ja-JP", {
 
 const number = new Intl.NumberFormat("ja-JP");
 
-export const MetricCard = ({ definition, value }: MetricCardProps) => (
+const MetricCard = ({ definition, value }: MetricCardProps) => (
   <article
     className={clsx(
-      "flex flex-col gap-2 rounded-xl border p-5 shadow-sm",
+      "flex min-w-0 flex-col gap-2 rounded-xl border p-5 shadow-sm",
       definition.emphasis === "strong"
         ? "border-stone-800 bg-stone-800 text-white"
         : "border-brand/20 bg-brand-soft",
@@ -31,8 +36,23 @@ export const MetricCard = ({ definition, value }: MetricCardProps) => (
     >
       {definition.title}
     </span>
-    <strong className="text-3xl tracking-tight">
+    <strong className="break-words text-3xl tracking-tight">
       {definition.format === "currency" ? currency.format(value) : number.format(value)}
     </strong>
   </article>
+);
+
+export const Metric = ({ definition, data }: MetricProps) => (
+  <section
+    aria-label={definition.title}
+    className={definition.columns === 2 ? "grid grid-cols-2 gap-5" : "grid grid-cols-1 gap-5"}
+  >
+    {data.map((row, index) => (
+      <MetricCard
+        definition={{ ...definition, title: (row.label as string) || definition.title }}
+        value={row.value as number}
+        key={index}
+      />
+    ))}
+  </section>
 );

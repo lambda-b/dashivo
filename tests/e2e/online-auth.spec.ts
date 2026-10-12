@@ -149,9 +149,9 @@ test("guest editing persists JSON, CSV and Python without API access or HTML dow
   await expect(page.getByText("￥754,000", { exact: true })).toBeVisible();
   await page.getByLabel("開始日", { exact: true }).fill("2026-02-01");
   await page.getByLabel("終了日", { exact: true }).fill("2026-02-01");
-  await expect(page.getByText("￥251,000", { exact: true })).toBeVisible();
+  await expect(page.getByText("￥11,000", { exact: true })).toBeVisible();
   await page.getByRole("radio", { name: "East", exact: true }).check();
-  await expect(page.getByText("￥141,000", { exact: true })).toBeVisible();
+  await expect(page.getByText("￥6,000", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "HTMLをダウンロード" })).toHaveCount(0);
   await expect(page.getByText(/ログインが必要です|オフライン実行中/)).toHaveCount(0);
 

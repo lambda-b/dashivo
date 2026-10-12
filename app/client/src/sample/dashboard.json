@@ -1,5 +1,5 @@
 {
-  "revisionId": "5ec2f1e896a6d86e0518f31f85a55c7ff52c53c5bb72b159e82d820782cdfa69",
+  "revisionId": "d28597b0406727591147b2b46a3b37f713c6ce34151b687f42e4c5caa2e7d9eb",
   "dashboard": {
     "title": "売上ダッシュボード（サンプル）",
     "description": "地域別の売上と注文状況を、ブラウザ内Pythonで集計します。",
@@ -107,12 +107,5 @@
         ]
       }
     ]
-  },
-  "sources": {
-    "data/sales.csv": "date,region,revenue,orders\n2026-01-01,East,125000,42\n2026-01-01,West,98000,34\n2026-02-01,East,141000,47\n2026-02-01,West,110000,38\n2026-03-01,East,153000,51\n2026-03-01,West,127000,43\n",
-    "logic/analysis.py": "from dashivo import plot\nimport numpy as np\nimport pandas as pd\n\n\ndef execute(inputs: dict[str, pd.DataFrame], params: dict):\n    frame = inputs[\"sales\"]\n    region = params.get(\"region\", \"All\")\n    if region != \"All\":\n        frame = frame[frame[\"region\"] == region]\n\n    period = params.get(\"sales_period\", {})\n    dates = pd.to_datetime(frame[\"date\"])\n    frame = frame[dates.between(period.get(\"from\") or dates.min(), period.get(\"to\") or dates.max())]\n\n    summary = (\n        frame.groupby(\"date\", as_index=False)\n        .agg(revenue=(\"revenue\", \"sum\"), orders=(\"orders\", \"sum\"))\n        .sort_values(\"date\")\n    )\n    summary[\"average_order_value\"] = np.divide(\n        summary[\"revenue\"], summary[\"orders\"]\n    ).round(2)\n\n    fig = plot.line(summary, x=\"date\", y=\"revenue\")\n    fig.title(\"月次売上\")\n    fig.legend(visible=False)\n    fig.y_axis(format=\"number\")\n    return fig\n",
-    "logic/revenue.py": "from dashivo import plot\nimport pandas as pd\n\n\ndef execute(inputs: dict[str, pd.DataFrame], params: dict):\n    data = inputs[\"sales\"]\n    region = params.get(\"region\", \"All\")\n    if region != \"All\":\n        data = data[data[\"region\"] == region]\n\n    period = params.get(\"sales_period\", {})\n    dates = pd.to_datetime(data[\"date\"])\n    data = data[dates.between(period.get(\"from\") or dates.min(), period.get(\"to\") or dates.max())]\n\n    fig = plot.metric(int(data[\"revenue\"].sum()), format=\"currency\", emphasis=\"strong\")\n    fig.title(\"売上\")\n    return fig\n",
-    "logic/orders.py": "from dashivo import plot\nimport pandas as pd\n\n\ndef execute(inputs: dict[str, pd.DataFrame], params: dict):\n    data = inputs[\"sales\"]\n    region = params.get(\"region\", \"All\")\n    if region != \"All\":\n        data = data[data[\"region\"] == region]\n\n    period = params.get(\"sales_period\", {})\n    dates = pd.to_datetime(data[\"date\"])\n    data = data[dates.between(period.get(\"from\") or dates.min(), period.get(\"to\") or dates.max())]\n\n    fig = plot.metric(int(data[\"orders\"].sum()), format=\"number\", emphasis=\"accent\")\n    fig.title(\"注文件数\")\n    return fig\n",
-    "logic/table.py": "from dashivo import plot\nimport numpy as np\nimport pandas as pd\n\n\ndef execute(inputs: dict[str, pd.DataFrame], params: dict):\n    frame = inputs[\"sales\"]\n    region = params.get(\"region\", \"All\")\n    if region != \"All\":\n        frame = frame[frame[\"region\"] == region]\n\n    period = params.get(\"sales_period\", {})\n    dates = pd.to_datetime(frame[\"date\"])\n    frame = frame[dates.between(period.get(\"from\") or dates.min(), period.get(\"to\") or dates.max())]\n\n    summary = (\n        frame.groupby(\"date\", as_index=False)\n        .agg(revenue=(\"revenue\", \"sum\"), orders=(\"orders\", \"sum\"))\n        .sort_values(\"date\")\n    )\n    summary[\"average_order_value\"] = np.divide(\n        summary[\"revenue\"], summary[\"orders\"]\n    ).round(2)\n\n    fig = plot.table(summary)\n    fig.title(\"月次サマリー\")\n    fig.column(\"date\", label=\"月\")\n    fig.column(\"revenue\", label=\"売上\", format=\"currency\")\n    fig.column(\"orders\", label=\"注文件数\", format=\"number\")\n    fig.column(\"average_order_value\", label=\"平均注文額\", format=\"currency\")\n    return fig\n"
   }
 }

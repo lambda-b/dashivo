@@ -52,6 +52,8 @@ open dist/dashboard.html
 
 公開用Editorはログインしなくても1件のダッシュボードを試用できます。初回は `app/client/src/sample/dashboard.json` の固定サンプルを表示します。未認証では定義・CSV・PythonをIndexedDBへ保存し、Pythonの実行はブラウザー内で行います。ログインは画面上部のボタンからCognito Hosted UIへ移動します。認証済みではユーザー専用のサーバーAPIを利用し、複数ダッシュボードの作成とHTMLのダウンロードが可能になります。
 
+固定サンプルは `app/client/src/sample/` 内の定義JSON、`data/*.csv`、`logic/*.py` に分けて管理し、Editorのビルド時にまとめて埋め込みます。
+
 サンプルの `sales_period`（対象期間）は開始日・終了日を含めて全出力を絞り込み、`region`（営業地域）と併用できます。ブラウザー保存がなければ現行サンプルを作成します。旧保存形式の移行やサンプルの自動更新は行いません。
 
 認証後もダッシュボード一覧が空なら、ブラウザー保存のサンプルを表示します。サンプルの表示だけではサーバーへ登録せず、新規作成後はサーバー保存のダッシュボードに切り替わります。取得待ちはローディング、取得失敗はエラーとして表示し、サンプルで代替しません。
@@ -115,5 +117,17 @@ def execute(inputs, params):
 ```
 
 戻り値は `plot.line`・`bar`・`pie`・`scatter`・`table`・`metric` で作るFigureです。種類、列の対応、タイトル、書式はPython側に集約し、JSONにはロジック参照と配置だけを保持します。Workbenchでは「実行」でのみ出力を更新し、検証用パラメータは閲覧画面へ影響しません。入力CSVはコードの実行に関係なく先頭5行を確認できます。詳細は確認エリアの「ヘルプ」、入力補助はコード内の `#chart` などのスニペットを参照してください。
+
+`metric` は数値1つ、または表示名をキーとした数値の辞書を受け取ります。既定の `columns=1` なら縦並び、`columns=2` なら2列で折り返します。`format` と `emphasis` は全カードに共通です。
+
+```python
+from dashivo import plot
+
+def execute(inputs, params):
+    fig = plot.metric({"今月の売上": 100000, "前月の売上": 95000}, columns=2, format="currency")
+    return fig
+```
+
+Pythonエディターでは標準の変数・キーワードに加え、`pd.`・`np.` の主要API、`plot.`・`fig.` のAPI名と呼び出し方を補完します。pandas・NumPyのimport別名にも対応します。その他の変数のドット以降はpandasの候補を表示しますが、型推論は行いません。`Ctrl+Space` でも補完を表示できます。
 
 `app/client/src/` 内のimportは `@/` を起点にし、共有契約は `@shared/api`・`@shared/dashboard` から参照します。Node.jsからも直接読み込むserverとinfraは、workspace package名（`@dashivo/shared-schema/api`、`@dashivo/shared-schema/dashboard` など）を使います。Vite設定と仮想モジュールは `@dashivo/shared-vite` にまとめ、editorとviewerで実装を分けています。Pyodideはdevでは配布ファイルを動的に読み込み、buildでは `virtual:dashivo/pyodide-runtime` を埋め込み実装へ差し替えます。

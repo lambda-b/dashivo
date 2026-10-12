@@ -1,22 +1,28 @@
-import { python } from "@codemirror/lang-python";
+import { python, globalCompletion, localCompletionSource } from "@codemirror/lang-python";
 import { indentUnit } from "@codemirror/language";
 import {
   autocompletion,
   acceptCompletion,
   nextSnippetField,
   prevSnippetField,
+  type CompletionContext,
 } from "@codemirror/autocomplete";
 import { indentWithTab } from "@codemirror/commands";
 import { Prec } from "@codemirror/state";
 import { keymap } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
 import { applyExactSnippet, completeSnippet } from "@/builder/workbench/code/snippets";
+import { completeLibraries } from "@/builder/workbench/code/completions";
 
 const basicSetup = { autocompletion: false };
+const pythonCompletions = [localCompletionSource, globalCompletion].map(
+  (source) => (context: CompletionContext) =>
+    context.matchBefore(/\.\w*$/) ? null : source(context),
+);
 const extensions = [
   python(),
   indentUnit.of("    "),
-  autocompletion({ override: [completeSnippet] }),
+  autocompletion({ override: [completeSnippet, completeLibraries, ...pythonCompletions] }),
   Prec.highest(
     keymap.of([
       { key: "Tab", run: applyExactSnippet },

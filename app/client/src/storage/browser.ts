@@ -11,7 +11,7 @@ import { inputSourceUploadQuerySchema } from "@shared/api";
 import { ApiError } from "@/api/request";
 import { messages } from "@/messages";
 import type { DashboardStorage } from "@/storage/server";
-import sample from "@/sample/dashboard.json";
+import { sample } from "@/sample/sample";
 import { registerDashboard } from "@/api/dashboards";
 
 interface StoredDashboard {

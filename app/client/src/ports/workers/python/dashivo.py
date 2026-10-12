@@ -114,9 +114,16 @@ class _Plot:
             "columns": [{"key": key, "label": key} for key in (columns if columns is not None else frame.columns)],
         })
 
-    def metric(self, value, *, format="number", emphasis="accent"):
-        return Figure(_value(value), {
-            "type": "metric", "title": "数値", "format": format, "emphasis": emphasis,
+    def metric(self, value, *, columns=1, format="number", emphasis="accent"):
+        if type(columns) is not int or columns not in (1, 2):
+            raise ValueError("metric columns must be 1 or 2")
+        values = value if isinstance(value, dict) else {"": value}
+        if not values or not all(isinstance(label, str) for label in values):
+            raise ValueError("metric requires values with string labels")
+
+        return Figure([{"label": label, "value": _value(number)} for label, number in values.items()], {
+            "type": "metric", "title": "数値", "columns": columns,
+            "format": format, "emphasis": emphasis,
         })
 
 

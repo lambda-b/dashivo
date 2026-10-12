@@ -35,7 +35,7 @@ test("server-generated HTML runs Python and switches tabs without network access
     await page.getByRole("link", { name: "サマリー" }).click();
     await page.getByLabel("開始日", { exact: true }).fill("2026-02-01");
     await page.getByLabel("終了日", { exact: true }).fill("2026-02-01");
-    await expect(page.getByText("￥251,000", { exact: true })).toBeVisible();
+    await expect(page.getByText("￥11,000", { exact: true })).toBeVisible();
     expect(requests).toEqual([]);
     expect(errors).toEqual([]);
   } finally {

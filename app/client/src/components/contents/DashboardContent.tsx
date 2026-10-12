@@ -1,13 +1,12 @@
 import { Plus } from "lucide-react";
 import { EditButton } from "@/components/primitives/EditButton";
-import { MetricCard } from "@/components/contents/MetricCard";
+import { Metric } from "@/components/contents/metric/Metric";
 import { ChartPanel } from "@/components/contents/chart/ChartPanel";
 import { DataTable } from "@/components/contents/table/DataTable";
 import type {
   AnalysisOutput,
   AnalysisResults,
   ContentDefinition,
-  DataRow,
   TabDefinition,
 } from "@shared/dashboard";
 
@@ -26,11 +25,11 @@ interface ContentProps {
 export const Content = ({ content, result }: ContentProps) => {
   switch (content.type) {
     case "metric":
-      return <MetricCard definition={content} value={result as number} />;
+      return <Metric definition={content} data={result} />;
     case "chart":
-      return <ChartPanel definition={content} data={result as DataRow[]} />;
+      return <ChartPanel definition={content} data={result} />;
     case "table":
-      return <DataTable definition={content} data={result as DataRow[]} />;
+      return <DataTable definition={content} data={result} />;
   }
 };
 
