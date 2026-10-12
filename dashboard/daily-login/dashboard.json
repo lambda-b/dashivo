@@ -6,7 +6,7 @@
       {
         "id": "logins",
         "type": "csv",
-        "path": "data/raw/logins.csv"
+        "path": "data/logins.csv"
       }
     ],
     "logic": [

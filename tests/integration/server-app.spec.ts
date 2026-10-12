@@ -32,7 +32,7 @@ const createTestApp = () =>
         return { id, title: createdDashboard.title, updatedAt: "2026-01-01T00:00:00.000Z" };
       },
       listAssets: async () => ({
-        csv: ["data/raw/sales.csv"],
+        csv: ["data/sales.csv"],
         python: ["logic/analysis.py"],
       }),
       readDashboard: async () => ({ dashboard, version: "v1" }),
@@ -82,11 +82,11 @@ test("Hono API requires a chosen dashboard ID and reports duplicate IDs as confl
 test("Hono API serves inputs and downloadable viewer through injected services", async () => {
   const app = createTestApp();
   const input = await app.request(
-    `${dashboardInputSourceEndpoint("sales-overview")}?path=data%2Fraw%2Fsales.csv`,
+    `${dashboardInputSourceEndpoint("sales-overview")}?path=data%2Fsales.csv`,
   );
 
   expect(input.status).toBe(200);
-  expect(await input.json()).toEqual({ source: "input:data/raw/sales.csv" });
+  expect(await input.json()).toEqual({ source: "input:data/sales.csv" });
 
   const unrelatedInput = await app.request(
     `${dashboardInputSourceEndpoint("sales-overview")}?path=data%2F..%2Fprivate.csv`,

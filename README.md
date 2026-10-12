@@ -74,7 +74,7 @@ pnpm test:e2e
 ```
 .
 ├─ dashboard/
-│  ├─ data/raw/       # ビルドへ埋め込むソースデータ
+│  ├─ data/       # ビルドへ埋め込むソースデータ
 │  ├─ logic/          # Python集計ロジック
 │  └─ dashboard.json  # UIとデータBindingのSchema
 ├─ app/

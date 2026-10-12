@@ -5,8 +5,14 @@ import { createIdentityStack } from "@dashivo/infra-cdk/stacks/identity";
 import { createStorageStack } from "@dashivo/infra-cdk/stacks/storage";
 import { createApiStack } from "@dashivo/infra-cdk/stacks/api";
 import { createDeploymentStack } from "@dashivo/infra-cdk/stacks/deployment";
+import { createBudgetStack } from "@dashivo/infra-cdk/stacks/budget";
 
 const app = new App();
+createBudgetStack(app, "DashivoBudget", {
+  env: { account: configuration.deployment.account, region: "us-east-1" },
+  terminationProtection: true,
+});
+
 createDeploymentStack(app, "DashivoDeployment", {
   env: { account: configuration.deployment.account, region: "ap-northeast-1" },
   terminationProtection: true,

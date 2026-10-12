@@ -10,6 +10,8 @@ import {
   ViewerProtocolPolicy,
   FunctionUrlOriginAccessControl,
   OriginRequestPolicy,
+  HeadersFrameOption,
+  HeadersReferrerPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
 import { HttpOrigin, S3BucketOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { AaaaRecord, ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
@@ -22,6 +24,22 @@ interface WebStackProps extends StackProps {
   readonly hostedZoneId: string;
   readonly apiOriginDomain?: string;
 }
+
+export const createEditorContentSecurityPolicy = (loginOrigin: string) =>
+  [
+    "default-src 'self'",
+    // Pyodide/Emscripten generates JavaScript functions for Python/JS bindings.
+    "script-src 'self' 'unsafe-eval'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    "worker-src 'self' blob:",
+    `connect-src 'self' https://cognito-idp.ap-northeast-1.amazonaws.com ${loginOrigin}`,
+    "object-src 'none'",
+    "base-uri 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+  ].join("; ");
 
 export const createWebStack = (app: App, id: string, props: WebStackProps) => {
   const stack = new Stack(app, id, props);
@@ -57,6 +75,23 @@ export const createWebStack = (app: App, id: string, props: WebStackProps) => {
     serverAccessLogsBucket: logs,
     serverAccessLogsPrefix: "s3/",
   });
+  const editorHeaders = new ResponseHeadersPolicy(stack, "EditorHeaders", {
+    securityHeadersBehavior: {
+      contentSecurityPolicy: {
+        contentSecurityPolicy: createEditorContentSecurityPolicy(
+          `https://dashivo-${stack.account}.auth.ap-northeast-1.amazoncognito.com`,
+        ),
+        override: true,
+      },
+      contentTypeOptions: { override: true },
+      frameOptions: { frameOption: HeadersFrameOption.DENY, override: true },
+      referrerPolicy: { referrerPolicy: HeadersReferrerPolicy.NO_REFERRER, override: true },
+      strictTransportSecurity: {
+        accessControlMaxAge: Duration.days(365),
+        override: true,
+      },
+    },
+  });
   const distribution = new Distribution(stack, "Distribution", {
     domainNames: [props.domainName],
     certificate,
@@ -72,7 +107,7 @@ export const createWebStack = (app: App, id: string, props: WebStackProps) => {
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
       cachePolicy: CachePolicy.CACHING_OPTIMIZED,
-      responseHeadersPolicy: ResponseHeadersPolicy.SECURITY_HEADERS,
+      responseHeadersPolicy: editorHeaders,
       compress: true,
     },
   });

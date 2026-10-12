@@ -17,7 +17,8 @@ import { InputSourceConflict } from "@dashivo/server/models/input-source-conflic
 import { createAuthenticatedServerApp } from "@dashivo/server/authentication";
 import { dashboardsEndpoint } from "@dashivo/shared-schema/api";
 
-const ownerId = "e58f017d-30d8-49b2-a056-b79688e79971";
+// Synthetic Cognito sub: the variant is intentionally not RFC UUID-compatible.
+const ownerId = "e58f017d-30d8-79b2-c056-b79688e79971";
 const otherOwner = "b0acec2c-3999-4113-8e63-e5db3d02caa1";
 const database = new DynamoDBClient({ region: "ap-northeast-1" });
 const dynamo = DynamoDBDocumentClient.from(database, {
@@ -285,7 +286,7 @@ test("SDK failures unrelated to conditions are not reported as user conflicts", 
   );
 });
 
-test("the authenticated server selects the repository from verified sub, not request owner", async () => {
+test("the authenticated server accepts non-RFC Cognito sub and isolates the verified owner", async () => {
   dbMock.on(QueryCommand).resolves({ Items: [] });
   const app = createAuthenticatedServerApp({
     verifyAccessToken: async () => ({ sub: ownerId }),

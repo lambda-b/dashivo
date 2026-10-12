@@ -92,7 +92,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          aws s3 sync dist/editor/ "s3://$WEBSITE_BUCKET/" --exclude index.html --cache-control no-cache
+          aws s3 sync dist/editor/ "s3://$WEBSITE_BUCKET/" --exclude index.html --exclude 'assets/*' --cache-control no-cache
+          aws s3 sync dist/editor/assets/ "s3://$WEBSITE_BUCKET/assets/" --cache-control 'public,max-age=31536000,immutable'
           aws s3 cp dist/editor/index.html "s3://$WEBSITE_BUCKET/index.html" --cache-control no-cache --content-type text/html
           invalidation_id=$(aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" \
             --paths '/*' --query Invalidation.Id --output text)
@@ -109,3 +110,22 @@ jobs:
             --header 'Content-Type: application/json' --header "x-amz-content-sha256: $payload_hash" \
             --data '{}' https://dashivo.pisan-zapra.com/api/dashboards)
           test "$status" = 401
+
+  public-smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      DASHIVO_PUBLIC_URL: https://dashivo.pisan-zapra.com
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24.13.0"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test tests/e2e/public-deployment.spec.ts

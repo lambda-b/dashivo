@@ -6,6 +6,7 @@ import { createEditorViteConfiguration } from "@dashivo/shared-vite/editor";
 import { createEmptyDashboard } from "@dashivo/shared-schema/dashboard";
 import sample from "@/sample/dashboard.json" with { type: "json" };
 import type { DashboardRegistration } from "@dashivo/shared-schema/api";
+import { createEditorContentSecurityPolicy } from "@dashivo/infra-cdk/stacks/web";
 
 const origin = "http://127.0.0.1:3130";
 const loginOrigin = "https://dashivo-test.auth.ap-northeast-1.amazoncognito.com";
@@ -30,7 +31,12 @@ test.beforeAll(async () => {
     configFile: false,
     root: path.resolve("app/client"),
     build: { outDir },
-    preview: { host: "127.0.0.1", port: 3130, strictPort: true },
+    preview: {
+      host: "127.0.0.1",
+      port: 3130,
+      strictPort: true,
+      headers: { "Content-Security-Policy": createEditorContentSecurityPolicy(loginOrigin) },
+    },
   });
 });
 

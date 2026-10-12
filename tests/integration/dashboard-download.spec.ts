@@ -8,7 +8,8 @@ import { createFilesystemDashboardDownloadStorage } from "@dashivo/infra/local/p
 import { createAwsDashboardDownloadStorage } from "@dashivo/infra-cdk/persistence/aws-dashboard-download-storage";
 import { dashboardDownloadResponseSchema } from "@dashivo/shared-schema/api";
 
-const ownerId = "e58f017d-30d8-49b2-a056-b79688e79971";
+// Synthetic Cognito sub: the variant is intentionally not RFC UUID-compatible.
+const ownerId = "e58f017d-30d8-79b2-c056-b79688e79971";
 const html = new TextEncoder().encode("<!doctype html><title>Viewer</title>").buffer;
 
 test("local downloads use the same URL contract, expire, and reject invalid paths", async () => {
@@ -36,7 +37,7 @@ test("local downloads use the same URL contract, expire, and reject invalid path
   }
 });
 
-test("AWS downloads save private HTML under the verified owner and sign a five-minute GET", async () => {
+test("AWS downloads accept non-RFC Cognito sub and sign an owner-scoped five-minute GET", async () => {
   const s3 = new S3Client({
     region: "ap-northeast-1",
     credentials: { accessKeyId: "test", secretAccessKey: "test" },

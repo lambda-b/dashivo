@@ -61,7 +61,8 @@ export const createAwsDashboardRepository = ({
   dynamo,
   s3,
 }: RepositoryOptions): DashboardRepository => {
-  const owner = z.uuid().parse(ownerId);
+  // Cognito sub is GUID-shaped but does not guarantee RFC UUID version/variant bits.
+  const owner = z.guid().parse(ownerId);
   const pk = `USER#${owner}`;
   const key = (sk: string) => ({ pk, sk });
   const definitionKey = (id: string) => key(`DASHBOARD#${dashboardIdSchema.parse(id)}`);

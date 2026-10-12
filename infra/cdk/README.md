@@ -8,7 +8,7 @@
 - `DashivoIdentity`：東京リージョンのCognito User Pool、公開クライアント、認可コード方式のHosted UI。削除保護・10分のAccess/ID token・1日のRefresh token・ローテーションを設定する。
 - `DashivoStorage`：東京リージョンのDynamoDBと、CSV・生成HTML・アクセスログ用の非公開S3。保存先はWeb/APIから独立した削除保護付きスタックとする。
 - `DashivoDeployment`：GitHub Actions用OIDCロール。既存の共有providerを参照し、main限定・承認付き `production` Environmentからのみ引き受けられる。初回デプロイ済み。
-- `DashivoApi`：東京リージョンのLambda（Node.js 24 / ARM64コンテナ）へAWS Repositoryを接続。Function URLはIAM認証とCloudFront OACに限定し、アプリケーションでもCognito JWTを検証する。ViteによるHTML生成とS3の署名URL配信まで実装済み。API・イメージは未デプロイ。
+- `DashivoApi`：東京リージョンのLambda（Node.js 24 / ARM64コンテナ）へAWS Repositoryを接続。Function URLはIAM認証とCloudFront OACに限定し、アプリケーションでもCognito JWTを検証する。ViteによるHTML生成とS3の署名URL配信まで実装・デプロイ済み。
 - APIの認証境界を実装。`X-Dashivo-Token` のAccess tokenを `aws-jwt-verify` で検証し、検証済み `sub` ごとのRepositoryとサービスをリクエストに紐づける。ローカルAPIは従来どおり認証なしで使用できる。
 - 公開用Editorのログイン/ログアウト・認可コード+PKCE・セッション更新をAmplify SDKで実装。トークンはタブ単位の `sessionStorage` に保存し、APIへAccess tokenだけを送信する。ログアウト時はQuery cacheも破棄する。
 - 未認証では1件の試用ダッシュボードをIndexedDBへ保存する。初回は固定サンプルを表示し、その既知の版は登録対象外とする。ログイン時に編集済みの版をCSV・Pythonとまとめて自動登録し、登録済みのユーザー・revisionIdは重複登録しない。ログイン後はサーバーAPIへ切り替え、複数作成・HTMLダウンロードが可能になる。
@@ -19,20 +19,20 @@
 - 費用優先でPrice Class 100を使用する。日本のエッジはこのクラスの対象外なので、必要になった時点で配信遅延を測定して見直す。
 - GitHub Actionsでは静的チェック、単体・結合テスト、資格情報を必要としないCDK synthを実行する。
 
-**まだサービス公開はできません。** このスタックはS3へアプリやダッシュボードをアップロードしません。HTML生成とEditorの配信接続を完成させてから公開します。`pnpm build` の成果物はダウンロード用Viewerであり、サービス用Editorとしてアップロードしないでください。
+公開EditorはGitHub Actionsから配置する。`pnpm build` の成果物はダウンロード用Viewerであり、サービス用Editorとしてアップロードしない。ローカルのダッシュボードやユーザーデータを配信用バケットへ配置しない。
 
 ## デプロイ状況
 
-2026-10-11にアカウント `154539905353` へ `DashivoWeb`・`DashivoIdentity`・`DashivoStorage` の初回デプロイを完了した。アプリの配置とAPI接続は未実施のため、サービスURLは現時点では403を返す。
+2026-10-11にアカウント `154539905353` へWeb・Identity・Storage・Deployment・APIをデプロイし、Editorを公開した。GitHub Actions run `38097367869` は成功。トップページの200、未認証GET/POSTの401を確認した。
 
 - Web：`us-east-1`、CloudFront Distribution ID `E20479BV3E4M6Z`。DNS・証明書・HTTPS接続を確認済み。
 - 認証・保存：`ap-northeast-1`。Cognitoのローテーション・削除保護、DynamoDBのオンデマンド設定・削除保護、S3の公開アクセス遮断・生成HTMLのLifecycleを確認済み。
-- Google連携は東京リージョンのParameter Storeを参照する。Identityスタックへの反映後に利用可能。
+- Google連携は東京リージョンのParameter Storeを参照する。Identityへ反映済みで、Google認証画面へのリダイレクトを確認した。実ユーザーによるログイン完了は別途確認する。
 - 初回の認証スタックはLiteとローテーションの組み合わせで失敗したため、Essentialsへ修正して再作成した。失敗時に残ったUser Poolはユーザー・アプリクライアントともに0件と確認して削除済みで、未使用リソースは残していない。
 
-各リソースの最新IDはCloudFormationのOutputsから取得する。今後のデプロイも必ず差分を確認し、公開までの残作業を完了するまではEditorを配置しない。
+各リソースの最新IDはCloudFormationのOutputsから取得する。今後のデプロイも必ず差分を確認し、production Environmentの承認を経て実行する。
 
-GitHubリポジトリは `lambda-b/dashivo` へ改名済み。`DashivoDeployment` とEnvironment変数 `AWS_DEPLOY_ROLE_ARN` を設定した。GitHub上のARM64イメージビルド・Runtime Interface Emulator・HTML生成、静的チェック・72件の単体/結合テスト・ブラウザーE2E・CDK synthは成功済み。本番ジョブはEnvironment承認待ちで、API・Editorの公開はまだ実行していない。
+GitHubリポジトリは `lambda-b/dashivo`。OIDC、ARM64イメージビルド・RIE起動・約20MBのHTML生成、静的チェック・単体/結合テスト・ブラウザーE2E・CDK synthをCIで確認済み。実AWS上の認証済みHTML生成は未検証。
 
 ## ローカル検証
 
@@ -71,12 +71,12 @@ GitHubリポジトリは `lambda-b/dashivo`。`DashivoDeployment` は既存のGi
 `Deploy` workflowはmainへのpushまたは手動起動で、共通の検証とARM64 Lambdaイメージ検証を実行する。すべて成功し、`production` Environmentで承認されると、OIDCで1時間以内のAWS資格情報を取得する。
 
 1. 既存の認証/Webスタックから公開設定を読み、Editorをビルドする。
-2. CDKでAPIの差分を出力し、イメージをビルド・bootstrapのECRへ登録してLambdaをデプロイする。
+2. CDKでStorageの出力を更新してからAPIの差分を出力し、イメージをビルド・bootstrapのECRへ登録してLambdaをデプロイする。
 3. APIのFunction URLを取得し、CloudFrontの `/api/*` を接続する。
 4. Editorの関連ファイルをS3へ配置し、最後にindex.htmlを更新する。旧ファイルは即時削除しない。
 5. CloudFrontのキャッシュを無効化し、トップページの200・未認証APIの401を確認する。
 
-認証・保存・デプロイ権限スタックはこのworkflowで更新しない。変更が必要な場合は管理者が差分確認の上で別途デプロイする。CDKの `--require-approval never` は無条件の自動公開ではなく、GitHub Environmentで承認済みのジョブ内に限定する。差分は承認後のジョブログに出るため、承認前のレビューはコミット内容と検証結果で行う。
+認証・デプロイ権限スタックはこのworkflowで更新しない。変更が必要な場合は管理者が差分確認の上で別途デプロイする。CDKの `--require-approval never` は無条件の自動公開ではなく、GitHub Environmentで承認済みのジョブ内に限定する。差分は承認後のジョブログに出るため、承認前のレビューはコミット内容と検証結果で行う。
 
 初期設定は管理者が一度だけ実施する。
 
@@ -111,16 +111,9 @@ LambdaはVPC・NATを使用しない。実行ロールはテーブルの読み�
 
 ローカル検証はSDKモックとLambda形式のイベント、CDKテンプレートを使う。実AWSでの権限・JWT・保存動作は、APIデプロイ後に別途確認する。
 
-## 公開までの残作業
+## 公開後の残作業
 
-1. 認証済みEditorと公開Lambdaの接続。ブラウザーのログイン/ログアウト・PKCE・更新処理とAPIトークン送信、サーバーのJWT検証は実装済み。実Cognitoでの結合確認はデプロイ後に行う。
-2. DynamoDB/S3 Repositoryの実AWS結合確認。実装とSDKモックによる検証は完了。Python登録とJSON更新はDynamoDBトランザクションで整合性を保証する。
-3. Lambda Function URL + CloudFront `/api/*` のデプロイと実AWS検証。IAM認証・OAC・必要ヘッダーの転送設定は実装済み。
-4. 公開EditorへCognitoの公開設定を渡し、配信用バケットへ配置する。Editor/Viewerの用途判定とローカルデータの分離は実装済み。
-5. サーバー側HTML生成のLambda実機検証。Vite/Pyodide同梱のDockerfileとS3の期限付きURL配信は実装済み。Dockerイメージのビルド・起動、実Lambda上の生成時間・メモリ・権限を確認する。
-6. GitHub OIDCデプロイ、EditorのS3同期・CloudFront invalidation。HTMLは短いTTL、hash付きアセットは長いTTLを設定する。
-7. 本番公開前にCSPをWorker/WASM/Cognitoに合わせて設定し、WAFの費用・レート制限、ログ・アラーム、バックアップを決定する。Shield AdvancedやWAFをこの初期スタックで自動購入しない。
-8. 試用版の自動登録APIを本番Repositoryへ接続する。同じユーザー・revisionIdの再送は既存登録を返し、サーバー側の編集内容を上書きしない。定義・CSV・Pythonの原子的な保存を保証する。
+実装・確認済みと、実Google認証や運用判断が必要な作業を [OPERATIONS.md](OPERATIONS.md) に整理する。Web/API接続、S3同期、キャッシュ無効化、未認証GET/POSTの拒否は本番で確認済み。CSPとデプロイ後の公開ブラウザーテストを追加した。認証済みCRUD・所有権分離・実LambdaでのHTML生成は、実アカウントでの確認が残る。
 
 ## 保存基盤と次の実装境界
 
@@ -154,7 +147,7 @@ S3 Lifecycleは削除時刻を保証しない。ダウンロードのアクセ�
 - 初期の安全上限は1項目350,000バイト、1トランザクション3,500,000バイト、一括登録99ファイル。CSV本体はDynamoDBのサイズ計算に含めない。上限超過は413で返す。
 - S3とDynamoDBは同時にロールバックできない。DBの成否不明時にCSVを削除すると確定済み参照を壊すため、自動削除しない。失敗・競合した登録の未参照オブジェクトが残る場合があり、公開前に参照照合による回収を実装する。Assets全体へ一律の失効は設定しない。
 
-SDKモックでキー分離・競合時のエラー・トランザクションの構成・再送・ページング・認証済みサーバーとの接続を確認した。実AWSでのトランザクション動作やIAM権限は未検証。次はDockerイメージの検証、Lambda Function URL/OACと実AWS結合確認、その後にGitHub OIDCデプロイの順に接続する。
+SDKモックでキー分離・競合時のエラー・トランザクションの構成・再送・ページング・認証済みサーバーとの接続を確認した。GitHub OIDCデプロイとFunction URL/OACの未認証API拒否は本番で確認済み。実Google認証後のトランザクション動作や保存用IAM権限は未検証。
 
 ## HTMLダウンロードの共通フロー
 
@@ -175,7 +168,7 @@ Dockerが使用可能な環境で、デプロイ前に以下を実行する（AR
 docker build --platform linux/arm64 -f infra/cdk/lambda/Dockerfile -t dashivo-api .
 ```
 
-Dockerの実ビルド・Lambda Runtime Interface Emulatorでの起動・AWS上の実行はまだ未検証。CDK synthの成功だけでイメージの起動確認済みとは扱わない。
+DockerのARM64実ビルド・Lambda Runtime Interface Emulatorでの起動・約20MBのHTML生成はGitHub Actionsで検証済み。実Lambdaは未認証リクエストの401まで確認済みで、認証済みHTML生成は未検証。
 
 Dockerfileと同じ依存選択・ハンドラーのbundle・production依存への絞り込みは、隔離ディレクトリで検証した。通常のNode.jsで未認証の401応答と約20MBのHTML生成を確認したが、Amazon LinuxのイメージやLambda上の確認を代替するものではない。
 

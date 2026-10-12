@@ -9,6 +9,35 @@ import { createStorageStack } from "@dashivo/infra-cdk/stacks/storage";
 import configuration from "@dashivo/infra-cdk/configuration" with { type: "json" };
 import { createApiStack } from "@dashivo/infra-cdk/stacks/api";
 import { createDeploymentStack } from "@dashivo/infra-cdk/stacks/deployment";
+import { createBudgetStack } from "@dashivo/infra-cdk/stacks/budget";
+
+test("monthly budget uses a private notification parameter and has no automatic actions", () => {
+  const template = Template.fromStack(
+    createBudgetStack(new App(), "BudgetTest", {
+      env: { account: "111111111111", region: "us-east-1" },
+    }),
+  );
+  template.hasParameter("NotificationEmail", { Type: "String", NoEcho: true });
+  template.resourceCountIs("AWS::Budgets::Budget", 1);
+  template.resourceCountIs("AWS::Budgets::BudgetsAction", 0);
+  template.hasResourceProperties("AWS::Budgets::Budget", {
+    Budget: {
+      BudgetType: "COST",
+      TimeUnit: "MONTHLY",
+      BudgetLimit: { Amount: 5, Unit: "USD" },
+      CostFilters: Match.absent(),
+    },
+    NotificationsWithSubscribers: ["ACTUAL", "FORECASTED"].map((NotificationType) => ({
+      Notification: {
+        NotificationType,
+        ComparisonOperator: "GREATER_THAN",
+        Threshold: 5,
+        ThresholdType: "ABSOLUTE_VALUE",
+      },
+      Subscribers: [{ SubscriptionType: "EMAIL", Address: { Ref: "NotificationEmail" } }],
+    })),
+  });
+});
 
 test("GitHub deployment trusts only the immutable production subject and scopes direct access", () => {
   const template = Template.fromStack(
@@ -477,10 +506,23 @@ test("DNS, TLS and response headers protect the configured service domain", () =
       DefaultRootObject: "index.html",
       DefaultCacheBehavior: Match.objectLike({
         ViewerProtocolPolicy: "redirect-to-https",
-        ResponseHeadersPolicyId: "67f7725c-6f97-4210-82d7-5512b31e9d03",
+        ResponseHeadersPolicyId: Match.anyValue(),
       }),
       Logging: Match.objectLike({ IncludeCookies: false }),
       ViewerCertificate: Match.objectLike({ MinimumProtocolVersion: "TLSv1.2_2021" }),
+    }),
+  });
+  template.hasResourceProperties("AWS::CloudFront::ResponseHeadersPolicy", {
+    ResponseHeadersPolicyConfig: Match.objectLike({
+      SecurityHeadersConfig: Match.objectLike({
+        ContentSecurityPolicy: {
+          ContentSecurityPolicy: Match.stringLikeRegexp("worker-src 'self' blob:"),
+          Override: true,
+        },
+        FrameOptions: { FrameOption: "DENY", Override: true },
+        ContentTypeOptions: { Override: true },
+        ReferrerPolicy: { ReferrerPolicy: "no-referrer", Override: true },
+      }),
     }),
   });
   template.resourceCountIs("AWS::Lambda::Function", 0);

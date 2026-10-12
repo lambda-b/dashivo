@@ -17,7 +17,8 @@ export const createAwsDashboardDownloadStorage = ({
   bucket: string;
   s3: S3Client;
 }): DashboardDownloadStorage => {
-  const owner = z.uuid().parse(ownerId);
+  // Cognito sub is GUID-shaped but does not guarantee RFC UUID version/variant bits.
+  const owner = z.guid().parse(ownerId);
 
   return async (dashboardId, html) => {
     const id = dashboardIdSchema.parse(dashboardId);

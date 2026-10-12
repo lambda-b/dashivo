@@ -71,7 +71,7 @@ for (const failFirstSave of [false, true]) {
     await page.route("**/api/dashboards/sales-overview/assets", (route) =>
       route.fulfill({
         json: {
-          csv: ["data/raw/sales.csv"],
+          csv: ["data/sales.csv"],
           python: ["logic/analysis.py"],
         },
       }),

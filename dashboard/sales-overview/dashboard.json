@@ -6,12 +6,12 @@
       {
         "id": "sales",
         "type": "csv",
-        "path": "data/raw/sales.csv"
+        "path": "data/sales.csv"
       },
       {
         "id": "input-1",
         "type": "csv",
-        "path": "data/raw/sales.csv"
+        "path": "data/sales.csv"
       }
     ],
     "logic": [
